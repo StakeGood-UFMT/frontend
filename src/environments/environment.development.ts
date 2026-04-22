@@ -1,8 +1,10 @@
 export const environment = {
   production: false,
+  apiUrl: 'https://api.stakegood.org/api/v1',
+  useMock: true,
   stellar: {
-    network: 'FUTURENET',
-    horizonUrl: 'https://horizon-futurenet.stellar.org',
-    rpcUrl: 'https://soroban-futurenet.stellar.org'
+    network: 'TESTNET',
+    horizonUrl: 'https://horizon-testnet.stellar.org',
+    rpcUrl: 'https://soroban-testnet.stellar.org'
   }
 };
