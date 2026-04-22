@@ -42,7 +42,7 @@ import { RouterModule } from '@angular/router';
 
       <!-- Bottom bar -->
       <div class="footer-bottom">
-        <span>© 2025 StakeGood — UFMT. All rights reserved.</span>
+        <span>© 2026 StakeGood — UFMT. All rights reserved.</span>
         <span class="stellar-badge">Powered by ⭐ Stellar</span>
       </div>
     </footer>
@@ -160,4 +160,4 @@ import { RouterModule } from '@angular/router';
     }
   `]
 })
-export class LandingFooterComponent {}
+export class LandingFooterComponent { }
