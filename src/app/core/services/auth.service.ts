@@ -68,6 +68,7 @@ export class AuthService {
     }
   }
 
+  async refresh(): Promise<string> {
     if (this.refreshTokenPromise) {
       return this.refreshTokenPromise;
     }
