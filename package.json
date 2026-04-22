@@ -18,7 +18,9 @@
     "@angular/forms": "^21.2.0",
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
+    "@creit.tech/stellar-wallets-kit": "^2.1.0",
     "@stellar/stellar-sdk": "^15.0.1",
+    "buffer": "^6.0.3",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
