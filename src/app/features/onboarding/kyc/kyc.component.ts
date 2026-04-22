@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
+import * as AuthActions from '../../../core/store/auth/auth.actions';
 
 @Component({
   selector: 'app-kyc',
@@ -12,22 +15,24 @@ import { CommonModule } from '@angular/common';
         <div class="kyc-header">
           <div class="header-overlay"></div>
           <div class="icon-circle">
-            <span class="icon">🛡️</span>
+            <span class="icon">{{ isVerifying() ? '⏳' : '🛡️' }}</span>
           </div>
           <h1 class="title">KYC Verification</h1>
         </div>
 
         <div class="kyc-body">
-          <h3 class="subtitle">Your identity verification is pending</h3>
+          <h3 class="subtitle">
+            {{ isVerifying() ? 'Verifying identity...' : 'Your identity verification is pending' }}
+          </h3>
           <p class="description">
             To ensure a secure environment and comply with regulatory standards, we need to verify your identity before you can access all features of the Arena.
           </p>
 
-          <button class="primary-btn">
-            Start Verification
+          <button class="primary-btn" (click)="startMockVerification()" [disabled]="isVerifying()">
+            {{ isVerifying() ? 'Processing...' : 'Start Verification' }}
           </button>
           
-          <button class="secondary-btn">
+          <button class="secondary-btn" (click)="goHome()" [disabled]="isVerifying()">
             Back to Home
           </button>
         </div>
@@ -135,10 +140,16 @@ import { CommonModule } from '@angular/common';
       margin-bottom: 1rem;
     }
 
-    .primary-btn:hover {
+    .primary-btn:hover:not(:disabled) {
       background: #0f172a;
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(30, 41, 59, 0.35);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.7;
+      cursor: wait;
+      transform: none;
     }
 
     .secondary-btn {
@@ -154,10 +165,38 @@ import { CommonModule } from '@angular/common';
       transition: all 0.2s ease;
     }
 
-    .secondary-btn:hover {
+    .secondary-btn:hover:not(:disabled) {
       background: #f8fafc;
       color: #334155;
     }
+    
+    .secondary-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   `]
 })
-export class KycComponent {}
+export class KycComponent {
+  private store = inject(Store);
+  private router = inject(Router);
+  public isVerifying = signal(false);
+
+  startMockVerification() {
+    this.isVerifying.set(true);
+    
+    // Simulate a 2-second KYC verification process
+    setTimeout(() => {
+      this.isVerifying.set(false);
+      
+      // Update NgRx Profile with approved KYC
+      this.store.dispatch(AuthActions.updateProfile({ profile: { kyc_status: 'approved' } }));
+      
+      // Redirect to Arena after approval
+      this.router.navigate(['/arena']);
+    }, 2000);
+  }
+
+  goHome() {
+    this.router.navigate(['/landing']);
+  }
+}
