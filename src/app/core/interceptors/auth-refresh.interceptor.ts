@@ -13,8 +13,13 @@ export const authRefreshInterceptor: HttpInterceptorFn = (req: HttpRequest<unkno
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      // Only handle requests to our API
+      if (!req.url.startsWith(API_CONFIG.baseUrl)) {
+        return throwError(() => error);
+      }
+
       // If it's an auth request itself, don't try to refresh (avoid infinite loops)
-      if (req.url.includes(API_CONFIG.endpoints.auth.base)) {
+      if (req.url.startsWith(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.base}`)) {
         return throwError(() => error);
       }
 

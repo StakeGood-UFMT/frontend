@@ -22,6 +22,7 @@ export class AuthService {
   private storage = inject(AuthStorageService);
   private wallet = inject(WalletService);
   private store = inject(Store);
+  private refreshTokenPromise: Promise<string> | null = null;
 
   public isLoggedIn = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
   public profile = toSignal(this.store.select(selectProfile), { initialValue: null as AuthProfile | null });
@@ -67,7 +68,10 @@ export class AuthService {
     }
   }
 
-  async refresh(): Promise<string> {
+    if (this.refreshTokenPromise) {
+      return this.refreshTokenPromise;
+    }
+
     const currentState = this.storage.load();
     const refreshToken = currentState?.refreshToken;
     if (!refreshToken) {
@@ -75,25 +79,31 @@ export class AuthService {
       throw new Error('No refresh token available');
     }
 
-    try {
-      const response = await lastValueFrom(
-        this.http.post<AuthResponse>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.refresh}`, {
-          refresh_token: refreshToken
-        })
-      );
+    this.refreshTokenPromise = (async () => {
+      try {
+        const response = await lastValueFrom(
+          this.http.post<AuthResponse>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.refresh}`, {
+            refresh_token: refreshToken
+          })
+        );
 
-      this.store.dispatch(AuthActions.loginSuccess({
-        accessToken: response.access_token,
-        refreshToken: response.refresh_token,
-        profile: response.profile
-      }));
-      
-      return response.access_token;
-    } catch (error) {
-      console.error('[AuthService] Token refresh failed', error);
-      this.logout();
-      throw error;
-    }
+        this.store.dispatch(AuthActions.loginSuccess({
+          accessToken: response.access_token,
+          refreshToken: response.refresh_token,
+          profile: response.profile
+        }));
+        
+        return response.access_token;
+      } catch (error) {
+        console.error('[AuthService] Token refresh failed', error);
+        this.logout();
+        throw error;
+      } finally {
+        this.refreshTokenPromise = null;
+      }
+    })();
+
+    return this.refreshTokenPromise;
   }
 
   logout() {

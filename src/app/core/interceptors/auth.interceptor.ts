@@ -13,8 +13,13 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   const authService = inject(AuthService);
   const token = authService.accessToken();
 
+  // Only intercept requests to our API
+  if (!req.url.startsWith(API_CONFIG.baseUrl)) {
+    return next(req);
+  }
+
   // If it's an auth request, skip adding headers
-  if (req.url.includes(API_CONFIG.endpoints.auth.base)) {
+  if (req.url.startsWith(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.base}`)) {
     return next(req);
   }
 

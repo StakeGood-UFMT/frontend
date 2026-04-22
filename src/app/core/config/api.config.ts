@@ -9,7 +9,7 @@ export const API_CONFIG = {
    * Complete API URL (baseURL + /api/ + version)
    * Example: https://api.stakegood.org/api/v1
    */
-  baseUrl: environment.apiUrl,
+  baseUrl: `${environment.apiBaseUrl}/api/${environment.apiVersion}`,
 
   /**
    * Endpoints relative to the baseUrl

@@ -186,7 +186,7 @@ const MOCK_MARKETS: Market[] = [
 ];
 
 export const mockMarketInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
-  if (!req.url.includes(API_CONFIG.endpoints.markets.base)) {
+  if (!req.url.startsWith(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.base}`)) {
     return next(req);
   }
 
@@ -226,7 +226,7 @@ export const mockMarketInterceptor: HttpInterceptorFn = (req: HttpRequest<unknow
   }
 
   // GET /api/v1/markets
-  if (req.method === 'GET' && req.url.endsWith(API_CONFIG.endpoints.markets.base)) {
+  if (req.method === 'GET' && req.url === `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.base}`) {
     const response: MarketListResponse = {
       markets: MOCK_MARKETS,
       total: MOCK_MARKETS.length,
