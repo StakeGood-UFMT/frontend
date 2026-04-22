@@ -25,22 +25,24 @@ import { BottomBarComponent } from '../bottom-bar/bottom-bar.component';
     .app-container {
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
     }
     .layout-body {
       display: flex;
       flex: 1;
+      overflow: hidden;
     }
     .main-content {
       flex: 1;
       padding: 1.5rem;
       overflow-y: auto;
       background: var(--bg-color);
-      margin-bottom: 0;
     }
     @media (max-width: 768px) {
       .main-content {
-        margin-bottom: 64px; /* Space for bottom bar */
+        padding: 1rem;
       }
     }
   `]

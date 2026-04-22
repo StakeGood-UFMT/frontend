@@ -31,25 +31,39 @@ import { RouterModule } from '@angular/router';
     </nav>
   `,
   styles: [`
+    :host {
+      display: block;
+      height: 100%;
+    }
     .side-bar {
       width: 240px;
-      height: calc(100vh - 64px);
+      height: 100%;
       background: var(--surface-color);
       border-right: 1px solid rgba(0,0,0,0.05);
-      padding: 1rem;
+      padding: 1rem 0.75rem;
+      overflow-y: auto;
     }
     .nav-links {
       list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .nav-links li {
+      margin: 0;
+      padding: 0;
     }
     .nav-item {
       display: flex;
       align-items: center;
-      padding: 0.75rem 1rem;
+      padding: 0.5rem 1rem;
       text-decoration: none;
       color: var(--text-color);
       border-radius: var(--border-radius-sm);
-      margin-bottom: 0.5rem;
       transition: background 0.2s;
+      line-height: 1.2;
     }
     .nav-item:hover {
       background: rgba(17, 212, 138, 0.1);
@@ -62,6 +76,10 @@ import { RouterModule } from '@angular/router';
     .icon {
       margin-right: 0.75rem;
       font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
     }
     @media (max-width: 768px) {
       .side-bar {

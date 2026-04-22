@@ -22,17 +22,13 @@ import { RouterModule } from '@angular/router';
   styles: [`
     .bottom-bar {
       display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
       height: 64px;
       background: var(--surface-color);
       border-top: 1px solid rgba(0,0,0,0.05);
       justify-content: space-around;
       align-items: center;
       padding: 0 1rem;
-      z-index: 100;
+      flex-shrink: 0;
     }
     .nav-item {
       display: flex;
