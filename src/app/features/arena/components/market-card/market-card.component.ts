@@ -31,16 +31,16 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
         <div class="prob-labels">
           <span class="yes-label">
             <span class="prob-dot yes-dot"></span>
-            YES {{ (market.yes_price * 100) | number:'1.0-0' }}%
+            YES {{ ((market.yes_price || 0) * 100) | number:'1.0-0' }}%
           </span>
           <span class="no-label">
-            NO {{ (market.no_price * 100) | number:'1.0-0' }}%
+            NO {{ ((market.no_price || 0) * 100) | number:'1.0-0' }}%
             <span class="prob-dot no-dot"></span>
           </span>
         </div>
         <div class="probability-bar">
-          <div class="yes-bar" [style.width.%]="market.yes_price * 100"></div>
-          <div class="no-bar" [style.width.%]="market.no_price * 100"></div>
+          <div class="yes-bar" [style.width.%]="(market.yes_price || 0) * 100"></div>
+          <div class="no-bar" [style.width.%]="(market.no_price || 0) * 100"></div>
         </div>
       </div>
 
@@ -48,7 +48,7 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
       <div class="card-footer">
         <div class="volume">
           <span class="volume-icon">📊</span>
-          <span class="volume-value">\${{ market.total_volume | number:'1.0-0' }}</span>
+          <span class="volume-value">\${{ market.total_liquidity || 0 | number:'1.0-0' }}</span>
           <span class="volume-label">Volume</span>
         </div>
         <div class="lock-date">
@@ -320,7 +320,8 @@ export class MarketCardComponent {
   }
 
   get lockDateFormatted(): string {
-    const d = new Date(this.market.lock_ts);
+    if (!this.market.lock_at) return 'N/A';
+    const d = new Date(this.market.lock_at);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 }

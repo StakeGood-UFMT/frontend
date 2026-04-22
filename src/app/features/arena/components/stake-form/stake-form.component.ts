@@ -10,8 +10,8 @@ import { Market } from '../../../../core/models/market.model';
   template: `
     <div class="stake-card">
       <div class="tabs">
-        <button [class.active]="side() === 'YES'" (click)="side.set('YES')" class="tab-yes">YES {{ (market.yes_price * 100).toFixed(0) }}¢</button>
-        <button [class.active]="side() === 'NO'" (click)="side.set('NO')" class="tab-no">NO {{ (market.no_price * 100).toFixed(0) }}¢</button>
+        <button [class.active]="side() === 'YES'" (click)="side.set('YES')" class="tab-yes">YES {{ ((market.yes_price || 0) * 100).toFixed(0) }}¢</button>
+        <button [class.active]="side() === 'NO'" (click)="side.set('NO')" class="tab-no">NO {{ ((market.no_price || 0) * 100).toFixed(0) }}¢</button>
       </div>
 
       <div class="form-content">
@@ -209,8 +209,8 @@ export class StakeFormComponent {
   }
 
   estimatedShares = computed(() => {
-    const price = this.side() === 'YES' ? this.market.yes_price : this.market.no_price;
-    if (this.amount <= 0 || !price) return 0;
+    const price = this.side() === 'YES' ? (this.market.yes_price || 0) : (this.market.no_price || 0);
+    if (this.amount <= 0 || price <= 0) return 0;
     return this.amount / price;
   });
 

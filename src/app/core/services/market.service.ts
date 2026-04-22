@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { lastValueFrom } from 'rxjs';
+import { lastValueFrom, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { API_CONFIG } from '../config/api.config';
 import { Market, MarketListResponse, MarketCategory, MarketHistoryPoint } from '../models/market.model';
@@ -88,6 +88,7 @@ export class MarketService {
 
   getMarketHistory(id: string, range: string = '1D') {
     const params = new HttpParams().set('range', range);
-    return this.http.get<MarketHistoryPoint[]>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.history(id)}`, { params });
+    return this.http.get<MarketHistoryResponse>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.history(id)}`, { params })
+      .pipe(map(res => res.snapshots));
   }
 }

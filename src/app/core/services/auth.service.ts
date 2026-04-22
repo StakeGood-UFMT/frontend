@@ -55,9 +55,14 @@ export class AuthService {
 
       // 5. Update State via NgRx Action
       this.store.dispatch(AuthActions.loginSuccess({
-        accessToken: response.access_token,
-        refreshToken: response.refresh_token,
-        profile: response.profile
+        accessToken: response.jwt,
+        refreshToken: '', // Assuming refresh_token is not in verify response for now
+        profile: {
+          public_key: response.wallet,
+          role: response.user.role,
+          kyc_status: response.kyc_status as any,
+          terms_accepted: true // Default for now
+        }
       }));
       
       console.log('[AuthService] Login successful', response.profile.public_key);
@@ -89,9 +94,14 @@ export class AuthService {
         );
 
         this.store.dispatch(AuthActions.loginSuccess({
-          accessToken: response.access_token,
-          refreshToken: response.refresh_token,
-          profile: response.profile
+          accessToken: response.jwt,
+          refreshToken: '', 
+          profile: {
+            public_key: response.wallet,
+            role: response.user.role,
+            kyc_status: response.kyc_status as any,
+            terms_accepted: true
+          }
         }));
         
         return response.access_token;

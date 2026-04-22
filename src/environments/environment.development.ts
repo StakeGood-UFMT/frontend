@@ -1,8 +1,8 @@
 export const environment = {
   production: false,
-  apiBaseUrl: 'https://api.stakegood.org',
+  apiBaseUrl: 'http://localhost:3000',
   apiVersion: 'v1',
-  useMock: true,
+  useMock: false,
   stellar: {
     network: 'TESTNET',
     horizonUrl: 'https://horizon-testnet.stellar.org',
