@@ -15,6 +15,21 @@ export interface Market {
   resolve_ts?: string;
   created_at: string;
   outcome?: 'YES' | 'NO' | null;
+  
+  // FE-6 Additions
+  resolution_rule: string;
+  resolution_source: string;
+  oracle_url?: string;
+  contract_address?: string;
+  fee_ngo: number;
+  fee_platform: number;
+  fee_gamification: number;
+}
+
+export interface MarketHistoryPoint {
+  timestamp: string;
+  yes_price: number;
+  no_price: number;
 }
 
 export interface MarketListResponse {

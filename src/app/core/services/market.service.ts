@@ -2,7 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Market, MarketListResponse, MarketCategory } from '../models/market.model';
+import { Market, MarketListResponse, MarketCategory, MarketHistoryPoint } from '../models/market.model';
 
 export interface MarketFiltersState {
   search: string;
@@ -78,5 +78,15 @@ export class MarketService {
 
   clearFilters(): void {
     this._filters.set({ search: '', category: 'ALL' });
+  }
+
+  // FE-6 Methods
+  getMarket(id: string) {
+    return this.http.get<Market>(`${this.baseUrl}/${id}`);
+  }
+
+  getMarketHistory(id: string, range: string = '1D') {
+    const params = new HttpParams().set('range', range);
+    return this.http.get<MarketHistoryPoint[]>(`${this.baseUrl}/${id}/history`, { params });
   }
 }
