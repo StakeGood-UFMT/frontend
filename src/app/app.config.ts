@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { mockAuthInterceptor } from './core/interceptors/mock-auth.interceptor';
+import { mockMarketInterceptor } from './core/interceptors/mock-market.interceptor';
 import { environment } from '../environments/environment';
 
 import { routes } from './app.routes';
@@ -17,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors(
       environment.useMock 
-        ? [mockAuthInterceptor, authInterceptor] 
+        ? [mockAuthInterceptor, mockMarketInterceptor, authInterceptor] 
         : [authInterceptor]
     )),
     provideStore({ auth: authReducer }),
