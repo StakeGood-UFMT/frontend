@@ -1,27 +1,59 @@
-# StakeGood Frontend
+# StakeGoodFrontend
 
-StakeGood is a decentralized prediction market and social impact platform built on the Stellar network (Soroban). This repository contains the frontend implementation designed to provide a premium, fast, and transparent experience for users and NGOs.
+This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.8.
 
-## 🚀 Vision
-Our mission is to orchestrate a seamless connection between Web3 wallets, our backend API, and the Soroban smart contracts, while masking blockchain latency with Optimistic UI patterns.
+## Development server
 
-## 📂 Documentation (Business Rules & Design)
-We maintain a detailed set of interface engineering and navigation rules to ensure consistency and security across the platform. These documents include visual mapping and technical requirements for every screen.
+To start a local development server, run:
 
-- 🇧🇷 **[Portuguese Version (Original)](./business-rules-sugested.md)**
-- 🇺🇸 **[English Version](./business-rules-suggested-en.md)**
+```bash
+ng serve
+```
 
-## 🛠 Tech Stack (Core Requirements)
-- **Framework:** Designed for Angular (but framework-agnostic rules).
-- **Network:** Stellar / Soroban.
-- **Wallet Integration:** Freighter (and other Soroban-compatible wallets).
-- **Communication:** REST API, WebSockets/SSE for real-time updates.
+Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
-## ✨ Key Features
-- **Optimistic UI:** Instant feedback for on-chain actions.
-- **XDR Delegation:** Secure transaction signing flow.
-- **Futarchy Voting:** Quadratic voice credit allocation for social impact.
-- **Tiered Compliance:** Integrated KYC and monthly limit management.
+## Code scaffolding
 
----
-*Built with ❤️ for the Stellar Ecosystem.*
+Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+
+```bash
+ng generate component component-name
+```
+
+For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+
+```bash
+ng generate --help
+```
+
+## Building
+
+To build the project run:
+
+```bash
+ng build
+```
+
+This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+
+## Running unit tests
+
+To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+
+```bash
+ng test
+```
+
+## Running end-to-end tests
+
+For end-to-end (e2e) testing, run:
+
+```bash
+ng e2e
+```
+
+Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+
+## Additional Resources
+
+For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
