@@ -1,19 +1,24 @@
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { API_CONFIG } from '../config/api.config';
 import { catchError, switchMap, throwError, Observable, from } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 
+/**
+ * Interceptor responsible for adding the Authorization header to outgoing requests.
+ * Also handles proactive token refresh if the token is close to expiring.
+ */
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
   const authService = inject(AuthService);
   const token = authService.accessToken();
 
-  // If it's an auth request, skip intercepting
-  if (req.url.includes('/auth/')) {
+  // If it's an auth request, skip adding headers
+  if (req.url.includes(API_CONFIG.endpoints.auth.base)) {
     return next(req);
   }
 
-  // Check if token needs refresh (< 5 min)
+  // Proactive check: if token exists and is about to expire (< 5 min), refresh it
   if (token) {
     try {
       const decoded: any = jwtDecode(token);
@@ -22,8 +27,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
       const fiveMinutes = 5 * 60 * 1000;
 
       if (expirationTime - now < fiveMinutes) {
-        console.log('[AuthInterceptor] Token expires soon. Triggering automatic refresh...');
-        // Token is about to expire, refresh it first
+        console.log('[AuthInterceptor] Token expires soon. Proactively refreshing...');
         return from(authService.refresh()).pipe(
           switchMap((newToken) => {
             const authReq = req.clone({
@@ -42,7 +46,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
     }
   }
 
-  // Normal request with token
+  // Normal request: add token if available
   let authReq = req;
   if (token) {
     authReq = req.clone({
@@ -50,24 +54,5 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
     });
   }
 
-  return next(authReq).pipe(
-    catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
-        // Unauthorized, attempt refresh
-        return from(authService.refresh()).pipe(
-          switchMap((newToken) => {
-            const retryReq = req.clone({
-              setHeaders: { Authorization: `Bearer ${newToken}` }
-            });
-            return next(retryReq);
-          }),
-          catchError((refreshError) => {
-            authService.logout();
-            return throwError(() => refreshError);
-          })
-        );
-      }
-      return throwError(() => error);
-    })
-  );
+  return next(authReq);
 };
