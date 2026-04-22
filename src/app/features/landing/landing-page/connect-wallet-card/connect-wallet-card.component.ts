@@ -23,10 +23,10 @@ import { WalletService } from '../../../../core/services/wallet.service';
             </div>
 
             <div class="card-text">
-              <h2 class="card-title">Pronto para começar?</h2>
+              <h2 class="card-title">Ready to get started?</h2>
               <p class="card-desc">
-                Conecte sua carteira Stellar em segundos e tenha acesso a todas as Arenas.
-                Sem e-mail. Sem senha. Só você e sua carteira.
+                Connect your Stellar wallet in seconds and access all Arenas.
+                No email. No password. Just you and your wallet.
               </p>
             </div>
 
@@ -40,7 +40,7 @@ import { WalletService } from '../../../../core/services/wallet.service';
               >
                 <span *ngIf="!isConnecting()" class="btn-icon">⚡</span>
                 <span class="spinner" *ngIf="isConnecting()"></span>
-                {{ isConnecting() ? 'Conectando carteira...' : 'Conectar Carteira Agora' }}
+                {{ isConnecting() ? 'Connecting wallet...' : 'Connect Wallet Now' }}
               </button>
 
               <div *ngIf="errorMsg()" class="error-msg">
@@ -48,7 +48,7 @@ import { WalletService } from '../../../../core/services/wallet.service';
               </div>
 
               <div class="wallet-hints">
-                <span>Suportamos:</span>
+                <span>We support:</span>
                 <span class="wallet-pill">Freighter</span>
                 <span class="wallet-pill">xBull</span>
                 <span class="wallet-pill">Albedo</span>
@@ -67,19 +67,19 @@ import { WalletService } from '../../../../core/services/wallet.service';
             </div>
 
             <div class="card-text">
-              <h2 class="card-title">Carteira conectada!</h2>
+              <h2 class="card-title">Wallet connected!</h2>
               <p class="card-desc">
-                Bem-vindo, <strong>{{ shortAddress() }}</strong>.<br>
-                Você já pode participar de todas as Arenas.
+                Welcome, <strong>{{ shortAddress() }}</strong>.<br>
+                You can now participate in all Arenas.
               </p>
             </div>
 
             <div class="card-actions">
               <a routerLink="/arena" id="cta-go-arena-btn" class="big-connect-btn connected-btn">
-                🏆 Ir para a Arena
+                🏆 Go to Arena
               </a>
               <button (click)="logout()" class="logout-link">
-                Desconectar carteira
+                Disconnect wallet
               </button>
             </div>
           </ng-container>
@@ -333,7 +333,7 @@ export class ConnectWalletCardComponent {
     try {
       await this.auth.login();
     } catch (e: any) {
-      this.errorMsg.set(e?.message || 'Falha ao conectar. Tente novamente.');
+      this.errorMsg.set(e?.message || 'Failed to connect. Please try again.');
     }
   }
 
@@ -344,18 +344,18 @@ export class ConnectWalletCardComponent {
   testimonials = [
     {
       avatar: '🧑‍💻',
-      text: 'Conectei em menos de 1 minuto com o Freighter. Fiz minha primeira aposta e já vi a doação confirmada on-chain.',
-      author: 'Carlos M., apostador desde Jan/25'
+      text: 'Connected in under a minute with Freighter. Made my first stake and already saw the donation confirmed on-chain.',
+      author: 'Carlos M., staker since Jan/25'
     },
     {
       avatar: '🧕',
-      text: 'Nunca pensei que investir em causas sociais pudesse ser tão direto e transparente. Incrível!',
-      author: 'Ana R., usuária verificada'
+      text: 'I never thought investing in social causes could be this direct and transparent. Amazing!',
+      author: 'Ana R., verified user'
     },
     {
       avatar: '🏢',
-      text: 'Nosso parceiro perfeito para impacto verificável. As métricas on-chain nos poupam horas de relatórios.',
-      author: 'ONG Médicos Solidários'
+      text: 'Our perfect partner for verifiable impact. The on-chain metrics save us hours of reporting.',
+      author: 'Doctors Solidarity NGO'
     }
   ];
 }

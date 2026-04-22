@@ -17,10 +17,10 @@ interface Feature {
       <div class="features-inner">
         <!-- Section header -->
         <div class="section-header">
-          <span class="section-tag">Como Funciona</span>
-          <h2 class="section-title">Mercado Preditivo com <span class="accent">Propósito</span></h2>
+          <span class="section-tag">How It Works</span>
+          <h2 class="section-title">Predictive Markets with <span class="accent">Purpose</span></h2>
           <p class="section-desc">
-            Uma plataforma onde cada aposta financia causas reais. Quanto mais precisa sua previsão, maior o impacto.
+            A platform where every stake funds real causes. The more accurate your prediction, the greater the impact.
           </p>
         </div>
 
@@ -284,36 +284,36 @@ export class FeaturesGridComponent {
   features: Feature[] = [
     {
       icon: '🎯',
-      title: 'Preveja com propósito',
-      description: 'Participe de mercados preditivos onde cada aposta tem impacto real. Sua carteira Stellar é tudo que você precisa — sem burocracia, sem intermediários.',
-      tag: 'Destaque'
+      title: 'Predict with purpose',
+      description: 'Join predictive markets where every stake has real-world impact. Your Stellar wallet is all you need — no bureaucracy, no middlemen.',
+      tag: 'Featured'
     },
     {
       icon: '🔗',
-      title: 'Blockchain Transparente',
-      description: 'Todas as apostas e resultados ficam registrados na Stellar. Auditável por qualquer pessoa a qualquer momento.'
+      title: 'Transparent Blockchain',
+      description: 'All stakes and outcomes are recorded on Stellar. Auditable by anyone, at any time.'
     },
     {
       icon: '🤝',
-      title: 'ONGs verificadas',
-      description: 'Trabalhamos somente com organizações verificadas. Seu dinheiro vai direto ao destino certo.'
+      title: 'Verified NGOs',
+      description: 'We work only with verified organizations. Your funds go exactly where they should.'
     },
     {
       icon: '⚡',
-      title: 'Transações Instantâneas',
-      description: 'Stellar finaliza transações em ~5 segundos com taxas mínimas. Nada de esperar dias pelo seu saldo.'
+      title: 'Instant Transactions',
+      description: 'Stellar finalizes transactions in ~5 seconds with minimal fees. No more waiting days for your balance.'
     },
     {
       icon: '📊',
-      title: 'Oracle de Impacto',
-      description: 'Dados de impacto verificados e publicados on-chain. Previsões corretamente baseadas em resultados reais.'
+      title: 'Impact Oracle',
+      description: 'Verified impact data published on-chain. Predictions accurately grounded in real-world outcomes.'
     }
   ];
 
   steps = [
-    { title: 'Conecte a Carteira', desc: 'Freighter, xBull, Albedo...' },
-    { title: 'Escolha uma Arena', desc: 'Tópico + ONG beneficiada' },
-    { title: 'Faça sua Previsão', desc: 'Aposte XLM no resultado' },
-    { title: 'Impacto Real', desc: 'Prêmio + doação confirmados' },
+    { title: 'Connect Wallet', desc: 'Freighter, xBull, Albedo...' },
+    { title: 'Choose an Arena', desc: 'Topic + beneficiary NGO' },
+    { title: 'Make your Prediction', desc: 'Stake XLM on the outcome' },
+    { title: 'Real Impact', desc: 'Prize + donation confirmed' },
   ];
 }

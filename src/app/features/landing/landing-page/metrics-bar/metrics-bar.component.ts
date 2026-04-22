@@ -117,10 +117,10 @@ interface Metric {
 })
 export class MetricsBarComponent {
   metrics: Metric[] = [
-    { icon: '🏆', value: 'R$ 248k', label: 'Distribuídos', trend: '+12%' },
-    { icon: '🧑‍🤝‍🧑', value: '1.340', label: 'Apostadores', trend: '+8%' },
-    { icon: '🎯', value: '47', label: 'Arenas ativas' },
-    { icon: '🤝', value: '12', label: 'ONGs parceiras', trend: '+3' },
-    { icon: '⭐', value: '98.6%', label: 'Satisfação' },
+    { icon: '🏆', value: '$248k', label: 'Distributed', trend: '+12%' },
+    { icon: '🧑‍🤝‍🧑', value: '1,340', label: 'Stakers', trend: '+8%' },
+    { icon: '🎯', value: '47', label: 'Active Arenas' },
+    { icon: '🤝', value: '12', label: 'Partner NGOs', trend: '+3' },
+    { icon: '⭐', value: '98.6%', label: 'Satisfaction' },
   ];
 }

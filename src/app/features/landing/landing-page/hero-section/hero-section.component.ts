@@ -23,14 +23,14 @@ import { WalletService } from '../../../../core/services/wallet.service';
 
         <!-- Headline -->
         <h1 class="headline">
-          Mercado Preditivo<br>
-          com <span class="highlight">Impacto Social</span>
+          Predictive Markets<br>
+          for <span class="highlight">Social Impact</span>
         </h1>
 
         <!-- Subheadline -->
         <p class="subheadline">
-          Aposte com sua carteira Stellar, gere impacto real e comprove resultados na blockchain.
-          <strong>Previsões transparentes. Filantropia verificável.</strong>
+          Stake with your Stellar wallet, generate real impact and verify outcomes on-chain.
+          <strong>Transparent predictions. Verifiable philanthropy.</strong>
         </p>
 
         <!-- CTA Row -->
@@ -46,18 +46,18 @@ import { WalletService } from '../../../../core/services/wallet.service';
           >
             <span class="btn-icon" *ngIf="!isConnecting()">⚡</span>
             <span class="loader" *ngIf="isConnecting()"></span>
-            <span>{{ isConnecting() ? 'Conectando...' : 'Conectar Carteira' }}</span>
+            <span>{{ isConnecting() ? 'Connecting...' : 'Connect Wallet' }}</span>
           </button>
 
           <!-- Connected state -->
           <div *ngIf="isLoggedIn()" class="connected-badge">
             <span class="connected-dot"></span>
-            Carteira Conectada — <a routerLink="/arena" class="go-arena">Ir para Arena →</a>
+            Wallet Connected — <a routerLink="/arena" class="go-arena">Go to Arena →</a>
           </div>
 
           <!-- Learn More (smooth scroll) -->
           <a href="#features" class="btn-secondary" id="hero-learn-more-btn">
-            Como funciona
+            How it works
           </a>
         </div>
 
@@ -68,9 +68,9 @@ import { WalletService } from '../../../../core/services/wallet.service';
 
         <!-- Trust signals -->
         <div class="trust-row">
-          <div class="trust-item">🔒 Não custodial</div>
+          <div class="trust-item">🔒 Non-custodial</div>
           <div class="trust-item">📜 Open source</div>
-          <div class="trust-item">💸 Sem taxas ocultas</div>
+          <div class="trust-item">💸 No hidden fees</div>
         </div>
       </div>
 
@@ -78,27 +78,27 @@ import { WalletService } from '../../../../core/services/wallet.service';
       <div class="hero-visual">
         <div class="card-mockup">
           <div class="card-header">
-            <span class="card-tag">🏆 Arena Ativa</span>
-            <span class="card-prize">R$ 5.200 em jogo</span>
+            <span class="card-tag">🏆 Active Arena</span>
+            <span class="card-prize">$5,200 at stake</span>
           </div>
           <div class="card-question">
-            Qual ONG atingirá sua meta de arrecadação até dezembro de 2025?
+            Which NGO will reach its fundraising goal by December 2025?
           </div>
           <div class="card-options">
             <div class="option option-a">
-              <span class="opt-label">Médicos Sem Fronteiras</span>
+              <span class="opt-label">Doctors Without Borders</span>
               <span class="opt-pct">62%</span>
               <div class="opt-bar"><div class="opt-fill" style="width:62%"></div></div>
             </div>
             <div class="option option-b">
-              <span class="opt-label">Cruz Vermelha BR</span>
+              <span class="opt-label">Red Cross BR</span>
               <span class="opt-pct">38%</span>
               <div class="opt-bar"><div class="opt-fill opt-fill-b" style="width:38%"></div></div>
             </div>
           </div>
           <div class="card-footer">
-            <span class="card-timer">⏰ 47 dias restantes</span>
-            <span class="card-participants">👥 138 apostadores</span>
+            <span class="card-timer">⏰ 47 days left</span>
+            <span class="card-participants">👥 138 stakers</span>
           </div>
         </div>
       </div>
@@ -468,7 +468,7 @@ export class HeroSectionComponent {
     try {
       await this.auth.login();
     } catch (e: any) {
-      this.errorMsg = e?.message || 'Falha ao conectar carteira. Tente novamente.';
+      this.errorMsg = e?.message || 'Failed to connect wallet. Please try again.';
     }
   }
 }
