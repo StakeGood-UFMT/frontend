@@ -1,14 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { TopBarComponent } from '../top-bar/top-bar.component';
 import { SideBarComponent } from '../side-bar/side-bar.component';
-import { BottomBarComponent } from '../bottom-bar/bottom-bar.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, TopBarComponent, SideBarComponent, BottomBarComponent],
+  imports: [CommonModule, RouterOutlet, TopBarComponent, SideBarComponent],
   template: `
     <div class="app-container">
       <app-top-bar></app-top-bar>
@@ -18,7 +18,6 @@ import { BottomBarComponent } from '../bottom-bar/bottom-bar.component';
           <router-outlet></router-outlet>
         </main>
       </div>
-      <app-bottom-bar></app-bottom-bar>
     </div>
   `,
   styles: [`
@@ -26,7 +25,7 @@ import { BottomBarComponent } from '../bottom-bar/bottom-bar.component';
       display: flex;
       flex-direction: column;
       height: 100vh;
-      width: 100vw;
+      width: 100%;
       overflow: hidden;
     }
     .layout-body {
@@ -38,13 +37,15 @@ import { BottomBarComponent } from '../bottom-bar/bottom-bar.component';
       flex: 1;
       padding: 1.5rem;
       overflow-y: auto;
-      background: var(--bg-color);
+      background: #F6F8F7;
+      transition: all 0.3s ease;
     }
-    @media (max-width: 768px) {
-      .main-content {
-        padding: 1rem;
-      }
+    .full-width {
+      padding: 0;
     }
   `]
 })
-export class AppShellComponent {}
+export class AppShellComponent {
+  private auth = inject(AuthService);
+  public isLoggedIn = this.auth.isLoggedIn;
+}

@@ -1,39 +1,68 @@
-import { Component, inject } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { WalletService } from '../../services/wallet.service';
+import { RouterModule } from '@angular/router';
+import { WalletConnect } from '../../../shared/components/wallet-connect';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-top-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule, WalletConnect],
   template: `
     <header class="top-bar">
       <div class="logo">
         <span class="brand">StakeGood</span>
       </div>
-      <div class="actions">
-        <button *ngIf="!(walletService.publicKey$ | async)" (click)="walletService.connect()" class="btn-primary">
-          Connect Wallet
+      
+      <!-- Hamburger Menu Toggle (Mobile) -->
+      <div class="mobile-menu">
+        <button (click)="toggleMenu()" class="hamburger-btn">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
         </button>
         
-        <div *ngIf="walletService.publicKey$ | async as address" class="wallet-container">
-          <div class="wallet-info">
-            <span class="status-dot"></span>
-            {{ address | slice:0:6 }}...{{ address | slice:-4 }}
+        <div *ngIf="isMenuOpen()" class="mobile-drawer-overlay" (click)="toggleMenu()">
+          <div class="drawer" (click)="$event.stopPropagation()">
+            <div class="drawer-header">
+              <h3>StakeGood</h3>
+              <button (click)="toggleMenu()" class="close-btn">&times;</button>
+            </div>
+            
+            <div class="drawer-content">
+              <!-- Navigation Links -->
+              <nav class="drawer-nav">
+                <a routerLink="/landing" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
+                  <span class="icon">🏠</span>
+                  <span class="label">Home</span>
+                </a>
+                <a routerLink="/arena" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
+                  <span class="icon">🏆</span>
+                  <span class="label">Arena</span>
+                </a>
+                <a *ngIf="isLoggedIn()" routerLink="/profile" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
+                  <span class="icon">👤</span>
+                  <span class="label">Profile</span>
+                </a>
+              </nav>
+
+              <div class="drawer-divider"></div>
+
+              <!-- Wallet Section -->
+              <div class="wallet-section">
+                <app-wallet-connect></app-wallet-connect>
+              </div>
+            </div>
           </div>
-          <button (click)="walletService.disconnect()" class="btn-disconnect" title="Disconnect">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-          </button>
         </div>
       </div>
     </header>
   `,
   styles: [`
     .top-bar {
-      height: 72px;
-      padding: 0 2rem;
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(10px);
+      height: 64px;
+      padding: 0 1.5rem;
+      background: #FFFFFF;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -43,74 +72,146 @@ import { WalletService } from '../../services/wallet.service';
       z-index: 100;
     }
     .brand {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 800;
-      letter-spacing: -0.025em;
-      background: linear-gradient(135deg, var(--primary-color), #0eb878);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #11D48A;
     }
-    .btn-primary {
-      background: var(--primary-color);
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: var(--border-radius-sm);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(17, 212, 138, 0.2);
+    .mobile-menu {
+      display: none;
     }
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(17, 212, 138, 0.3);
-      background: #0eb878;
-    }
-    .wallet-container {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      background: var(--bg-color);
-      padding: 0.5rem;
-      padding-left: 1rem;
-      border-radius: var(--border-radius-sm);
-      border: 1px solid rgba(0,0,0,0.05);
-    }
-    .wallet-info {
-      font-size: 0.875rem;
-      font-weight: 600;
-      font-family: 'JetBrains Mono', monospace;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--text-color);
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--primary-color);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--primary-color);
-    }
-    .btn-disconnect {
-      background: rgba(0,0,0,0.05);
-      border: none;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      cursor: pointer;
-      color: #666;
-      transition: all 0.2s ease;
-    }
-    .btn-disconnect:hover {
-      background: #fee2e2;
-      color: #ef4444;
+
+    @media (max-width: 768px) {
+      .mobile-menu {
+        display: block;
+      }
+
+      /* Hamburger Styles */
+      .hamburger-btn {
+        background: none;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        cursor: pointer;
+        padding: 10px;
+      }
+      .bar {
+        width: 28px;
+        height: 3px;
+        background-color: #111815;
+        border-radius: 2px;
+      }
+
+      .mobile-drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+      }
+
+      .drawer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 85%;
+        max-width: 320px;
+        height: 100%;
+        background: #F6F8F7;
+        box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      .drawer-header {
+        padding: 24px;
+        background: #FFFFFF;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+      }
+
+      .drawer-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #11D48A;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 2rem;
+        cursor: pointer;
+        color: #9ca3af;
+        line-height: 1;
+      }
+
+      .drawer-content {
+        padding: 16px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .drawer-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .drawer-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        text-decoration: none;
+        color: #4b5563;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
+
+      .drawer-item:hover, .drawer-item.active {
+        background: #FFFFFF;
+        color: #11D48A;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      }
+
+      .drawer-item .icon {
+        margin-right: 12px;
+        font-size: 1.25rem;
+      }
+
+      .drawer-divider {
+        height: 1px;
+        background: rgba(0,0,0,0.05);
+        margin: 10px 0;
+      }
+
+      .wallet-section {
+        margin-top: auto;
+        padding-bottom: 20px;
+      }
+
+      @keyframes slideIn {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+      }
     }
   `]
 })
 export class TopBarComponent {
-  walletService = inject(WalletService);
+  public isMenuOpen = signal(false);
+  private auth = inject(AuthService);
+  public isLoggedIn = this.auth.isLoggedIn;
+
+  toggleMenu() {
+    this.isMenuOpen.update(v => !v);
+  }
 }

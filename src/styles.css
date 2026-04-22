@@ -1,35 +1,29 @@
-:root {
-  --primary-color: #11D48A;
-  --bg-color: #F6F8F7;
-  --text-color: #111815;
-  --surface-color: #ffffff;
-  --border-radius-sm: 12px;
-  --border-radius-lg: 16px;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
-}
-
-html, body {
-  height: 100%;
+/* Global styles and reset */
+* {
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-}
-
-* {
   box-sizing: border-box;
 }
 
-ul, ol {
-  list-style: none;
+html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Prevent body scroll, shell handles it */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #F6F8F7;
+  color: #111815;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  color: var(--text-color);
-  margin: 0;
+:root {
+  --primary-color: #11D48A;
+  --secondary-color: #111815;
+  --bg-color: #F6F8F7;
+  --surface-color: #FFFFFF;
+  --text-color: #111815;
+  --text-muted: #6B7280;
+  --error-color: #CC5A37;
+  --border-radius: 12px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
