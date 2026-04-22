@@ -19,6 +19,11 @@ export const routes: Routes = [
         canActivate: [authGuard, termsGuard, kycGuard],
         loadComponent: () => import('./features/arena/arena.component').then(m => m.ArenaComponent) 
       },
+      {
+        path: 'arena/:id',
+        canActivate: [authGuard, termsGuard, kycGuard],
+        loadComponent: () => import('./features/arena/market-detail/market-detail.component').then(m => m.MarketDetailComponent)
+      },
       { 
         path: 'profile', 
         canActivate: [authGuard],
