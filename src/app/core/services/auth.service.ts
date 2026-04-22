@@ -49,6 +49,7 @@ export class AuthService {
       const response = await lastValueFrom(
         this.http.post<AuthResponse>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.verify}`, {
           wallet: walletAddress,
+          nonce: nonce,
           signature: signature
         })
       );
