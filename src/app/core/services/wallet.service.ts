@@ -14,7 +14,27 @@ export class WalletService {
   constructor() {
     StellarWalletsKit.init({
       network: Networks[environment.stellar.network as keyof typeof Networks] || Networks.TESTNET,
-      modules: defaultModules()
+      modules: defaultModules(),
+      theme: {
+        // StakeGood brand theme
+        'background': '#111815',
+        'background-secondary': '#0d1f17',
+        'foreground-strong': '#ffffff',
+        'foreground': '#f1f5f2',
+        'foreground-secondary': '#9ca3af',
+        'primary': '#11D48A',
+        'primary-foreground': '#111815',
+        'transparent': 'rgba(0,0,0,0)',
+        'lighter': '#1a2e26',
+        'light': '#162820',
+        'light-gray': 'rgba(255,255,255,0.08)',
+        'gray': 'rgba(255,255,255,0.15)',
+        'danger': 'oklch(57.7% 0.245 27.325)',
+        'border': 'rgba(17,212,138,0.15)',
+        'shadow': '0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(17,212,138,0.1)',
+        'border-radius': '1rem',
+        'font-family': "'Inter', 'system-ui', sans-serif",
+      }
     });
   }
 
