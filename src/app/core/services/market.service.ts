@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { API_CONFIG } from '../config/api.config';
 import { Market, MarketListResponse, MarketCategory, MarketHistoryPoint } from '../models/market.model';
 
 export interface MarketFiltersState {
@@ -14,7 +15,7 @@ export interface MarketFiltersState {
 })
 export class MarketService {
   private http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/markets`;
+  private readonly baseUrl = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.base}`;
 
   // State signals
   private _markets = signal<Market[]>([]);
@@ -82,11 +83,11 @@ export class MarketService {
 
   // FE-6 Methods
   getMarket(id: string) {
-    return this.http.get<Market>(`${this.baseUrl}/${id}`);
+    return this.http.get<Market>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.detail(id)}`);
   }
 
   getMarketHistory(id: string, range: string = '1D') {
     const params = new HttpParams().set('range', range);
-    return this.http.get<MarketHistoryPoint[]>(`${this.baseUrl}/${id}/history`, { params });
+    return this.http.get<MarketHistoryPoint[]>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.history(id)}`, { params });
   }
 }

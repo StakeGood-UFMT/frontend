@@ -1,5 +1,6 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent, HttpResponse } from '@angular/common/http';
 import { Observable, of, delay } from 'rxjs';
+import { API_CONFIG } from '../config/api.config';
 import { Market, MarketListResponse } from '../models/market.model';
 
 const MOCK_MARKETS: Market[] = [
@@ -185,7 +186,7 @@ const MOCK_MARKETS: Market[] = [
 ];
 
 export const mockMarketInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
-  if (!req.url.includes('/markets')) {
+  if (!req.url.startsWith(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.base}`)) {
     return next(req);
   }
 
@@ -225,7 +226,7 @@ export const mockMarketInterceptor: HttpInterceptorFn = (req: HttpRequest<unknow
   }
 
   // GET /api/v1/markets
-  if (req.method === 'GET' && req.url.endsWith('/markets')) {
+  if (req.method === 'GET' && req.url === `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.base}`) {
     const response: MarketListResponse = {
       markets: MOCK_MARKETS,
       total: MOCK_MARKETS.length,

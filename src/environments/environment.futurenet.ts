@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://api.stakegood.org/api/v1',
+  apiBaseUrl: 'https://api.stakegood.org',
+  apiVersion: 'v1',
   useMock: false,
   stellar: {
     network: 'FUTURENET',

@@ -2,6 +2,7 @@ import { Injectable, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { API_CONFIG } from '../config/api.config';
 import { AuthState, AuthResponse, AuthProfile } from '../models/auth.model';
 import { AuthStorageService } from './auth-storage.service';
 import { WalletService } from './wallet.service';
@@ -15,12 +16,13 @@ import { map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly baseUrl = `${environment.apiUrl}/auth`;
+  private readonly baseUrl = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.base}`;
   
   private http = inject(HttpClient);
   private storage = inject(AuthStorageService);
   private wallet = inject(WalletService);
   private store = inject(Store);
+  private refreshTokenPromise: Promise<string> | null = null;
 
   public isLoggedIn = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
   public profile = toSignal(this.store.select(selectProfile), { initialValue: null as AuthProfile | null });
@@ -35,7 +37,7 @@ export class AuthService {
 
       // 2. GET Nonce
       const { nonce } = await lastValueFrom(
-        this.http.get<{ nonce: string }>(`${this.baseUrl}/nonce`, {
+        this.http.get<{ nonce: string }>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.nonce}`, {
           params: { wallet: walletAddress }
         })
       );
@@ -45,7 +47,7 @@ export class AuthService {
 
       // 4. POST Verify (Authenticate)
       const response = await lastValueFrom(
-        this.http.post<AuthResponse>(`${this.baseUrl}/verify`, {
+        this.http.post<AuthResponse>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.verify}`, {
           wallet: walletAddress,
           signature: signature
         })
@@ -67,6 +69,10 @@ export class AuthService {
   }
 
   async refresh(): Promise<string> {
+    if (this.refreshTokenPromise) {
+      return this.refreshTokenPromise;
+    }
+
     const currentState = this.storage.load();
     const refreshToken = currentState?.refreshToken;
     if (!refreshToken) {
@@ -74,25 +80,31 @@ export class AuthService {
       throw new Error('No refresh token available');
     }
 
-    try {
-      const response = await lastValueFrom(
-        this.http.post<AuthResponse>(`${this.baseUrl}/refresh`, {
-          refresh_token: refreshToken
-        })
-      );
+    this.refreshTokenPromise = (async () => {
+      try {
+        const response = await lastValueFrom(
+          this.http.post<AuthResponse>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.refresh}`, {
+            refresh_token: refreshToken
+          })
+        );
 
-      this.store.dispatch(AuthActions.loginSuccess({
-        accessToken: response.access_token,
-        refreshToken: response.refresh_token,
-        profile: response.profile
-      }));
-      
-      return response.access_token;
-    } catch (error) {
-      console.error('[AuthService] Token refresh failed', error);
-      this.logout();
-      throw error;
-    }
+        this.store.dispatch(AuthActions.loginSuccess({
+          accessToken: response.access_token,
+          refreshToken: response.refresh_token,
+          profile: response.profile
+        }));
+        
+        return response.access_token;
+      } catch (error) {
+        console.error('[AuthService] Token refresh failed', error);
+        this.logout();
+        throw error;
+      } finally {
+        this.refreshTokenPromise = null;
+      }
+    })();
+
+    return this.refreshTokenPromise;
   }
 
   logout() {

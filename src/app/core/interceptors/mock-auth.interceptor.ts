@@ -1,16 +1,17 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent, HttpResponse } from '@angular/common/http';
 import { Observable, of, delay } from 'rxjs';
+import { API_CONFIG } from '../config/api.config';
 
 export const mockAuthInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
-  // Only intercept if the URL contains /api/v1/auth/
-  if (!req.url.includes('/api/v1/auth/')) {
+  // Only intercept if the URL matches the full auth base path (including version)
+  if (!req.url.startsWith(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.base}`)) {
     return next(req);
   }
 
   console.log(`[MockAuthInterceptor] Intercepting ${req.method} ${req.url}`);
 
   // 1. GET /nonce
-  if (req.method === 'GET' && req.url.endsWith('/auth/nonce')) {
+  if (req.method === 'GET' && req.url === `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.nonce}`) {
     const wallet = req.params.get('wallet') || 'unknown';
     return of(new HttpResponse({
       status: 200,
@@ -21,7 +22,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>
   }
 
   // 2. POST /verify
-  if (req.method === 'POST' && req.url.endsWith('/auth/verify')) {
+  if (req.method === 'POST' && req.url === `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.verify}`) {
     const body: any = req.body;
     // Create a mock JWT (header.payload.signature)
     const payload = btoa(JSON.stringify({
@@ -46,7 +47,7 @@ export const mockAuthInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>
   }
 
   // 3. POST /refresh
-  if (req.method === 'POST' && req.url.endsWith('/auth/refresh')) {
+  if (req.method === 'POST' && req.url === `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.refresh}`) {
     const payload = btoa(JSON.stringify({
       exp: Math.floor(Date.now() / 1000) + 3600,
       public_key: 'GA...MOCK'
