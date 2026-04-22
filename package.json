@@ -19,6 +19,8 @@
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
     "@creit.tech/stellar-wallets-kit": "^2.1.0",
+    "@ngrx/effects": "^17.2.0",
+    "@ngrx/store": "^17.2.0",
     "@stellar/stellar-sdk": "^15.0.1",
     "buffer": "^6.0.3",
     "jwt-decode": "^4.0.0",

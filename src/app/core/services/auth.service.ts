@@ -1,10 +1,15 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthState, AuthResponse, AuthProfile } from '../models/auth.model';
 import { AuthStorageService } from './auth-storage.service';
 import { WalletService } from './wallet.service';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { selectIsLoggedIn, selectProfile, selectAuthState } from '../store/auth/auth.selectors';
+import * as AuthActions from '../store/auth/auth.actions';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -12,31 +17,16 @@ import { WalletService } from './wallet.service';
 export class AuthService {
   private readonly baseUrl = `${environment.apiUrl}/auth`;
   
-  private state = signal<AuthState>({
-    accessToken: null,
-    refreshToken: null,
-    profile: null,
-    isLoggedIn: false
-  });
+  private http = inject(HttpClient);
+  private storage = inject(AuthStorageService);
+  private wallet = inject(WalletService);
+  private store = inject(Store);
 
-  public isLoggedIn = computed(() => this.state().isLoggedIn);
-  public profile = computed(() => this.state().profile);
-  public accessToken = computed(() => this.state().accessToken);
+  public isLoggedIn = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
+  public profile = toSignal(this.store.select(selectProfile), { initialValue: null as AuthProfile | null });
+  public accessToken = toSignal(this.store.select(selectAuthState).pipe(map(s => s.accessToken)), { initialValue: null as string | null });
 
-  constructor(
-    private http: HttpClient,
-    private storage: AuthStorageService,
-    private wallet: WalletService
-  ) {
-    this.init();
-  }
-
-  private init() {
-    const saved = this.storage.load();
-    if (saved) {
-      this.state.set(saved);
-    }
-  }
+  constructor() {}
 
   async login(): Promise<void> {
     try {
@@ -51,8 +41,6 @@ export class AuthService {
       );
 
       // 3. Sign Nonce
-      // Note: The backend usually expects the signature of the nonce string.
-      // Depending on the implementation, we might need to sign a transaction or a blob.
       const signature = await this.wallet.sign(nonce);
 
       // 4. POST Verify (Authenticate)
@@ -63,16 +51,12 @@ export class AuthService {
         })
       );
 
-      // 5. Update State and Storage
-      const newState: AuthState = {
+      // 5. Update State via NgRx Action
+      this.store.dispatch(AuthActions.loginSuccess({
         accessToken: response.access_token,
         refreshToken: response.refresh_token,
-        profile: response.profile,
-        isLoggedIn: true
-      };
-      
-      this.state.set(newState);
-      this.storage.save(newState);
+        profile: response.profile
+      }));
       
       console.log('[AuthService] Login successful', response.profile.public_key);
     } catch (error) {
@@ -83,7 +67,8 @@ export class AuthService {
   }
 
   async refresh(): Promise<string> {
-    const refreshToken = this.state().refreshToken;
+    const currentState = this.storage.load();
+    const refreshToken = currentState?.refreshToken;
     if (!refreshToken) {
       this.logout();
       throw new Error('No refresh token available');
@@ -96,15 +81,11 @@ export class AuthService {
         })
       );
 
-      const newState: AuthState = {
-        ...this.state(),
+      this.store.dispatch(AuthActions.loginSuccess({
         accessToken: response.access_token,
         refreshToken: response.refresh_token,
         profile: response.profile
-      };
-
-      this.state.set(newState);
-      this.storage.save(newState);
+      }));
       
       return response.access_token;
     } catch (error) {
@@ -115,13 +96,7 @@ export class AuthService {
   }
 
   logout() {
-    this.state.set({
-      accessToken: null,
-      refreshToken: null,
-      profile: null,
-      isLoggedIn: false
-    });
-    this.storage.clear();
+    this.store.dispatch(AuthActions.logout());
     this.wallet.disconnect();
   }
 }
