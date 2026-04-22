@@ -23,6 +23,7 @@
     "@ngrx/store": "^17.2.0",
     "@stellar/stellar-sdk": "^15.0.1",
     "buffer": "^6.0.3",
+    "chart.js": "^4.5.1",
     "jwt-decode": "^4.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

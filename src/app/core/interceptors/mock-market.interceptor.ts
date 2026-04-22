@@ -14,7 +14,13 @@ const MOCK_MARKETS: Market[] = [
     no_price: 0.38,
     total_volume: 284500,
     lock_ts: '2026-06-30T23:59:59Z',
-    created_at: '2026-01-15T10:00:00Z'
+    created_at: '2026-01-15T10:00:00Z',
+    resolution_rule: 'Bitcoin price will be determined by the Binance BTC/USDT daily close price.',
+    resolution_source: 'Binance API',
+    oracle_url: 'https://api.binance.com',
+    fee_ngo: 1.5,
+    fee_platform: 2.0,
+    fee_gamification: 0.5
   },
   {
     id: 'mkt-002',
@@ -27,47 +33,27 @@ const MOCK_MARKETS: Market[] = [
     no_price: 0.55,
     total_volume: 156200,
     lock_ts: '2026-12-31T23:59:59Z',
-    created_at: '2026-02-01T08:30:00Z'
+    created_at: '2026-02-01T08:30:00Z',
+    resolution_rule: 'Based on official FIFA press release or website announcement.',
+    resolution_source: 'FIFA.com',
+    fee_ngo: 1.0,
+    fee_platform: 2.5,
+    fee_gamification: 0.5
   },
-  {
-    id: 'mkt-003',
-    title: 'Will Ethereum transition to full danksharding in 2026?',
-    description: 'Resolves YES if Ethereum mainnet implements full danksharding before December 31, 2026.',
-    category: 'CRYPTO',
-    status: 'OPEN',
+  ...[
+    { id: 'mkt-003', title: 'Will Ethereum transition to full danksharding in 2026?', category: 'CRYPTO' as const, yes_price: 0.28, no_price: 0.72, total_volume: 98300, lock_ts: '2026-12-31T23:59:59Z', created_at: '2026-01-20T14:00:00Z', description: 'Resolves YES if Ethereum mainnet implements full danksharding before December 31, 2026.' },
+    { id: 'mkt-004', title: 'Will the US Federal Reserve cut rates before June 2026?', category: 'ECONOMICS' as const, yes_price: 0.71, no_price: 0.29, total_volume: 412000, lock_ts: '2026-05-31T23:59:59Z', created_at: '2026-01-10T09:00:00Z', description: 'Resolves YES if the Federal Reserve announces a rate cut at any FOMC meeting before June 1, 2026.' },
+    { id: 'mkt-005', title: 'Will a new manned Moon landing happen before 2027?', category: 'SCIENCE' as const, yes_price: 0.35, no_price: 0.65, total_volume: 67800, lock_ts: '2026-12-31T23:59:59Z', created_at: '2026-03-01T11:00:00Z', description: 'Resolves YES if any nation successfully lands astronauts on the Moon before January 1, 2027.' },
+  ].map(m => ({
+    ...m,
+    status: 'OPEN' as const,
     image_url: '',
-    yes_price: 0.28,
-    no_price: 0.72,
-    total_volume: 98300,
-    lock_ts: '2026-12-31T23:59:59Z',
-    created_at: '2026-01-20T14:00:00Z'
-  },
-  {
-    id: 'mkt-004',
-    title: 'Will the US Federal Reserve cut rates before June 2026?',
-    description: 'Resolves YES if the Federal Reserve announces a rate cut at any FOMC meeting before June 1, 2026.',
-    category: 'ECONOMICS',
-    status: 'OPEN',
-    image_url: '',
-    yes_price: 0.71,
-    no_price: 0.29,
-    total_volume: 412000,
-    lock_ts: '2026-05-31T23:59:59Z',
-    created_at: '2026-01-10T09:00:00Z'
-  },
-  {
-    id: 'mkt-005',
-    title: 'Will a new manned Moon landing happen before 2027?',
-    description: 'Resolves YES if any nation successfully lands astronauts on the Moon before January 1, 2027.',
-    category: 'SCIENCE',
-    status: 'OPEN',
-    image_url: '',
-    yes_price: 0.35,
-    no_price: 0.65,
-    total_volume: 67800,
-    lock_ts: '2026-12-31T23:59:59Z',
-    created_at: '2026-03-01T11:00:00Z'
-  },
+    resolution_rule: 'Standard resolution rules apply.',
+    resolution_source: 'Official sources',
+    fee_ngo: 1.0,
+    fee_platform: 2.0,
+    fee_gamification: 1.0
+  })),
   {
     id: 'mkt-006',
     title: 'Will the 2026 Oscars Best Picture go to a streaming film?',
@@ -81,7 +67,12 @@ const MOCK_MARKETS: Market[] = [
     lock_ts: '2026-03-01T00:00:00Z',
     resolve_ts: '2026-03-10T02:00:00Z',
     created_at: '2025-12-01T10:00:00Z',
-    outcome: 'YES'
+    outcome: 'YES',
+    resolution_rule: 'Based on Academy Awards results.',
+    resolution_source: 'Oscars.org',
+    fee_ngo: 1.0,
+    fee_platform: 2.0,
+    fee_gamification: 1.0
   },
   {
     id: 'mkt-007',
@@ -94,7 +85,12 @@ const MOCK_MARKETS: Market[] = [
     no_price: 0.61,
     total_volume: 203500,
     lock_ts: '2026-07-15T23:59:59Z',
-    created_at: '2026-02-15T12:00:00Z'
+    created_at: '2026-02-15T12:00:00Z',
+    resolution_rule: 'Based on tournament outcome.',
+    resolution_source: 'CONMEBOL',
+    fee_ngo: 1.0,
+    fee_platform: 2.0,
+    fee_gamification: 1.0
   },
   {
     id: 'mkt-008',
@@ -107,7 +103,12 @@ const MOCK_MARKETS: Market[] = [
     no_price: 0.45,
     total_volume: 134700,
     lock_ts: '2026-06-30T23:59:59Z',
-    created_at: '2026-03-10T15:00:00Z'
+    created_at: '2026-03-10T15:00:00Z',
+    resolution_rule: 'Based on DefiLlama Solana TVL.',
+    resolution_source: 'DefiLlama',
+    fee_ngo: 1.0,
+    fee_platform: 2.0,
+    fee_gamification: 1.0
   },
   {
     id: 'mkt-009',
@@ -120,7 +121,12 @@ const MOCK_MARKETS: Market[] = [
     no_price: 0.78,
     total_volume: 56200,
     lock_ts: '2028-11-01T00:00:00Z',
-    created_at: '2026-04-01T09:00:00Z'
+    created_at: '2026-04-01T09:00:00Z',
+    resolution_rule: 'Based on FEC official results.',
+    resolution_source: 'FEC.gov',
+    fee_ngo: 1.0,
+    fee_platform: 2.0,
+    fee_gamification: 1.0
   },
   {
     id: 'mkt-010',
@@ -133,7 +139,12 @@ const MOCK_MARKETS: Market[] = [
     no_price: 0.19,
     total_volume: 321000,
     lock_ts: '2026-04-15T00:00:00Z',
-    created_at: '2025-11-01T08:00:00Z'
+    created_at: '2025-11-01T08:00:00Z',
+    resolution_rule: 'Based on SpaceX or NASA confirmation.',
+    resolution_source: 'SpaceX.com',
+    fee_ngo: 1.0,
+    fee_platform: 2.0,
+    fee_gamification: 1.0
   },
   {
     id: 'mkt-011',
@@ -146,7 +157,12 @@ const MOCK_MARKETS: Market[] = [
     no_price: 0.33,
     total_volume: 78900,
     lock_ts: '2026-06-30T23:59:59Z',
-    created_at: '2026-02-20T10:00:00Z'
+    created_at: '2026-02-20T10:00:00Z',
+    resolution_rule: 'Based on Official Journal of the EU.',
+    resolution_source: 'europa.eu',
+    fee_ngo: 1.0,
+    fee_platform: 2.0,
+    fee_gamification: 1.0
   },
   {
     id: 'mkt-012',
@@ -159,7 +175,12 @@ const MOCK_MARKETS: Market[] = [
     no_price: 0.26,
     total_volume: 45600,
     lock_ts: '2027-01-31T23:59:59Z',
-    created_at: '2026-01-05T08:00:00Z'
+    created_at: '2026-01-05T08:00:00Z',
+    resolution_rule: 'Based on annual climate reports.',
+    resolution_source: 'NASA/NOAA',
+    fee_ngo: 1.0,
+    fee_platform: 2.0,
+    fee_gamification: 1.0
   }
 ];
 
@@ -169,6 +190,39 @@ export const mockMarketInterceptor: HttpInterceptorFn = (req: HttpRequest<unknow
   }
 
   console.log(`[MockMarketInterceptor] Intercepting ${req.method} ${req.url}`);
+
+  // GET /api/v1/markets/:id/history
+  if (req.method === 'GET' && req.url.includes('/history')) {
+    const history = Array.from({ length: 20 }).map((_, i) => ({
+      timestamp: new Date(Date.now() - (20 - i) * 3600000).toISOString(),
+      yes_price: 0.4 + Math.random() * 0.2,
+      no_price: 0.4 + Math.random() * 0.2,
+    }));
+
+    return of(new HttpResponse({
+      status: 200,
+      body: history
+    })).pipe(delay(400));
+  }
+
+  // GET /api/v1/markets/:id
+  const marketIdMatch = req.url.match(/\/markets\/([^\/?]+)$/);
+  if (req.method === 'GET' && marketIdMatch) {
+    const id = marketIdMatch[1];
+    const market = MOCK_MARKETS.find(m => m.id === id);
+
+    if (market) {
+      return of(new HttpResponse({
+        status: 200,
+        body: market
+      })).pipe(delay(400));
+    } else {
+      return of(new HttpResponse({
+        status: 404,
+        body: { message: 'Market not found' }
+      })).pipe(delay(400));
+    }
+  }
 
   // GET /api/v1/markets
   if (req.method === 'GET' && req.url.endsWith('/markets')) {

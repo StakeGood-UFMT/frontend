@@ -11,6 +11,8 @@ import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import { authReducer } from './core/store/auth/auth.reducer';
 import { AuthEffects } from './core/store/auth/auth.effects';
+import { marketReducer } from './core/store/market/market.reducer';
+import { MarketEffects } from './core/store/market/market.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,7 +23,10 @@ export const appConfig: ApplicationConfig = {
         ? [mockAuthInterceptor, mockMarketInterceptor, authInterceptor] 
         : [authInterceptor]
     )),
-    provideStore({ auth: authReducer }),
-    provideEffects([AuthEffects])
+    provideStore({ 
+      auth: authReducer,
+      market: marketReducer 
+    }),
+    provideEffects([AuthEffects, MarketEffects])
   ]
 };
