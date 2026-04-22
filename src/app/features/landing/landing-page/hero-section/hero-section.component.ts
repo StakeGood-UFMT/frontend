@@ -114,8 +114,8 @@ import { WalletService } from '../../../../core/services/wallet.service';
       display: grid;
       grid-template-columns: 1fr 1fr;
       align-items: center;
-      gap: 48px;
-      padding: 80px 80px 60px;
+      gap: 32px;
+      padding: 48px 48px 40px;
       position: relative;
       overflow: hidden;
     }
@@ -437,9 +437,9 @@ import { WalletService } from '../../../../core/services/wallet.service';
     @media (max-width: 960px) {
       .hero {
         grid-template-columns: 1fr;
-        padding: 60px 40px 60px;
+        padding: 40px 24px 40px;
         min-height: auto;
-        gap: 48px;
+        gap: 32px;
       }
       .hero-visual { order: -1; }
       .card-mockup { max-width: 100%; }
@@ -447,7 +447,7 @@ import { WalletService } from '../../../../core/services/wallet.service';
     }
 
     @media (max-width: 600px) {
-      .hero { padding: 48px 24px 48px; }
+      .hero { padding: 32px 16px 32px; }
       .headline { font-size: 2rem; }
       .cta-row { flex-direction: column; align-items: stretch; }
       .btn-primary, .btn-secondary { justify-content: center; }

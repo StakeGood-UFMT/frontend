@@ -61,7 +61,7 @@ interface Feature {
     .features {
       font-family: 'Inter', sans-serif;
       background: #F6F8F7;
-      padding: 96px 80px;
+      padding: 56px 48px;
     }
 
     .features-inner {
@@ -265,13 +265,13 @@ interface Feature {
 
     /* Responsive */
     @media (max-width: 960px) {
-      .features { padding: 64px 40px; }
+      .features { padding: 40px 24px; }
       .features-grid { grid-template-columns: repeat(2, 1fr); }
       .feature-card.featured { grid-column: span 2; }
     }
 
     @media (max-width: 600px) {
-      .features { padding: 48px 20px; }
+      .features { padding: 32px 16px; }
       .features-grid { grid-template-columns: 1fr; }
       .feature-card.featured { grid-column: span 1; }
       .flow-steps { flex-direction: column; align-items: stretch; }

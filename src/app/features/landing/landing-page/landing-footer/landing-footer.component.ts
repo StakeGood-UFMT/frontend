@@ -53,7 +53,7 @@ import { RouterModule } from '@angular/router';
     .footer {
       font-family: 'Inter', sans-serif;
       background: #111815;
-      padding: 60px 80px 0;
+      padding: 40px 48px 0;
     }
 
     .footer-inner {
@@ -61,8 +61,8 @@ import { RouterModule } from '@angular/router';
       margin: 0 auto;
       display: grid;
       grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: 48px;
-      padding-bottom: 48px;
+      gap: 32px;
+      padding-bottom: 32px;
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
 
@@ -147,13 +147,13 @@ import { RouterModule } from '@angular/router';
     }
 
     @media (max-width: 960px) {
-      .footer { padding: 48px 40px 0; }
+      .footer { padding: 32px 24px 0; }
       .footer-inner { grid-template-columns: 1fr 1fr; gap: 32px; }
       .footer-links { grid-column: span 2; }
     }
 
     @media (max-width: 600px) {
-      .footer { padding: 40px 20px 0; }
+      .footer { padding: 28px 16px 0; }
       .footer-inner { grid-template-columns: 1fr; }
       .footer-links { grid-template-columns: 1fr 1fr; gap: 24px; }
       .footer-bottom { flex-direction: column; text-align: center; }

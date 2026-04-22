@@ -104,7 +104,7 @@ import { WalletService } from '../../../../core/services/wallet.service';
     .cta-section {
       font-family: 'Inter', sans-serif;
       background: #FFFFFF;
-      padding: 96px 80px;
+      padding: 56px 48px;
     }
 
     .cta-inner {
@@ -302,12 +302,12 @@ import { WalletService } from '../../../../core/services/wallet.service';
 
     /* Responsive */
     @media (max-width: 960px) {
-      .cta-section { padding: 64px 40px; }
+      .cta-section { padding: 40px 24px; }
       .cta-inner { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 600px) {
-      .cta-section { padding: 48px 20px; }
+      .cta-section { padding: 32px 16px; }
       .connect-card { padding: 28px 24px; }
       .card-title { font-size: 1.4rem; }
     }

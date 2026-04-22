@@ -31,7 +31,7 @@ interface Metric {
 
     .metrics-bar {
       background: linear-gradient(135deg, #111815 0%, #1a2e26 100%);
-      padding: 40px 80px;
+      padding: 28px 32px;
       font-family: 'Inter', sans-serif;
     }
 
@@ -104,11 +104,11 @@ interface Metric {
     }
 
     @media (max-width: 960px) {
-      .metrics-bar { padding: 32px 40px; }
+      .metrics-bar { padding: 24px 24px; }
     }
 
     @media (max-width: 600px) {
-      .metrics-bar { padding: 28px 20px; }
+      .metrics-bar { padding: 20px 16px; }
       .metrics-inner { grid-template-columns: 1fr 1fr; gap: 12px; }
       .metric-card { padding: 14px 16px; gap: 10px; }
       .metric-value { font-size: 1.15rem; }
