@@ -65,7 +65,7 @@ export class AuthService {
         }
       }));
       
-      console.log('[AuthService] Login successful', response.profile.public_key);
+      console.log('[AuthService] Login successful', response.wallet);
     } catch (error) {
       console.error('[AuthService] Login failed', error);
       this.logout();
@@ -104,7 +104,7 @@ export class AuthService {
           }
         }));
         
-        return response.access_token;
+        return response.jwt;
       } catch (error) {
         console.error('[AuthService] Token refresh failed', error);
         this.logout();
