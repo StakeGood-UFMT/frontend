@@ -26,11 +26,11 @@ export const routes: Routes = [
       },
       {
         path: 'onboarding/kyc',
-        loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent)
+        loadComponent: () => import('./features/onboarding/kyc/kyc.component').then(m => m.KycComponent)
       },
       {
         path: 'onboarding/terms',
-        loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent)
+        loadComponent: () => import('./features/onboarding/terms/terms.component').then(m => m.TermsComponent)
       }
     ]
   }
