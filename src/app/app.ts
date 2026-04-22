@@ -1,6 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { StellarService } from '@core/services/stellar.service';
 
 @Component({
   selector: 'app-root',
@@ -9,9 +8,4 @@ import { StellarService } from '@core/services/stellar.service';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
-  private stellarService = inject(StellarService);
-  
-  public connectionStatus = this.stellarService.connectionStatus;
-  public stellarNetwork = this.stellarService.getNetwork();
-}
+export class App {}

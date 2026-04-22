@@ -1,1 +1,29 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global styles and reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Prevent body scroll, shell handles it */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #F6F8F7;
+  color: #111815;
+}
+
+:root {
+  --primary-color: #11D48A;
+  --secondary-color: #111815;
+  --bg-color: #F6F8F7;
+  --surface-color: #FFFFFF;
+  --text-color: #111815;
+  --text-muted: #6B7280;
+  --error-color: #CC5A37;
+  --border-radius: 12px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
