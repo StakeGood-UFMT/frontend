@@ -20,7 +20,7 @@ describe('MarketDetailComponent', () => {
         title: 'Test Market',
         description: 'Test Description',
         category: 'CRYPTO',
-        status: 'OPEN',
+        status: 'active',
         yes_price: 0.5,
         no_price: 0.5,
         total_volume: 1000,

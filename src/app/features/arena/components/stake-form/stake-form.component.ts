@@ -73,6 +73,10 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
           <span *ngIf="!isSubmitting()">Stake {{ side() }}</span>
           <span *ngIf="isSubmitting()" class="btn-spinner"></span>
         </button>
+
+        <p class="status-msg" *ngIf="market.status !== 'active'">
+          This market is {{ market.status }} and closed for new stakes.
+        </p>
       </div>
     </div>
   `,
@@ -221,6 +225,17 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
       animation: spin 0.8s linear infinite;
     }
 
+    .status-msg {
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: #6B7280;
+      text-align: center;
+      background: #F3F4F6;
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-style: italic;
+    }
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -262,7 +277,10 @@ export class StakeFormComponent implements OnInit, OnChanges {
     const isOutcomeBlocked = this.market.user_position?.outcome && 
                             this.market.user_position.outcome !== this.side();
     
-    return this.amount > 0 && this.authService.isLoggedIn() && !isOutcomeBlocked;
+    return this.amount > 0 && 
+           this.authService.isLoggedIn() && 
+           !isOutcomeBlocked && 
+           this.market.status === 'active';
   }
 
   async submitStake() {

@@ -1,5 +1,5 @@
-export type MarketStatus = 'OPEN' | 'LOCKED' | 'RESOLVED' | 'CANCELLED';
-export type MarketCategory = 'ALL' | 'SPORTS' | 'POLITICS' | 'CRYPTO' | 'ENTERTAINMENT' | 'SCIENCE' | 'ECONOMICS';
+export type MarketStatus = 'active' | 'locked' | 'resolved' | 'CANCELLED';
+export type MarketCategory = 'ALL' | 'Sports' | 'Finance' | 'Environment' | 'Tech' | 'Politics' | 'Science' | 'Health' | 'Education' | 'Animals' | 'Entertainment';
 
 export interface UserPosition {
   outcome: 'YES' | 'NO' | null;
@@ -58,8 +58,8 @@ export interface MarketListResponse {
 
 /** Derived display status: if market is OPEN but past lock_ts, show as LOCKED */
 export function derivedStatus(market: Market): MarketStatus {
-  if (market.status === 'OPEN' && new Date() >= new Date(market.lock_at)) {
-    return 'LOCKED';
+  if (market.status === 'active' && new Date() >= new Date(market.lock_at)) {
+    return 'locked';
   }
   return market.status;
 }

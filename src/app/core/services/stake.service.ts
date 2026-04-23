@@ -23,7 +23,11 @@ export class StakeService {
       const response = await firstValueFrom(
         this.http.post<{ xdr: string; txHash: string }>(
           `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.transactions.buildPrediction}`,
-          { marketId, outcome, amount }
+          { 
+            market_id: marketId, 
+            outcome, 
+            amount: amount.toString() 
+          }
         )
       );
 
@@ -65,8 +69,16 @@ export class StakeService {
       console.error('[StakeService] Stake failed:', error);
       
       let errorMessage = 'Failed to place stake';
-      if (error.error?.code === 'HEDGE_LOCK') {
-        errorMessage = 'HEDGE_LOCK: Market is currently locked for this operation.';
+      
+      // Handle backend specific errors
+      if (error.error?.error === 'KYC_REQUIRED') {
+        errorMessage = 'KYC Required: Please verify your identity in settings.';
+      } else if (error.error?.error === 'SPENDING_LIMIT_EXCEEDED') {
+        errorMessage = `Limit Exceeded: Only $${error.error.remaining} remaining in your limit.`;
+      } else if (error.error?.code === 'HEDGE_LOCK') {
+        errorMessage = 'Hedge Lock: Market is locked for this side of the prediction.';
+      } else if (error.status === 403) {
+        errorMessage = 'Forbidden: Access denied by security policy.';
       } else if (error.message === 'User canceled') {
          errorMessage = 'Transaction canceled by user';
       }
