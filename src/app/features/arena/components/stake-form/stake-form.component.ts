@@ -1,20 +1,25 @@
-import { Component, Input, signal, computed, inject } from '@angular/core';
+import { Component, Input, signal, computed, inject, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Market } from '../../../../core/models/market.model';
 import { StakeService } from '../../../../core/services/stake.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
+import { UserPositionSelectorComponent } from '../user-position-selector/user-position-selector.component';
+
 @Component({
   selector: 'app-stake-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UserPositionSelectorComponent],
   template: `
     <div class="stake-card">
-      <div class="tabs">
-        <button [class.active]="side() === 'YES'" (click)="side.set('YES')" class="tab-yes">YES {{ ((market.yes_price || 0) * 100).toFixed(0) }}¢</button>
-        <button [class.active]="side() === 'NO'" (click)="side.set('NO')" class="tab-no">NO {{ ((market.no_price || 0) * 100).toFixed(0) }}¢</button>
-      </div>
+      <app-user-position-selector
+        [selected]="side()"
+        [userPosition]="market.user_position"
+        [yesPrice]="market.yes_price || 0"
+        [noPrice]="market.no_price || 0"
+        (selectionChange)="side.set($event)"
+      ></app-user-position-selector>
 
       <div class="form-content">
         <div class="input-group">
@@ -221,7 +226,7 @@ import { AuthService } from '../../../../core/services/auth.service';
     }
   `]
 })
-export class StakeFormComponent {
+export class StakeFormComponent implements OnInit, OnChanges {
   private stakeService = inject(StakeService);
   private authService = inject(AuthService);
 
@@ -231,8 +236,33 @@ export class StakeFormComponent {
   amount = 0;
   isSubmitting = signal(false);
 
+  constructor() {
+    // Effect to ensure side is not blocked when user position changes
+    // We can use ngOnInit or a simple effect if we want it reactive
+  }
+
+  ngOnInit() {
+    this.enforceNoHedge();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['market']) {
+      this.enforceNoHedge();
+    }
+  }
+
+  private enforceNoHedge() {
+    const userPos = this.market.user_position;
+    if (userPos?.outcome && userPos.outcome !== this.side()) {
+      this.side.set(userPos.outcome);
+    }
+  }
+
   isValid() {
-    return this.amount > 0 && this.authService.isLoggedIn();
+    const isOutcomeBlocked = this.market.user_position?.outcome && 
+                            this.market.user_position.outcome !== this.side();
+    
+    return this.amount > 0 && this.authService.isLoggedIn() && !isOutcomeBlocked;
   }
 
   async submitStake() {

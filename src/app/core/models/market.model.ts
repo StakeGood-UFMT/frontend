@@ -1,6 +1,11 @@
 export type MarketStatus = 'OPEN' | 'LOCKED' | 'RESOLVED' | 'CANCELLED';
 export type MarketCategory = 'ALL' | 'SPORTS' | 'POLITICS' | 'CRYPTO' | 'ENTERTAINMENT' | 'SCIENCE' | 'ECONOMICS';
 
+export interface UserPosition {
+  outcome: 'YES' | 'NO' | null;
+  amount: string;
+}
+
 export interface Market {
   id: string;
   title: string;
@@ -8,13 +13,14 @@ export interface Market {
   category: MarketCategory;
   status: MarketStatus;
   image_url?: string;
-  yes_price?: number;   // Note: Backend documentation didn't explicitly show yes/no price in the list, but it's likely there.
+  yes_price?: number;
   no_price?: number;
-  total_liquidity: string; // decimal_string in backend
-  lock_at: string;         // ISO_DATE
-  settle_at?: string;      // ISO_DATE
+  total_liquidity: string;
+  lock_at: string;
+  settle_at?: string;
   created_at: string;
   outcome?: 'YES' | 'NO' | null;
+  user_position?: UserPosition;
   
   // FE-6 Additions
   resolution_rule: string;
