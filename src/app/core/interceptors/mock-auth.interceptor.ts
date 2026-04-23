@@ -16,7 +16,9 @@ export const mockAuthInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>
     return of(new HttpResponse({
       status: 200,
       body: { 
-        nonce: `mock-nonce-for-${wallet}-${Date.now()}` 
+        nonce: `mock-nonce-for-${wallet}-${Date.now()}`,
+        expires_at: new Date(Date.now() + 300000).toISOString(),
+        ttl_seconds: 300
       }
     })).pipe(delay(500));
   }
@@ -34,13 +36,16 @@ export const mockAuthInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>
     return of(new HttpResponse({
       status: 200,
       body: {
-        access_token: mockToken,
-        refresh_token: 'mock-refresh-token',
-        profile: {
-          public_key: body.wallet || 'GA...MOCK',
+        jwt: mockToken,
+        wallet: body.wallet || 'GA...MOCK',
+        kyc_status: 'none',
+        kyc_tier: 0,
+        expires_in: 3600,
+        user: {
+          id: 'mock-uuid',
+          primary_wallet: body.wallet || 'GA...MOCK',
           role: 'user',
-          kyc_status: 'not_started',
-          terms_accepted: false
+          public_visibility: true
         }
       }
     })).pipe(delay(800));
@@ -57,13 +62,16 @@ export const mockAuthInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>
     return of(new HttpResponse({
       status: 200,
       body: {
-        access_token: mockToken,
-        refresh_token: 'mock-refreshed-refresh-token',
-        profile: {
-          public_key: 'GA...MOCK',
+        jwt: mockToken,
+        wallet: 'GA...MOCK',
+        kyc_status: 'none',
+        kyc_tier: 0,
+        expires_in: 3600,
+        user: {
+          id: 'mock-uuid',
+          primary_wallet: 'GA...MOCK',
           role: 'user',
-          kyc_status: 'not_started',
-          terms_accepted: false
+          public_visibility: true
         }
       }
     })).pipe(delay(500));

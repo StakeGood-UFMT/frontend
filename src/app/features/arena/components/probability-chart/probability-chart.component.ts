@@ -112,7 +112,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
         datasets: [
           {
             label: 'Yes %',
-            data: this.history.map(p => p.yes_price * 100),
+            data: this.history.map(p => p.yes_probability * 100),
             borderColor: '#11D48A',
             backgroundColor: 'rgba(17, 212, 138, 0.1)',
             fill: true,
@@ -167,7 +167,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
         ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     });
-    this.chart.data.datasets[0].data = this.history.map(p => p.yes_price * 100);
+    this.chart.data.datasets[0].data = this.history.map(p => p.yes_probability * 100);
     this.chart.update();
   }
 }

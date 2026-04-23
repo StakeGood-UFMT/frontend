@@ -7,9 +7,17 @@ export interface AuthProfile {
 }
 
 export interface AuthResponse {
-  access_token: string;
-  refresh_token: string;
-  profile: AuthProfile;
+  jwt: string;
+  wallet: string;
+  kyc_status: 'none' | 'pending' | 'verified' | 'rejected';
+  kyc_tier: number;
+  expires_in: number;
+  user: {
+    id: string;
+    primary_wallet: string;
+    role: 'user' | 'ngo_partner' | 'admin';
+    public_visibility: boolean;
+  };
 }
 
 export interface AuthState {

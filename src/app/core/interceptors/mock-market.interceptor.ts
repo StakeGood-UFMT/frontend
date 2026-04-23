@@ -13,8 +13,8 @@ const MOCK_MARKETS: Market[] = [
     image_url: '',
     yes_price: 0.62,
     no_price: 0.38,
-    total_volume: 284500,
-    lock_ts: '2026-06-30T23:59:59Z',
+    total_liquidity: '284500',
+    lock_at: '2026-06-30T23:59:59Z',
     created_at: '2026-01-15T10:00:00Z',
     resolution_rule: 'Bitcoin price will be determined by the Binance BTC/USDT daily close price.',
     resolution_source: 'Binance API',
@@ -32,8 +32,8 @@ const MOCK_MARKETS: Market[] = [
     image_url: '',
     yes_price: 0.45,
     no_price: 0.55,
-    total_volume: 156200,
-    lock_ts: '2026-12-31T23:59:59Z',
+    total_liquidity: '156200',
+    lock_at: '2026-12-31T23:59:59Z',
     created_at: '2026-02-01T08:30:00Z',
     resolution_rule: 'Based on official FIFA press release or website announcement.',
     resolution_source: 'FIFA.com',
@@ -42,9 +42,9 @@ const MOCK_MARKETS: Market[] = [
     fee_gamification: 0.5
   },
   ...[
-    { id: 'mkt-003', title: 'Will Ethereum transition to full danksharding in 2026?', category: 'CRYPTO' as const, yes_price: 0.28, no_price: 0.72, total_volume: 98300, lock_ts: '2026-12-31T23:59:59Z', created_at: '2026-01-20T14:00:00Z', description: 'Resolves YES if Ethereum mainnet implements full danksharding before December 31, 2026.' },
-    { id: 'mkt-004', title: 'Will the US Federal Reserve cut rates before June 2026?', category: 'ECONOMICS' as const, yes_price: 0.71, no_price: 0.29, total_volume: 412000, lock_ts: '2026-05-31T23:59:59Z', created_at: '2026-01-10T09:00:00Z', description: 'Resolves YES if the Federal Reserve announces a rate cut at any FOMC meeting before June 1, 2026.' },
-    { id: 'mkt-005', title: 'Will a new manned Moon landing happen before 2027?', category: 'SCIENCE' as const, yes_price: 0.35, no_price: 0.65, total_volume: 67800, lock_ts: '2026-12-31T23:59:59Z', created_at: '2026-03-01T11:00:00Z', description: 'Resolves YES if any nation successfully lands astronauts on the Moon before January 1, 2027.' },
+    { id: 'mkt-003', title: 'Will Ethereum transition to full danksharding in 2026?', category: 'CRYPTO' as const, yes_price: 0.28, no_price: 0.72, total_liquidity: '98300', lock_at: '2026-12-31T23:59:59Z', created_at: '2026-01-20T14:00:00Z', description: 'Resolves YES if Ethereum mainnet implements full danksharding before December 31, 2026.' },
+    { id: 'mkt-004', title: 'Will the US Federal Reserve cut rates before June 2026?', category: 'ECONOMICS' as const, yes_price: 0.71, no_price: 0.29, total_liquidity: '412000', lock_at: '2026-05-31T23:59:59Z', created_at: '2026-01-10T09:00:00Z', description: 'Resolves YES if the Federal Reserve announces a rate cut at any FOMC meeting before June 1, 2026.' },
+    { id: 'mkt-005', title: 'Will a new manned Moon landing happen before 2027?', category: 'SCIENCE' as const, yes_price: 0.35, no_price: 0.65, total_liquidity: '67800', lock_at: '2026-12-31T23:59:59Z', created_at: '2026-03-01T11:00:00Z', description: 'Resolves YES if any nation successfully lands astronauts on the Moon before January 1, 2027.' },
   ].map(m => ({
     ...m,
     status: 'OPEN' as const,
@@ -64,9 +64,9 @@ const MOCK_MARKETS: Market[] = [
     image_url: '',
     yes_price: 0.52,
     no_price: 0.48,
-    total_volume: 89100,
-    lock_ts: '2026-03-01T00:00:00Z',
-    resolve_ts: '2026-03-10T02:00:00Z',
+    total_liquidity: '89100',
+    lock_at: '2026-03-01T00:00:00Z',
+    settle_at: '2026-03-10T02:00:00Z',
     created_at: '2025-12-01T10:00:00Z',
     outcome: 'YES',
     resolution_rule: 'Based on Academy Awards results.',
@@ -84,8 +84,8 @@ const MOCK_MARKETS: Market[] = [
     image_url: '',
     yes_price: 0.39,
     no_price: 0.61,
-    total_volume: 203500,
-    lock_ts: '2026-07-15T23:59:59Z',
+    total_liquidity: '203500',
+    lock_at: '2026-07-15T23:59:59Z',
     created_at: '2026-02-15T12:00:00Z',
     resolution_rule: 'Based on tournament outcome.',
     resolution_source: 'CONMEBOL',
@@ -102,8 +102,8 @@ const MOCK_MARKETS: Market[] = [
     image_url: '',
     yes_price: 0.55,
     no_price: 0.45,
-    total_volume: 134700,
-    lock_ts: '2026-06-30T23:59:59Z',
+    total_liquidity: '134700',
+    lock_at: '2026-06-30T23:59:59Z',
     created_at: '2026-03-10T15:00:00Z',
     resolution_rule: 'Based on DefiLlama Solana TVL.',
     resolution_source: 'DefiLlama',
@@ -120,8 +120,8 @@ const MOCK_MARKETS: Market[] = [
     image_url: '',
     yes_price: 0.22,
     no_price: 0.78,
-    total_volume: 56200,
-    lock_ts: '2028-11-01T00:00:00Z',
+    total_liquidity: '56200',
+    lock_at: '2028-11-01T00:00:00Z',
     created_at: '2026-04-01T09:00:00Z',
     resolution_rule: 'Based on FEC official results.',
     resolution_source: 'FEC.gov',
@@ -138,8 +138,8 @@ const MOCK_MARKETS: Market[] = [
     image_url: '',
     yes_price: 0.81,
     no_price: 0.19,
-    total_volume: 321000,
-    lock_ts: '2026-04-15T00:00:00Z',
+    total_liquidity: '321000',
+    lock_at: '2026-04-15T00:00:00Z',
     created_at: '2025-11-01T08:00:00Z',
     resolution_rule: 'Based on SpaceX or NASA confirmation.',
     resolution_source: 'SpaceX.com',
@@ -156,8 +156,8 @@ const MOCK_MARKETS: Market[] = [
     image_url: '',
     yes_price: 0.67,
     no_price: 0.33,
-    total_volume: 78900,
-    lock_ts: '2026-06-30T23:59:59Z',
+    total_liquidity: '78900',
+    lock_at: '2026-06-30T23:59:59Z',
     created_at: '2026-02-20T10:00:00Z',
     resolution_rule: 'Based on Official Journal of the EU.',
     resolution_source: 'europa.eu',
@@ -174,8 +174,8 @@ const MOCK_MARKETS: Market[] = [
     image_url: '',
     yes_price: 0.74,
     no_price: 0.26,
-    total_volume: 45600,
-    lock_ts: '2027-01-31T23:59:59Z',
+    total_liquidity: '45600',
+    lock_at: '2027-01-31T23:59:59Z',
     created_at: '2026-01-05T08:00:00Z',
     resolution_rule: 'Based on annual climate reports.',
     resolution_source: 'NASA/NOAA',
@@ -202,7 +202,11 @@ export const mockMarketInterceptor: HttpInterceptorFn = (req: HttpRequest<unknow
 
     return of(new HttpResponse({
       status: 200,
-      body: history
+      body: {
+        market_id: 'mkt-001',
+        title: 'Mock Market History',
+        snapshots: history
+      }
     })).pipe(delay(400));
   }
 
@@ -229,9 +233,12 @@ export const mockMarketInterceptor: HttpInterceptorFn = (req: HttpRequest<unknow
   if (req.method === 'GET' && req.url === `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.base}`) {
     const response: MarketListResponse = {
       markets: MOCK_MARKETS,
-      total: MOCK_MARKETS.length,
-      page: 1,
-      page_size: 20
+      pagination: {
+        total: MOCK_MARKETS.length,
+        limit: 20,
+        offset: 0,
+        has_next: false
+      }
     };
 
     return of(new HttpResponse({
