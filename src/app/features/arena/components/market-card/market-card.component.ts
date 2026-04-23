@@ -114,27 +114,27 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
       color: #0d9b66;
     }
 
-    .category-badge[data-category="CRYPTO"] {
+    .category-badge[data-category="Tech"] {
       background: rgba(139, 92, 246, 0.08);
       color: #7c3aed;
     }
-    .category-badge[data-category="SPORTS"] {
+    .category-badge[data-category="Sports"] {
       background: rgba(14, 165, 233, 0.08);
       color: #0284c7;
     }
-    .category-badge[data-category="POLITICS"] {
+    .category-badge[data-category="Politics"] {
       background: rgba(239, 68, 68, 0.08);
       color: #dc2626;
     }
-    .category-badge[data-category="SCIENCE"] {
+    .category-badge[data-category="Science"], .category-badge[data-category="Environment"] {
       background: rgba(16, 185, 129, 0.08);
       color: #059669;
     }
-    .category-badge[data-category="ENTERTAINMENT"] {
+    .category-badge[data-category="Entertainment"] {
       background: rgba(245, 158, 11, 0.08);
       color: #d97706;
     }
-    .category-badge[data-category="ECONOMICS"] {
+    .category-badge[data-category="Finance"] {
       background: rgba(99, 102, 241, 0.08);
       color: #4f46e5;
     }
@@ -308,12 +308,16 @@ export class MarketCardComponent {
 
   get categoryIcon(): string {
     const icons: Record<string, string> = {
-      CRYPTO: '₿',
-      SPORTS: '⚽',
-      POLITICS: '🏛',
-      SCIENCE: '🔬',
-      ENTERTAINMENT: '🎬',
-      ECONOMICS: '📈',
+      Finance: '💰',
+      Tech: '💻',
+      Sports: '⚽',
+      Environment: '🌱',
+      Politics: '🏛',
+      Science: '🔬',
+      Health: '🏥',
+      Education: '🎓',
+      Animals: '🐾',
+      Entertainment: '🎬',
       ALL: '🌐'
     };
     return icons[this.market.category] || '📌';
