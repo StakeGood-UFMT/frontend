@@ -25,6 +25,10 @@ Chart.register(...registerables);
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      height: 100%;
+    }
     .chart-container {
       background: white;
       border-radius: 12px;
@@ -92,7 +96,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['history'] && this.chart) {
+    if ((changes['history'] || changes['selectedRange']) && this.chart) {
       this.updateChart();
     }
   }
