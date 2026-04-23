@@ -25,6 +25,12 @@ export const API_CONFIG = {
       base: '/markets',
       detail: (id: string) => `/markets/${id}`,
       history: (id: string) => `/markets/${id}/history`,
+    },
+    transactions: {
+      base: '/transactions',
+      buildPrediction: '/transactions/build-prediction',
+      submit: '/transactions/submit',
+      status: (hash: string) => `/transactions/${hash}/status`,
     }
   }
 };

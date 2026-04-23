@@ -1,7 +1,9 @@
-import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
+import { Component, Input, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Market } from '../../../../core/models/market.model';
+import { StakeService } from '../../../../core/services/stake.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-stake-form',
@@ -57,8 +59,14 @@ import { Market } from '../../../../core/models/market.model';
           </div>
         </div>
 
-        <button class="submit-btn" [class.no]="side() === 'NO'" [disabled]="!isValid()">
-          Stake {{ side() }}
+        <button 
+          class="submit-btn" 
+          [class.no]="side() === 'NO'" 
+          [disabled]="!isValid() || isSubmitting()"
+          (click)="submitStake()"
+        >
+          <span *ngIf="!isSubmitting()">Stake {{ side() }}</span>
+          <span *ngIf="isSubmitting()" class="btn-spinner"></span>
         </button>
       </div>
     </div>
@@ -195,17 +203,55 @@ import { Market } from '../../../../core/models/market.model';
       background: #D1D5DB;
       cursor: not-allowed;
       transform: none;
+      box-shadow: none;
+    }
+
+    .btn-spinner {
+      display: inline-block;
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   `]
 })
 export class StakeFormComponent {
+  private stakeService = inject(StakeService);
+  private authService = inject(AuthService);
+
   @Input({ required: true }) market!: Market;
   
   side = signal<'YES' | 'NO'>('YES');
   amount = 0;
+  isSubmitting = signal(false);
 
   isValid() {
-    return this.amount > 0;
+    return this.amount > 0 && this.authService.isLoggedIn();
+  }
+
+  async submitStake() {
+    if (!this.isValid() || this.isSubmitting()) return;
+
+    this.isSubmitting.set(true);
+    try {
+      await this.stakeService.placeStake(
+        this.market.id,
+        this.side(),
+        this.amount
+      );
+      // Reset amount on success
+      this.amount = 0;
+    } catch (error) {
+      // Error handled by service toast
+    } finally {
+      this.isSubmitting.set(false);
+    }
   }
 
   estimatedShares = computed(() => {
