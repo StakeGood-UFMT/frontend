@@ -39,6 +39,11 @@ export const routes: Routes = [
       {
         path: 'onboarding/terms',
         loadComponent: () => import('./features/onboarding/terms/terms.component').then(m => m.TermsComponent)
+      },
+      {
+        path: 'proposals/new',
+        canActivate: [authGuard, kycGuard],
+        loadComponent: () => import('./features/proposals/pages/propose-market/propose-market.component').then(m => m.ProposeMarketComponent)
       }
     ]
   }

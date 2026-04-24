@@ -35,6 +35,9 @@ export const API_CONFIG = {
     },
     users: {
       meClaims: '/users/me/claims',
+    },
+    proposals: {
+      base: '/proposals',
     }
   }
 };

@@ -1,0 +1,114 @@
+<div class="propose-container">
+  <div class="header">
+    <button class="back-btn" routerLink="/arena">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      Back to Arena
+    </button>
+    <h1>Propose Market</h1>
+    <p>Help shape the future of StakeGood by suggesting high-impact markets.</p>
+  </div>
+
+  <div class="glass-card">
+    <form [formGroup]="proposalForm" (ngSubmit)="onSubmit()">
+      <div class="form-grid">
+        <!-- Title -->
+        <div class="form-group full-width">
+          <label for="title">Market Title</label>
+          <input 
+            id="title" 
+            type="text" 
+            formControlName="title" 
+            placeholder="e.g., Will NASA land humans on Mars by 2030?"
+            [class.invalid]="isInvalid('title')"
+          >
+          <span class="error-msg" *ngIf="isInvalid('title')">
+            Title must be between 10 and 100 characters.
+          </span>
+        </div>
+
+        <!-- Category -->
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" formControlName="category" [class.invalid]="isInvalid('category')">
+            <option value="" disabled selected>Select a category</option>
+            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+          </select>
+          <span class="error-msg" *ngIf="isInvalid('category')">Category is required.</span>
+        </div>
+
+        <!-- Lock Date -->
+        <div class="form-group">
+          <label for="lock_at">Lock Date (UTC)</label>
+          <input 
+            id="lock_at" 
+            type="datetime-local" 
+            formControlName="lock_at"
+            [class.invalid]="isInvalid('lock_at')"
+          >
+          <span class="error-msg" *ngIf="isInvalid('lock_at')">Lock date is required.</span>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group full-width">
+          <label for="description">Context & Description</label>
+          <textarea 
+            id="description" 
+            formControlName="description" 
+            rows="4"
+            placeholder="Provide background information about this market..."
+            [class.invalid]="isInvalid('description')"
+          ></textarea>
+          <span class="error-msg" *ngIf="isInvalid('description')">
+            Description must be at least 50 characters.
+          </span>
+        </div>
+
+        <!-- Resolution Rule -->
+        <div class="form-group full-width">
+          <label for="resolution_rule">Resolution Rule</label>
+          <textarea 
+            id="resolution_rule" 
+            formControlName="resolution_rule" 
+            rows="3"
+            placeholder="Describe exactly how this market will be resolved (e.g., YES if NASA confirms...)"
+            [class.invalid]="isInvalid('resolution_rule')"
+          ></textarea>
+          <span class="error-msg" *ngIf="isInvalid('resolution_rule')">Resolution rule is required.</span>
+        </div>
+
+        <!-- Resolution Source -->
+        <div class="form-group">
+          <label for="resolution_source">Official Source (URL/Agency)</label>
+          <input 
+            id="resolution_source" 
+            type="text" 
+            formControlName="resolution_source"
+            placeholder="e.g., nasa.gov"
+            [class.invalid]="isInvalid('resolution_source')"
+          >
+          <span class="error-msg" *ngIf="isInvalid('resolution_source')">Source is required.</span>
+        </div>
+
+        <!-- Image URL -->
+        <div class="form-group">
+          <label for="image_url">Image URL (Optional)</label>
+          <input 
+            id="image_url" 
+            type="text" 
+            formControlName="image_url"
+            placeholder="https://..."
+            [class.invalid]="isInvalid('image_url')"
+          >
+          <span class="error-msg" *ngIf="isInvalid('image_url')">Must be a valid URL.</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="submit-btn" [disabled]="isSubmitting">
+          <span *ngIf="!isSubmitting">Submit Proposal</span>
+          <span *ngIf="isSubmitting" class="loader"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
