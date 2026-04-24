@@ -10,8 +10,9 @@ import { AuthService } from '../../services/auth.service';
   imports: [CommonModule, RouterModule, WalletConnect],
   template: `
     <header class="top-bar">
-      <div class="logo">
+      <div class="logo" routerLink="/landing">
         <img src="/logo.png" alt="StakeGood Logo" class="brand-logo">
+        <span class="brand-name">StakeGood</span>
       </div>
       
       <!-- Hamburger Menu Toggle (Mobile) -->
@@ -25,7 +26,10 @@ import { AuthService } from '../../services/auth.service';
         <div *ngIf="isMenuOpen()" class="mobile-drawer-overlay" (click)="toggleMenu()">
           <div class="drawer" (click)="$event.stopPropagation()">
             <div class="drawer-header">
-              <img src="/logo.png" alt="StakeGood Logo" class="drawer-logo">
+              <div class="drawer-brand">
+                <img src="/logo.png" alt="StakeGood Logo" class="drawer-logo">
+                <span class="drawer-brand-name">StakeGood</span>
+              </div>
               <button (click)="toggleMenu()" class="close-btn">&times;</button>
             </div>
             
@@ -60,8 +64,8 @@ import { AuthService } from '../../services/auth.service';
   `,
   styles: [`
     .top-bar {
-      height: 64px;
-      padding: 0 1.5rem;
+      height: 72px;
+      padding: 0 2rem;
       background: #FFFFFF;
       display: flex;
       align-items: center;
@@ -71,10 +75,28 @@ import { AuthService } from '../../services/auth.service';
       top: 0;
       z-index: 100;
     }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 4px 0;
+    }
     .brand-logo {
-      height: 120px;
+      height: 40px;
       width: auto;
       object-fit: contain;
+      transition: transform 0.2s;
+    }
+    .brand-logo:hover {
+      transform: scale(1.05);
+    }
+    .brand-name {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #0d1b15;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
     }
     .mobile-menu {
       display: none;
@@ -136,9 +158,21 @@ import { AuthService } from '../../services/auth.service';
         border-bottom: 1px solid rgba(0,0,0,0.05);
       }
 
+      .drawer-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
       .drawer-logo {
-        height: 60px;
+        height: 36px;
         width: auto;
+      }
+      .drawer-brand-name {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #0d1b15;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
       }
 
       .close-btn {
