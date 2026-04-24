@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://api.stakegood.org',
+  apiBaseUrl: 'https://stakegood-backend.onrender.com',
   apiVersion: 'v1',
   useMock: false,
   stellar: {
