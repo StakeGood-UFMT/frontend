@@ -34,4 +34,4 @@ import { LandingFooterComponent } from './landing-footer/landing-footer.componen
     }
   `]
 })
-export class LandingPageComponent {}
+export class LandingPageComponent { }

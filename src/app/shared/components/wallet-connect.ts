@@ -42,6 +42,12 @@ import { WalletService } from '../../core/services/wallet.service';
         </button>
       </div>
 
+      <!-- Powered by Stellar Badge -->
+      <div *ngIf="isLoggedIn()" class="stellar-badge-small">
+        <span class="badge-dot"></span>
+        Powered by Stellar Network
+      </div>
+
       <!-- ERROR MESSAGE -->
       <div *ngIf="errorMessage()" class="error-toast">
         {{ errorMessage() }}
@@ -202,6 +208,35 @@ import { WalletService } from '../../core/services/wallet.service';
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(5px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Stellar Badge Styles */
+    .stellar-badge-small {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(17, 212, 138, 0.08);
+      color: #0a8a57;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      width: fit-content;
+      margin: 4px auto 0;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      background: #11D48A;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.8); }
     }
   `]
 })

@@ -11,7 +11,7 @@ import { AuthService } from '../../services/auth.service';
   template: `
     <header class="top-bar">
       <div class="logo">
-        <span class="brand">StakeGood</span>
+        <img src="/logo.png" alt="StakeGood Logo" class="brand-logo">
       </div>
       
       <!-- Hamburger Menu Toggle (Mobile) -->
@@ -25,7 +25,7 @@ import { AuthService } from '../../services/auth.service';
         <div *ngIf="isMenuOpen()" class="mobile-drawer-overlay" (click)="toggleMenu()">
           <div class="drawer" (click)="$event.stopPropagation()">
             <div class="drawer-header">
-              <h3>StakeGood</h3>
+              <img src="/logo.png" alt="StakeGood Logo" class="drawer-logo">
               <button (click)="toggleMenu()" class="close-btn">&times;</button>
             </div>
             
@@ -71,10 +71,10 @@ import { AuthService } from '../../services/auth.service';
       top: 0;
       z-index: 100;
     }
-    .brand {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #11D48A;
+    .brand-logo {
+      height: 120px;
+      width: auto;
+      object-fit: contain;
     }
     .mobile-menu {
       display: none;
@@ -136,11 +136,9 @@ import { AuthService } from '../../services/auth.service';
         border-bottom: 1px solid rgba(0,0,0,0.05);
       }
 
-      .drawer-header h3 {
-        margin: 0;
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: #11D48A;
+      .drawer-logo {
+        height: 60px;
+        width: auto;
       }
 
       .close-btn {
