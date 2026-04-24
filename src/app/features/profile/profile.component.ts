@@ -7,10 +7,17 @@ import { ClaimsTabComponent } from './claims-tab/claims-tab.component';
   standalone: true,
   imports: [CommonModule, ClaimsTabComponent],
   template: `
-    <div class="profile-container">
-      <div class="profile-header">
-        <h1>My Account</h1>
-        <p>Manage your predictions, claims and settings.</p>
+    <div class="profile-page">
+      <div class="page-header">
+        <div class="header-content">
+          <h1 class="page-title">
+            <span class="title-icon">👤</span>
+            My Account
+          </h1>
+          <p class="page-subtitle">
+            Manage your predictions, claims and settings.
+          </p>
+        </div>
       </div>
 
       <nav class="profile-tabs">
@@ -35,74 +42,95 @@ import { ClaimsTabComponent } from './claims-tab/claims-tab.component';
       </nav>
 
       <main class="tab-content">
-        <div *ngIf="activeTab() === 'activity'" class="placeholder-tab">
-          <div class="tab-icon">📊</div>
-          <h3>Your Activity</h3>
-          <p>Recent stakes and results will appear here.</p>
+        <div *ngIf="activeTab() === 'activity'" class="state-container">
+          <div class="state-card placeholder">
+            <div class="state-icon">📊</div>
+            <h2 class="state-title">Your Activity</h2>
+            <p class="state-message">Recent stakes and results will appear here.</p>
+          </div>
         </div>
 
         <app-claims-tab *ngIf="activeTab() === 'claims'"></app-claims-tab>
 
-        <div *ngIf="activeTab() === 'settings'" class="placeholder-tab">
-          <div class="tab-icon">⚙️</div>
-          <h3>Settings</h3>
-          <p>Wallet and security preferences.</p>
+        <div *ngIf="activeTab() === 'settings'" class="state-container">
+          <div class="state-card placeholder">
+            <div class="state-icon">⚙️</div>
+            <h2 class="state-title">Settings</h2>
+            <p class="state-message">Wallet and security preferences.</p>
+          </div>
         </div>
       </main>
     </div>
   `,
   styles: [`
-    .profile-container {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 0 1.5rem;
-      animation: slideIn 0.5s ease-out;
+    .profile-page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 8px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      animation: fadeInUp 0.4s ease-out;
     }
 
-    .profile-header {
-      margin-bottom: 3rem;
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .profile-header h1 {
-      font-size: 3rem;
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
       font-weight: 800;
-      margin-bottom: 0.5rem;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #fff 0%, #6b7280 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #111815;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .profile-header p {
-      color: #9ca3af;
-      font-size: 1.1rem;
+    .title-icon {
+      font-size: 1.5rem;
+    }
+
+    .page-subtitle {
+      margin: 6px 0 0;
+      font-size: 0.92rem;
+      color: #6b7280;
+      line-height: 1.5;
     }
 
     .profile-tabs {
       display: flex;
-      gap: 2rem;
-      border-bottom: 1px solid #374151;
-      margin-bottom: 2.5rem;
+      gap: 32px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 0 4px;
     }
 
     .profile-tabs button {
       background: none;
       border: none;
-      color: #9ca3af;
-      padding: 1rem 0.5rem;
-      font-size: 1.1rem;
-      font-weight: 600;
+      color: #6b7280;
+      padding: 12px 0;
+      font-size: 0.95rem;
+      font-weight: 700;
       cursor: pointer;
       position: relative;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .profile-tabs button:hover {
-      color: #fff;
+      color: #111815;
     }
 
     .profile-tabs button.active {
-      color: #10b981;
+      color: #11D48A;
     }
 
     .profile-tabs button.active::after {
@@ -112,42 +140,66 @@ import { ClaimsTabComponent } from './claims-tab/claims-tab.component';
       left: 0;
       right: 0;
       height: 3px;
-      background: #10b981;
+      background: #11D48A;
       border-radius: 99px;
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 2px 10px rgba(17, 212, 138, 0.2);
     }
 
     .tab-content {
       min-height: 400px;
+      animation: fadeInUp 0.5s ease-out 0.1s both;
     }
 
-    .placeholder-tab {
-      padding: 5rem 2rem;
-      text-align: center;
-      background: rgba(31, 41, 55, 0.3);
-      border: 1px solid #374151;
-      border-radius: 20px;
-      color: #9ca3af;
+    .state-container {
+      display: flex;
+      justify-content: center;
+      padding: 40px 0;
+    }
+
+    .state-card {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1rem;
+      text-align: center;
+      padding: 48px 32px;
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      max-width: 420px;
+      width: 100%;
+      animation: fadeInUp 0.4s ease-out;
     }
 
-    .tab-icon {
+    .state-icon {
       font-size: 3rem;
-      opacity: 0.5;
+      margin-bottom: 16px;
     }
 
-    .placeholder-tab h3 {
-      color: #fff;
+    .state-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111815;
+      margin: 0 0 8px;
+    }
+
+    .state-message {
+      font-size: 0.9rem;
+      color: #6b7280;
+      line-height: 1.5;
       margin: 0;
-      font-size: 1.5rem;
     }
 
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @media (max-width: 768px) {
+      .profile-page {
+        padding: 4px 0;
+        gap: 18px;
+      }
+      .page-title {
+        font-size: 1.4rem;
+      }
+      .profile-tabs {
+        gap: 20px;
+      }
     }
   `]
 })

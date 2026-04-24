@@ -30,45 +30,48 @@ import { ClaimsListComponent } from './claims-list.component';
     .claims-tab-wrapper {
       display: flex;
       flex-direction: column;
-      gap: 2rem;
-      animation: fadeIn 0.4s ease-out;
+      gap: 24px;
+      animation: fadeInUp 0.4s ease-out;
     }
 
     .tab-header .description {
-      color: #9ca3af;
-      font-size: 0.95rem;
+      color: #6b7280;
+      font-size: 0.92rem;
       max-width: 600px;
-      line-height: 1.5;
+      line-height: 1.6;
+      margin: 0;
     }
 
     .tab-footer {
-      margin-top: 1rem;
+      margin-top: 8px;
     }
 
     .info-card {
       display: flex;
-      padding: 1rem;
-      background: rgba(59, 130, 246, 0.05);
-      border: 1px solid rgba(59, 130, 246, 0.1);
-      border-radius: 8px;
+      padding: 16px;
+      background: rgba(17, 212, 138, 0.05);
+      border: 1px solid rgba(17, 212, 138, 0.1);
+      border-radius: 12px;
       align-items: center;
     }
 
     .info-card p {
       margin: 0;
-      font-size: 0.85rem;
-      color: #60a5fa;
+      font-size: 0.82rem;
+      color: #0eb87a;
+      font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 10px;
+      line-height: 1.4;
     }
 
     .info-icon {
       font-size: 1.1rem;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
   `]

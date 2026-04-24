@@ -18,27 +18,36 @@ import { ClaimsTabComponent } from './claims-tab.component';
   `,
   styles: [`
     .claims-page-container {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 0 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 8px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      animation: fadeInUp 0.4s ease-out;
     }
 
     .page-header {
-      margin-bottom: 3rem;
+      margin-bottom: 8px;
     }
 
     .page-header h1 {
-      font-size: 3rem;
+      font-size: 1.75rem;
       font-weight: 800;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, #fff 0%, #6b7280 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #111815;
+      margin: 0;
     }
 
     .page-header p {
-      color: #9ca3af;
-      font-size: 1.1rem;
+      margin: 6px 0 0;
+      font-size: 0.92rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   `]
 })

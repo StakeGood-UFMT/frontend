@@ -25,44 +25,46 @@ import { ClaimService } from './claim.service';
   `,
   styles: [`
     .claim-btn {
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      font-weight: 600;
-      transition: all 0.2s ease;
+      padding: 10px 24px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       border: none;
       min-width: 120px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 8px;
     }
 
     .btn-success {
-      background: var(--success-green, #10b981);
-      color: white;
+      background: linear-gradient(135deg, #11D48A, #0eb87a);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(17, 212, 138, 0.15);
     }
 
     .btn-success:hover:not(:disabled) {
-      filter: brightness(1.1);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(17, 212, 138, 0.25);
     }
 
     .btn-secondary {
-      background: #374151;
+      background: #f3f4f6;
       color: #9ca3af;
       cursor: not-allowed;
     }
 
     button:disabled {
-      opacity: 0.7;
+      opacity: 0.6;
       cursor: not-allowed;
     }
 
     .spinner-small {
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      width: 16px;
+      height: 16px;
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
       border-top-color: white;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;

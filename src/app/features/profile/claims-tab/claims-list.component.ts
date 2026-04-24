@@ -55,154 +55,123 @@ import { PendingTxStore } from '../../../core/services/pending-tx.service';
     .claims-container {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-      color: #e5e7eb;
+      gap: 16px;
     }
 
     .list-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .list-header h2 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 700;
-      background: linear-gradient(90deg, #fff, #9ca3af);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .refresh-btn {
-      background: rgba(55, 65, 81, 0.5);
-      border: 1px solid #374151;
-      color: #9ca3af;
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.75rem;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
-
-    .refresh-btn:hover:not(:disabled) {
-      background: #374151;
-      color: #fff;
+      display: none; /* Already have a title in ProfileComponent if needed, or keeping it clean */
     }
 
     .claims-grid {
       display: grid;
-      gap: 1rem;
+      gap: 16px;
     }
 
     .claim-row {
-      background: rgba(31, 41, 55, 0.6);
-      backdrop-filter: blur(10px);
-      border: 1px solid #374151;
-      border-radius: 12px;
-      padding: 1.25rem;
+      background: #FFFFFF;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 16px;
+      padding: 20px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
     }
 
     .claim-row:hover {
-      border-color: #4b5563;
-      transform: translateX(4px);
-      background: rgba(31, 41, 55, 0.8);
+      border-color: rgba(17, 212, 138, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
     }
 
     .claim-row.claimed {
       opacity: 0.6;
+      background: #f9fafb;
       border-style: dashed;
-      background: rgba(17, 24, 39, 0.4);
     }
 
     .claim-info {
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 6px;
     }
 
     .market-title {
-      font-weight: 600;
+      font-weight: 700;
       font-size: 1.05rem;
-      color: #f3f4f6;
+      color: #111815;
     }
 
     .claim-meta {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      font-size: 0.875rem;
+      gap: 12px;
+      font-size: 0.85rem;
     }
 
     .amount {
-      color: #10b981;
+      color: #11D48A;
       font-weight: 800;
-      letter-spacing: -0.01em;
     }
 
     .status-badge {
-      padding: 0.15rem 0.5rem;
-      border-radius: 99px;
+      padding: 4px 10px;
+      border-radius: 8px;
       font-size: 0.7rem;
       font-weight: 700;
       text-transform: uppercase;
-      background: #374151;
-      color: #9ca3af;
+      background: #f3f4f6;
+      color: #6b7280;
     }
 
     .status-badge.resolved {
-      background: rgba(16, 185, 129, 0.15);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.2);
+      background: rgba(17, 212, 138, 0.08);
+      color: #0eb87a;
     }
 
     .impact-info {
-      margin-top: 0.2rem;
+      margin-top: 4px;
     }
 
     .impact-badge {
-      font-size: 0.7rem;
-      color: #a78bfa;
+      font-size: 0.72rem;
+      color: #8b5cf6;
       font-weight: 600;
-      background: rgba(139, 92, 246, 0.1);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
+      background: rgba(139, 92, 246, 0.06);
+      padding: 4px 8px;
+      border-radius: 6px;
     }
 
     .loading-state, .empty-state {
-      padding: 4rem 2rem;
+      padding: 64px 32px;
       text-align: center;
-      background: rgba(17, 24, 39, 0.4);
-      border-radius: 16px;
-      border: 1px dashed #374151;
-      color: #9ca3af;
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      color: #6b7280;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.5rem;
+      gap: 8px;
     }
 
     .empty-icon {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
+      font-size: 3rem;
+      margin-bottom: 8px;
     }
 
     .skeleton-list {
       display: grid;
-      gap: 1rem;
+      gap: 16px;
       width: 100%;
     }
 
     .skeleton-item {
       height: 90px;
-      background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+      background: linear-gradient(90deg, #f3f4f6 25%, #f9fafb 50%, #f3f4f6 75%);
       background-size: 200% 100%;
-      border-radius: 12px;
+      border-radius: 16px;
       animation: shimmer 2s infinite linear;
     }
 
