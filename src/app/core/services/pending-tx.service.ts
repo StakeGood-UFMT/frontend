@@ -3,9 +3,9 @@ import { Injectable, signal, effect, inject } from '@angular/core';
 export interface PendingTx {
   txHash?: string;
   marketId: string;
-  outcome: string;
-  amount: number;
-  type: 'STAKE';
+  outcome?: string;
+  amount?: number;
+  type: 'STAKE' | 'CLAIM';
   status: 'pending' | 'submitted' | 'confirmed' | 'failed';
   timestamp: number;
 }
