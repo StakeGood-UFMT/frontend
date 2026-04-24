@@ -28,6 +28,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent) 
       },
       {
+        path: 'claims',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/profile/claims-tab/claims-page.component').then(m => m.ClaimsPageComponent)
+      },
+      {
         path: 'onboarding/kyc',
         loadComponent: () => import('./features/onboarding/kyc/kyc.component').then(m => m.KycComponent)
       },

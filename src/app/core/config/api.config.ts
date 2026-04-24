@@ -29,8 +29,12 @@ export const API_CONFIG = {
     transactions: {
       base: '/transactions',
       buildPrediction: '/transactions/build-prediction',
+      buildClaim: '/transactions/build-claim',
       submit: '/transactions/submit',
       status: (hash: string) => `/transactions/${hash}/status`,
+    },
+    users: {
+      meClaims: '/users/me/claims',
     }
   }
 };
