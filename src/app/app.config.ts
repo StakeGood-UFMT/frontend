@@ -1,5 +1,5 @@
 import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withHashLocation } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { authRefreshInterceptor } from './core/interceptors/auth-refresh.interceptor';
@@ -18,7 +18,7 @@ import { MarketEffects } from './core/store/market/market.effects';
 export const appConfig: ApplicationConfig = {
   providers: [
 
-    provideRouter(routes),
+    provideRouter(routes, withHashLocation()),
     provideHttpClient(withInterceptors(
       environment.useMock 
         ? [mockAuthInterceptor, mockMarketInterceptor, authRefreshInterceptor, authInterceptor] 
