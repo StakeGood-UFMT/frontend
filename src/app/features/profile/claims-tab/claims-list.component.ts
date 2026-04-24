@@ -14,7 +14,7 @@ import { PendingTxStore } from '../../../core/services/pending-tx.service';
       <header class="list-header">
         <h2>Available Claims</h2>
         <button (click)="loadClaims()" class="refresh-btn" [disabled]="loading()">
-          <i class="icon-refresh"></i> Refresh
+          <span [class.spinning]="loading()">↻</span> Refresh
         </button>
       </header>
 
@@ -59,7 +59,53 @@ import { PendingTxStore } from '../../../core/services/pending-tx.service';
     }
 
     .list-header {
-      display: none; /* Already have a title in ProfileComponent if needed, or keeping it clean */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .list-header h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #111815;
+    }
+
+    .refresh-btn {
+      background: transparent;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      color: #6b7280;
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .refresh-btn:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: #11D48A;
+      color: #11D48A;
+    }
+
+    .refresh-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .spinning {
+      display: inline-block;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
     .claims-grid {
