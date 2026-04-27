@@ -4,6 +4,9 @@ import { RouterModule } from '@angular/router';
 import { WalletConnect } from '../../../shared/components/wallet-connect';
 import { AuthService } from '../../services/auth.service';
 import { UserNotificationsService } from '../../services/user-notifications.service';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { selectIsAdmin } from '../../store/auth/auth.selectors';
 
 @Component({
   selector: 'app-top-bar',
@@ -45,15 +48,45 @@ import { UserNotificationsService } from '../../services/user-notifications.serv
                   <span class="icon">🏆</span>
                   <span class="label">Arena</span>
                 </a>
+                <a routerLink="/impact/ledger" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
+                  <span class="icon">📊</span>
+                  <span class="label">Impact Ledger</span>
+                </a>
+                <a routerLink="/ngos" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
+                  <span class="icon">🌍</span>
+                  <span class="label">NGO Directory</span>
+                </a>
+                <a *ngIf="isLoggedIn()" routerLink="/voting" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
+                  <span class="icon">🗳️</span>
+                  <span class="label">Voting</span>
+                </a>
                 <a *ngIf="isLoggedIn()" routerLink="/profile" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
                   <span class="icon">👤</span>
                   <span class="label">Profile</span>
+                </a>
+                <a *ngIf="isLoggedIn()" routerLink="/settings" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
+                  <span class="icon">⚙️</span>
+                  <span class="label">Settings</span>
                 </a>
                 <a *ngIf="isLoggedIn()" routerLink="/notifications" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
                   <span class="icon">🔔</span>
                   <span class="label">Notifications</span>
                   <span *ngIf="unreadCount() > 0" class="badge">{{ unreadCount() }}</span>
                 </a>
+
+                <!-- Admin Section -->
+                <ng-container *ngIf="isAdmin()">
+                  <div class="drawer-divider"></div>
+                  <div class="nav-section-title">Admin Operations</div>
+                  <a routerLink="/admin/keeper" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item admin-item">
+                    <span class="icon">⚙️</span>
+                    <span class="label">Keeper TTL</span>
+                  </a>
+                  <a routerLink="/admin/markets" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item admin-item">
+                    <span class="icon">🏢</span>
+                    <span class="label">Market Admin</span>
+                  </a>
+                </ng-container>
               </nav>
 
               <div class="drawer-divider"></div>
@@ -243,6 +276,20 @@ import { UserNotificationsService } from '../../services/user-notifications.serv
         margin: 10px 0;
       }
 
+      .nav-section-title {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 8px 16px;
+      }
+
+      .admin-item:hover, .admin-item.active {
+        color: #10b981 !important;
+        background: rgba(16, 185, 129, 0.08) !important;
+      }
+
       .wallet-section {
         margin-top: auto;
         padding-bottom: 20px;
@@ -258,8 +305,10 @@ import { UserNotificationsService } from '../../services/user-notifications.serv
 export class TopBarComponent {
   public isMenuOpen = signal(false);
   private auth = inject(AuthService);
+  private store = inject(Store);
   private userNotificationsService = inject(UserNotificationsService);
   public isLoggedIn = this.auth.isLoggedIn;
+  public isAdmin = toSignal(this.store.select(selectIsAdmin), { initialValue: false });
   public unreadCount = this.userNotificationsService.unreadCount;
 
   toggleMenu() {
