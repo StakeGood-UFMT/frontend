@@ -1,84 +1,106 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { LegalService } from '../../../../core/services/legal.service';
 
 @Component({
   selector: 'app-terms',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <main class="terms-container">
-      <div class="terms-card">
-        <header class="terms-header">
-          <div class="badge">Legal Document</div>
-          <h1>Terms of Use</h1>
-          <div class="version-info">
-            <span class="version">Version 2.1.0</span>
-            <span class="dot"></span>
-            <span class="date">Last updated: April 27, 2026</span>
+      @if (legalService.loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading terms...</p>
+        </div>
+      } @else if (legalService.error()) {
+        <div class="error-state">
+          <p>{{ legalService.error() }}</p>
+          <button (click)="legalService.fetchCurrentTerms()" class="btn-retry">Try Again</button>
+        </div>
+      } @else {
+        @if (legalService.terms(); as terms) {
+          <div class="terms-card">
+            <header class="terms-header">
+              <div class="badge">Legal Document</div>
+              <h1>Terms of Use</h1>
+              <div class="version-info">
+                <span class="version">Version {{ terms.version }}</span>
+                <span class="dot"></span>
+                <span class="date">Last updated: {{ terms.updatedAt | date:'longDate' }}</span>
+              </div>
+            </header>
+
+            <nav class="terms-toc">
+              <h3>Table of Contents</h3>
+              <ul>
+                @for (section of terms.sections; track section.id) {
+                  <li><a [href]="'#' + section.id">{{ $index + 1 }}. {{ section.title }}</a></li>
+                }
+              </ul>
+            </nav>
+
+            <section class="terms-content">
+              @for (section of terms.sections; track section.id) {
+                <div [id]="section.id" class="term-section">
+                  <h2>{{ $index + 1 }}. {{ section.title }}</h2>
+                  <div [innerHTML]="section.body"></div>
+                </div>
+              }
+            </section>
+
+            <footer class="terms-footer">
+              <p>Questions about our terms? <a href="mailto:legal@stakegood.com">Contact our legal team</a></p>
+            </footer>
           </div>
-        </header>
-
-        <nav class="terms-toc">
-          <h3>Table of Contents</h3>
-          <ul>
-            <li><a href="#acceptance">1. Acceptance of Terms</a></li>
-            <li><a href="#eligibility">2. Eligibility</a></li>
-            <li><a href="#account">3. Account Responsibility</a></li>
-            <li><a href="#blockchain">4. Blockchain & Stellar Network</a></li>
-            <li><a href="#risk">5. Risk Disclosure</a></li>
-          </ul>
-        </nav>
-
-        <section class="terms-content">
-          <div id="acceptance" class="term-section">
-            <h2>1. Acceptance of Terms</h2>
-            <p>
-              By accessing or using the StakeGood platform, you agree to be bound by these Terms of Use and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
-            </p>
-          </div>
-
-          <div id="eligibility" class="term-section">
-            <h2>2. Eligibility</h2>
-            <p>
-              You must be at least 18 years of age and have the legal capacity to enter into a binding agreement to use StakeGood. By using the platform, you represent and warrant that you meet these requirements.
-            </p>
-          </div>
-
-          <div id="account" class="term-section">
-            <h2>3. Account Responsibility</h2>
-            <p>
-              You are solely responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account.
-            </p>
-          </div>
-
-          <div id="blockchain" class="term-section">
-            <h2>4. Blockchain & Stellar Network</h2>
-            <p>
-              StakeGood operates on the Stellar blockchain. You acknowledge that blockchain transactions are irreversible and that we have no control over the Stellar network's performance or fees.
-            </p>
-          </div>
-
-          <div id="risk" class="term-section">
-            <h2>5. Risk Disclosure</h2>
-            <p>
-              Participating in predictive markets involves significant financial risk. StakeGood is not a financial advisor, and you should only use funds you can afford to lose.
-            </p>
-          </div>
-        </section>
-
-        <footer class="terms-footer">
-          <p>Questions about our terms? <a href="mailto:legal@stakegood.com">Contact our legal team</a></p>
-        </footer>
-      </div>
+        }
+      }
     </main>
   `,
   styles: [`
     .terms-container {
       padding: 3rem 1.5rem;
       background-color: #F6F8F7;
-      min-height: 100%;
+      min-height: 100vh;
       display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .loading-state, .error-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       justify-content: center;
+      padding: 5rem;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(17, 212, 138, 0.1);
+      border-top: 4px solid #11D48A;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .btn-retry {
+      background: #111815;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      cursor: pointer;
     }
 
     .terms-card {
@@ -200,4 +222,10 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class TermsComponent { }
+export class TermsComponent implements OnInit {
+  legalService = inject(LegalService);
+
+  ngOnInit(): void {
+    this.legalService.fetchCurrentTerms();
+  }
+}
