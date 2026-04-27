@@ -53,6 +53,12 @@ import { UserNotificationsService } from '../../services/user-notifications.serv
             </a>
           </li>
           <li *ngIf="isLoggedIn()">
+            <a routerLink="/settings" routerLinkActive="active" class="nav-item">
+              <span class="icon">⚙️</span>
+              <span class="label">Settings</span>
+            </a>
+          </li>
+          <li *ngIf="isLoggedIn()">
             <a routerLink="/notifications" routerLinkActive="active" class="nav-item">
               <span class="icon">🔔</span>
               <span class="label">Notifications</span>
