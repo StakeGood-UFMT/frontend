@@ -31,9 +31,9 @@ export class SettingsService {
     this.error.set(null);
     try {
       const data = await lastValueFrom(
-        this.http.get<UserSettings>(`${this.base}${API_CONFIG.endpoints.users.meSettings}`)
+        this.http.get<any>(`${this.base}${API_CONFIG.endpoints.users.meSettings}`)
       );
-      this.settings.set(data);
+      this.settings.set(this.mapSettings(data));
     } catch (e: any) {
       this.error.set(e?.error?.message ?? 'We could not load your settings. Please try again.');
     } finally {
@@ -45,10 +45,15 @@ export class SettingsService {
   async updatePrivacy(payload: PrivacyPayload): Promise<void> {
     this.loading.set(true);
     try {
-      const updated = await lastValueFrom(
-        this.http.patch<UserSettings>(`${this.base}${API_CONFIG.endpoints.users.mePrivacy}`, payload)
+      const resp = await lastValueFrom(
+        this.http.patch<any>(`${this.base}${API_CONFIG.endpoints.users.mePrivacy}`, payload)
       );
-      this.settings.set(updated);
+      // Backend returns partial privacy object, update local state
+      this.settings.update(s => s ? { 
+        ...s, 
+        publicVisibility: resp.publicVisibility, 
+        privateMode: resp.privateMode 
+      } : s);
     } catch (e: any) {
       this.error.set(e?.error?.message ?? 'Unable to update privacy settings.');
       throw e;
@@ -92,24 +97,58 @@ export class SettingsService {
 
   // ── Wallets ──────────────────────────────────────────────────────────────
   async addWallet(address: string): Promise<void> {
-    const updated = await lastValueFrom(
-      this.http.post<UserSettings>(
+    const data = await lastValueFrom(
+      this.http.post<any>(
         `${this.base}${API_CONFIG.endpoints.users.meWallets}`,
         { address }
       )
     );
-    this.settings.set(updated);
+    // Backend returns full settings on add
+    this.settings.set(this.mapSettings(data));
   }
 
   async removeWallet(address: string): Promise<void> {
     if (!this.canRemoveWallet()) {
       throw new Error('You must have at least one linked wallet.');
     }
-    const updated = await lastValueFrom(
-      this.http.delete<UserSettings>(
+    const resp = await lastValueFrom(
+      this.http.delete<any>(
         `${this.base}${API_CONFIG.endpoints.users.meWalletRemove(address)}`
       )
     );
-    this.settings.set(updated);
+    // Backend returns { unlinked: true, address, linkedWallets: updated }
+    // We update local state by filtering
+    this.settings.update(s => {
+      if (!s) return null;
+      return {
+        ...s,
+        wallets: s.wallets.filter(w => w.address !== address)
+      };
+    });
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  private mapSettings(data: any): UserSettings {
+    return {
+      publicVisibility: data.privacy?.publicVisibility ?? false,
+      privateMode: data.privacy?.privateMode ?? false,
+      twoFactorEnabled: data.security?.totpEnabled ?? false,
+      monthlyLimit: data.spending?.spendingLimitUsd ?? 0,
+      monthlyConsumed: 0, // Placeholder
+      wallets: [
+        {
+          id: 'primary',
+          address: data.wallets.primary,
+          isPrimary: true,
+          linkedAt: data.profile.createdAt,
+        },
+        ...(data.wallets.linked || []).map((w: any) => ({
+          id: w.address,
+          address: w.address,
+          isPrimary: false,
+          linkedAt: w.linkedAt,
+        })),
+      ],
+    };
   }
 }
