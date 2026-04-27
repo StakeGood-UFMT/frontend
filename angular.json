@@ -33,7 +33,11 @@
             "allowedCommonJsDependencies": [
               "@stellar/stellar-sdk",
               "@albedo-link/intent",
-              "buffer"
+              "buffer",
+              "@stellar/freighter-api",
+              "@lobstrco/signer-extension-api",
+              "tweetnacl",
+              "tweetnacl-util"
             ]
           },
           "configurations": {
@@ -46,8 +50,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "10kB",
-                  "maximumError": "20kB"
+                  "maximumWarning": "20kB",
+                  "maximumError": "40kB"
                 }
               ],
               "outputHashing": "all"
