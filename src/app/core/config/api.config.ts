@@ -35,6 +35,13 @@ export const API_CONFIG = {
     },
     users: {
       meClaims: '/users/me/claims',
+      meSettings: '/users/me/settings',
+      mePrivacy: '/users/me/privacy',
+      me2faEnable: '/users/me/2fa/enable',
+      me2faVerify: '/users/me/2fa/verify',
+      meComplianceExport: '/users/me/compliance-report/export',
+      meWallets: '/users/me/wallets',
+      meWalletRemove: (address: string) => `/users/me/wallets/${address}`,
     },
     proposals: {
       base: '/proposals',
