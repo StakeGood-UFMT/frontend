@@ -243,7 +243,7 @@ export class ClaimsListComponent implements OnInit {
         // Debounce or just reload
         this.loadClaims();
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   ngOnInit() {

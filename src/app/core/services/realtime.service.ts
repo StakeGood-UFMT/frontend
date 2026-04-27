@@ -27,7 +27,7 @@ export class RealtimeService {
       } else {
         this.disconnect();
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   private connect(wallet: string) {
