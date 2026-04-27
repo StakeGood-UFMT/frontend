@@ -15,6 +15,14 @@ export const routes: Routes = [
         path: 'landing', 
         loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent) 
       },
+      {
+        path: 'help',
+        loadComponent: () => import('./features/static/pages/help-center/help-center.component').then(m => m.HelpCenterComponent)
+      },
+      {
+        path: 'terms',
+        loadComponent: () => import('./features/static/pages/terms/terms.component').then(m => m.TermsComponent)
+      },
       { 
         path: 'arena', 
         loadComponent: () => import('./features/arena/arena.component').then(m => m.ArenaComponent) 
@@ -94,4 +102,7 @@ export const routes: Routes = [
       }
     ]
   }
+  ,
+  // Wildcard route for 404 - placed at root level to catch unknown routes
+  { path: '**', loadComponent: () => import('./features/static/pages/not-found/not-found.component').then(m => m.NotFoundComponent) }
 ];
