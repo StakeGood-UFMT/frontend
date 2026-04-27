@@ -27,3 +27,8 @@ export const selectRole = createSelector(
   selectProfile,
   (profile) => profile?.role
 );
+
+export const selectIsAdmin = createSelector(
+  selectRole,
+  (role) => role === 'admin'
+);
