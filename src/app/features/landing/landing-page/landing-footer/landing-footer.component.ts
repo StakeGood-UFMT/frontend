@@ -26,6 +26,7 @@ import { RouterModule } from '@angular/router';
             <span class="col-title">Product</span>
             <a routerLink="/arena" class="footer-link">Arena</a>
             <a routerLink="/landing" class="footer-link">How it works</a>
+            <a routerLink="/help" class="footer-link">Help Center</a>
           </div>
           <div class="links-col">
             <span class="col-title">Community</span>
@@ -34,7 +35,7 @@ import { RouterModule } from '@angular/router';
           </div>
           <div class="links-col">
             <span class="col-title">Legal</span>
-            <a routerLink="/onboarding/terms" class="footer-link">Terms of Use</a>
+            <a routerLink="/terms" class="footer-link">Terms of Use</a>
             <a href="#" class="footer-link">Privacy</a>
           </div>
         </div>
