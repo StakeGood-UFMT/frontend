@@ -61,6 +61,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/notifications/notifications.component').then(m => m.NotificationsPage)
       },
       {
+        path: 'leaderboard',
+        loadComponent: () => import('./features/leaderboard/leaderboard.page').then(m => m.LeaderboardPage)
+      },
+      {
         path: 'settings',
         canActivate: [authGuard],
         loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsPage)
