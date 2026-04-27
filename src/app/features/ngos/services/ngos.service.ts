@@ -32,6 +32,13 @@ export class NgosService {
   // Computed: filtered NGOs
   public filteredNgos = computed(() => {
     let list = this._ngos();
+    
+    // Defensive check to prevent "list is not iterable" errors
+    if (!Array.isArray(list)) {
+      console.warn('[NgosService] list is not an array:', list);
+      return [];
+    }
+
     const { search, cause, sortBy } = this._filters();
 
     if (cause !== 'ALL') {
@@ -64,9 +71,19 @@ export class NgosService {
 
     try {
       const response = await lastValueFrom(
-        this.http.get<Ngo[]>(this.baseUrl)
+        this.http.get<any>(this.baseUrl)
       );
-      this._ngos.set(response);
+      
+      // Backend returns { ngos: Ngo[], pagination: ... }
+      const list = Array.isArray(response) ? response : (response?.ngos || []);
+      
+      if (Array.isArray(list)) {
+        this._ngos.set(list);
+      } else {
+        console.error('[NgosService] Failed to extract NGOs array from response:', response);
+        this._ngos.set([]);
+        this._error.set('Server returned invalid data format');
+      }
     } catch (err: any) {
       console.error('[NgosService] Failed to fetch NGOs', err);
       this._error.set(err?.message || 'Failed to load NGOs. Please try again.');
