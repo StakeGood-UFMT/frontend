@@ -45,6 +45,11 @@ export const API_CONFIG = {
     voting: {
       buildVote: '/transactions/build-vote',
     },
+    notifications: {
+      base: '/notifications',
+      markAllRead: '/notifications/mark-all-read',
+      read: (id: string) => `/notifications/${id}/read`,
+    },
     admin: {
       base: '/admin',
       keeperBatchBump: '/admin/keeper/batch-bump-ttl',

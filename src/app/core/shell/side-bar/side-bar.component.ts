@@ -6,6 +6,7 @@ import { WalletConnect } from '../../../shared/components/wallet-connect';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { selectIsAdmin } from '../../store/auth/auth.selectors';
+import { UserNotificationsService } from '../../services/user-notifications.service';
 
 @Component({
   selector: 'app-side-bar',
@@ -43,6 +44,13 @@ import { selectIsAdmin } from '../../store/auth/auth.selectors';
             <a routerLink="/profile" routerLinkActive="active" class="nav-item">
               <span class="icon">👤</span>
               <span class="label">Profile</span>
+            </a>
+          </li>
+          <li *ngIf="isLoggedIn()">
+            <a routerLink="/notifications" routerLinkActive="active" class="nav-item">
+              <span class="icon">🔔</span>
+              <span class="label">Notifications</span>
+              <span *ngIf="unreadCount() > 0" class="badge">{{ unreadCount() }}</span>
             </a>
           </li>
 
@@ -114,6 +122,17 @@ import { selectIsAdmin } from '../../store/auth/auth.selectors';
       margin-right: 1rem;
       font-size: 1.25rem;
     }
+    .badge {
+      margin-left: auto;
+      background: #11D48A;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 0.1rem 0.4rem;
+      border-radius: 99px;
+      min-width: 1.25rem;
+      text-align: center;
+    }
     .sidebar-footer {
       padding-top: 2rem;
       border-top: 1px solid rgba(0,0,0,0.05);
@@ -148,7 +167,9 @@ import { selectIsAdmin } from '../../store/auth/auth.selectors';
 export class SideBarComponent {
   private auth = inject(AuthService);
   private store = inject(Store);
+  private userNotificationsService = inject(UserNotificationsService);
   
   public isLoggedIn = this.auth.isLoggedIn;
   public isAdmin = toSignal(this.store.select(selectIsAdmin), { initialValue: false });
+  public unreadCount = this.userNotificationsService.unreadCount;
 }

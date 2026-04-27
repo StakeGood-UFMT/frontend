@@ -3,6 +3,7 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { PendingTxStore } from './pending-tx.service';
 import { NotificationService } from './notification.service';
+import { UserNotificationsService } from './user-notifications.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,6 +12,7 @@ export class RealtimeService {
   private authService = inject(AuthService);
   private pendingTxStore = inject(PendingTxStore);
   private notificationService = inject(NotificationService);
+  private userNotificationsService = inject(UserNotificationsService);
   
   private socket: WebSocket | null = null;
   private reconnectTimeout: any = null;
@@ -21,6 +23,7 @@ export class RealtimeService {
       const profile = this.authService.profile();
       if (profile?.public_key) {
         this.connect(profile.public_key);
+        this.userNotificationsService.fetchNotifications();
       } else {
         this.disconnect();
       }
@@ -105,6 +108,13 @@ export class RealtimeService {
         if (data.txHash) {
           this.pendingTxStore.updateStatus(data.txHash, 'failed');
           this.notificationService.show(`Transaction failed: ${data.reason || 'Unknown error'}`, 'error', data.txHash);
+        }
+        break;
+
+      case 'notification_created':
+        if (data.notification) {
+          this.userNotificationsService.addNotification(data.notification);
+          this.notificationService.show(data.notification.title, 'success');
         }
         break;
     }
