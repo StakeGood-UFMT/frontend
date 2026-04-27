@@ -50,6 +50,11 @@ export const API_CONFIG = {
       markAllRead: '/notifications/mark-all-read',
       read: (id: string) => `/notifications/${id}/read`,
     },
+    ngos: {
+      base: '/ngos',
+      detail: (id: string) => `/ngos/${id}`,
+      timeline: (id: string) => `/ngos/${id}/timeline`,
+    },
     admin: {
       base: '/admin',
       keeperBatchBump: '/admin/keeper/batch-bump-ttl',

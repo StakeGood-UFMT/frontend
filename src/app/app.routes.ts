@@ -61,6 +61,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/notifications/notifications.component').then(m => m.NotificationsPage)
       },
       {
+        path: 'ngos',
+        loadComponent: () => import('./features/ngos/pages/ngo-directory/ngo-directory.component').then(m => m.NgoDirectoryPage)
+      },
+      {
+        path: 'ngos/:id',
+        loadComponent: () => import('./features/ngos/pages/ngo-profile/ngo-profile.component').then(m => m.NgoProfilePage)
+      },
+      {
         path: 'admin',
         canActivate: [authGuard, adminGuard],
         children: [
