@@ -49,6 +49,10 @@ export const routes: Routes = [
         path: 'voting',
         canActivate: [authGuard],
         loadComponent: () => import('./features/voting/voting.component').then(m => m.VotingPage)
+      },
+      {
+        path: 'impact/ledger',
+        loadComponent: () => import('./features/impact/ledger/impact-ledger.component').then(m => m.ImpactLedgerPage)
       }
     ]
   }

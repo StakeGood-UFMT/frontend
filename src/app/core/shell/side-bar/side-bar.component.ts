@@ -24,6 +24,12 @@ import { WalletConnect } from '../../../shared/components/wallet-connect';
               <span class="label">Arena</span>
             </a>
           </li>
+          <li>
+            <a routerLink="/impact/ledger" routerLinkActive="active" class="nav-item">
+              <span class="icon">📊</span>
+              <span class="label">Impact Ledger</span>
+            </a>
+          </li>
           <li *ngIf="isLoggedIn()">
             <a routerLink="/voting" routerLinkActive="active" class="nav-item">
               <span class="icon">🗳️</span>
