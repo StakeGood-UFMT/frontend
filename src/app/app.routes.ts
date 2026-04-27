@@ -56,6 +56,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/impact/ledger/impact-ledger.component').then(m => m.ImpactLedgerPage)
       },
       {
+        path: 'notifications',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/notifications/notifications.component').then(m => m.NotificationsPage)
+      },
+      {
         path: 'admin',
         canActivate: [authGuard, adminGuard],
         children: [

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { WalletConnect } from '../../../shared/components/wallet-connect';
 import { AuthService } from '../../services/auth.service';
+import { UserNotificationsService } from '../../services/user-notifications.service';
 
 @Component({
   selector: 'app-top-bar',
@@ -47,6 +48,11 @@ import { AuthService } from '../../services/auth.service';
                 <a *ngIf="isLoggedIn()" routerLink="/profile" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
                   <span class="icon">👤</span>
                   <span class="label">Profile</span>
+                </a>
+                <a *ngIf="isLoggedIn()" routerLink="/notifications" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
+                  <span class="icon">🔔</span>
+                  <span class="label">Notifications</span>
+                  <span *ngIf="unreadCount() > 0" class="badge">{{ unreadCount() }}</span>
                 </a>
               </nav>
 
@@ -219,6 +225,17 @@ import { AuthService } from '../../services/auth.service';
         margin-right: 12px;
         font-size: 1.25rem;
       }
+      .badge {
+        margin-left: auto;
+        background: #11D48A;
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 800;
+        padding: 0.1rem 0.4rem;
+        border-radius: 99px;
+        min-width: 1.25rem;
+        text-align: center;
+      }
 
       .drawer-divider {
         height: 1px;
@@ -241,7 +258,9 @@ import { AuthService } from '../../services/auth.service';
 export class TopBarComponent {
   public isMenuOpen = signal(false);
   private auth = inject(AuthService);
+  private userNotificationsService = inject(UserNotificationsService);
   public isLoggedIn = this.auth.isLoggedIn;
+  public unreadCount = this.userNotificationsService.unreadCount;
 
   toggleMenu() {
     this.isMenuOpen.update(v => !v);
