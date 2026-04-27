@@ -34,6 +34,12 @@ import { UserNotificationsService } from '../../services/user-notifications.serv
               <span class="label">Impact Ledger</span>
             </a>
           </li>
+          <li>
+            <a routerLink="/ngos" routerLinkActive="active" class="nav-item">
+              <span class="icon">🌍</span>
+              <span class="label">NGO Directory</span>
+            </a>
+          </li>
           <li *ngIf="isLoggedIn()">
             <a routerLink="/voting" routerLinkActive="active" class="nav-item">
               <span class="icon">🗳️</span>
