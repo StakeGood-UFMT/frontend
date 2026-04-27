@@ -62,6 +62,10 @@ export const API_CONFIG = {
       detail: (id: string) => `/ngos/${id}`,
       timeline: (id: string) => `/ngos/${id}/timeline`,
     },
+    legal: {
+      termsCurrent: '/legal/terms/current',
+      faq: '/legal/faq',
+    },
     admin: {
       base: '/admin',
       keeperBatchBump: '/admin/keeper/batch-bump-ttl',

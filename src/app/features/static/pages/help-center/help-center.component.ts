@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { LegalService } from '../../../../core/services/legal.service';
 
 @Component({
   selector: 'app-help-center',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <main class="help-container">
       <header class="help-header">
@@ -25,7 +27,7 @@ import { CommonModule } from '@angular/common';
           </div>
           <h3>Getting Started</h3>
           <p>Learn the basics of how StakeGood works and start predicting.</p>
-          <a href="#" class="link">View 12 articles</a>
+          <a routerLink="/arena" class="link">Explore Markets</a>
         </div>
 
         <div class="category-card">
@@ -34,7 +36,7 @@ import { CommonModule } from '@angular/common';
           </div>
           <h3>Wallets & Payments</h3>
           <p>How to link your Stellar wallet and manage your funds safely.</p>
-          <a href="#" class="link">View 8 articles</a>
+          <a routerLink="/settings" class="link">Manage Wallets</a>
         </div>
 
         <div class="category-card">
@@ -43,7 +45,7 @@ import { CommonModule } from '@angular/common';
           </div>
           <h3>Security & Trust</h3>
           <p>Everything you need to know about our security protocols.</p>
-          <a href="#" class="link">View 5 articles</a>
+          <a routerLink="/terms" class="link">View Terms</a>
         </div>
 
         <div class="category-card">
@@ -52,33 +54,37 @@ import { CommonModule } from '@angular/common';
           </div>
           <h3>Community & FAQ</h3>
           <p>Join the conversation and find answers to common questions.</p>
-          <a href="#" class="link">View 15 articles</a>
+          <a href="https://discord.gg/stakegood" target="_blank" class="link">Join Discord</a>
         </div>
       </section>
 
       <section class="featured-articles">
-        <h2>Featured Articles</h2>
-        <div class="article-list">
-          <div class="article-item">
-            <span class="dot"></span>
-            <a href="#">How to bridge assets to the Stellar Network?</a>
+        <h2>Frequently Asked Questions</h2>
+        @if (legalService.loading()) {
+          <div class="loading-faq">Loading FAQs...</div>
+        } @else {
+          <div class="faq-accordion">
+            @for (item of legalService.faqItems(); track item.id) {
+              <details class="faq-item">
+                <summary>
+                  <span class="faq-category">{{ item.category }}</span>
+                  <span class="faq-question">{{ item.question }}</span>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </summary>
+                <div class="faq-answer">
+                  <p>{{ item.answer }}</p>
+                </div>
+              </details>
+            }
           </div>
-          <div class="article-item">
-            <span class="dot"></span>
-            <a href="#">Understanding market resolution and voting.</a>
-          </div>
-          <div class="article-item">
-            <span class="dot"></span>
-            <a href="#">What happens if a market is disputed?</a>
-          </div>
-        </div>
+        }
       </section>
 
       <footer class="help-footer">
         <div class="contact-card">
           <h2>Still need help?</h2>
           <p>Our support team is always ready to assist you with any questions.</p>
-          <button class="btn-primary">Contact Support</button>
+          <a href="mailto:support@stakegood.com" class="btn-primary">Contact Support</a>
         </div>
       </footer>
     </main>
@@ -277,10 +283,81 @@ import { CommonModule } from '@angular/common';
       transform: scale(1.05);
     }
 
+    .loading-faq {
+      text-align: center;
+      padding: 3rem;
+      color: #6B7280;
+    }
+
+    .faq-accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .faq-item {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #E5E7EB;
+    }
+
+    .faq-item summary {
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      list-style: none;
+      position: relative;
+    }
+
+    .faq-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-category {
+      background: rgba(17, 212, 138, 0.1);
+      color: #0D9E67;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-right: 1rem;
+      text-transform: uppercase;
+    }
+
+    .faq-question {
+      font-weight: 600;
+      color: #111815;
+      flex: 1;
+    }
+
+    .chevron {
+      transition: transform 0.3s;
+      color: #9CA3AF;
+    }
+
+    .faq-item[open] .chevron {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      padding: 0 1.5rem 1.5rem;
+      color: #4B5563;
+      line-height: 1.6;
+    }
+
     @media (max-width: 768px) {
       .help-header h1 { font-size: 2.25rem; }
       .contact-card { padding: 2rem; }
+      .faq-item summary { padding: 1rem; }
     }
   `]
 })
-export class HelpCenterComponent { }
+export class HelpCenterComponent implements OnInit {
+  legalService = inject(LegalService);
+
+  ngOnInit(): void {
+    this.legalService.fetchFAQ();
+  }
+}
