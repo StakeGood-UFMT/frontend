@@ -37,4 +37,12 @@ export class NotificationService {
       prev.map(n => n.id === id ? { ...n, ...updates } : n)
     );
   }
+
+  success(message: string, txHash?: string, persistent = false): string {
+    return this.show(message, 'success', txHash, persistent);
+  }
+
+  error(message: string, txHash?: string, persistent = false): string {
+    return this.show(message, 'error', txHash, persistent);
+  }
 }

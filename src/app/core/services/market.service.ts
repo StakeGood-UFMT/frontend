@@ -82,6 +82,10 @@ export class MarketService {
   }
 
   // FE-6 Methods
+  getMarkets() {
+    return this.http.get<MarketListResponse>(this.baseUrl);
+  }
+
   getMarket(id: string) {
     return this.http.get<Market>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.detail(id)}`);
   }

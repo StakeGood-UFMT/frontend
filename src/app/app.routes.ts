@@ -3,6 +3,7 @@ import { AppShellComponent } from './core/shell/app-shell/app-shell.component';
 import { authGuard } from './core/guards/auth.guard';
 import { termsGuard } from './core/guards/terms.guard';
 import { kycGuard } from './core/guards/kyc.guard';
+import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -53,6 +54,21 @@ export const routes: Routes = [
       {
         path: 'impact/ledger',
         loadComponent: () => import('./features/impact/ledger/impact-ledger.component').then(m => m.ImpactLedgerPage)
+      },
+      {
+        path: 'admin',
+        canActivate: [authGuard, adminGuard],
+        children: [
+          { path: '', redirectTo: 'keeper', pathMatch: 'full' },
+          {
+            path: 'keeper',
+            loadComponent: () => import('./features/admin/keeper-ttl/keeper-ttl.component').then(m => m.KeeperTTLComponent)
+          },
+          {
+            path: 'markets',
+            loadComponent: () => import('./features/admin/market-admin/market-admin.component').then(m => m.MarketAdminComponent)
+          }
+        ]
       }
     ]
   }

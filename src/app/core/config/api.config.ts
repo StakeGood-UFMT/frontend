@@ -44,6 +44,11 @@ export const API_CONFIG = {
     },
     voting: {
       buildVote: '/transactions/build-vote',
+    },
+    admin: {
+      base: '/admin',
+      keeperBatchBump: '/admin/keeper/batch-bump-ttl',
+      distributeImpact: (id: string) => `/admin/markets/${id}/distribute-impact`,
     }
   }
 };

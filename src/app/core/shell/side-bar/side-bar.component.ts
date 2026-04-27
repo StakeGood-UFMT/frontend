@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { WalletConnect } from '../../../shared/components/wallet-connect';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { selectIsAdmin } from '../../store/auth/auth.selectors';
 
 @Component({
   selector: 'app-side-bar',
@@ -40,6 +43,20 @@ import { WalletConnect } from '../../../shared/components/wallet-connect';
             <a routerLink="/profile" routerLinkActive="active" class="nav-item">
               <span class="icon">👤</span>
               <span class="label">Profile</span>
+            </a>
+          </li>
+
+          <!-- Admin Section -->
+          <li *ngIf="isAdmin()" class="admin-nav-group">
+            <div class="nav-divider"></div>
+            <div class="nav-section-title">Admin Operations</div>
+            <a routerLink="/admin/keeper" routerLinkActive="active" class="nav-item">
+              <span class="icon">⚙️</span>
+              <span class="label">Keeper TTL</span>
+            </a>
+            <a routerLink="/admin/markets" routerLinkActive="active" class="nav-item">
+              <span class="icon">🏢</span>
+              <span class="label">Market Admin</span>
             </a>
           </li>
         </ul>
@@ -101,6 +118,26 @@ import { WalletConnect } from '../../../shared/components/wallet-connect';
       padding-top: 2rem;
       border-top: 1px solid rgba(0,0,0,0.05);
     }
+    .nav-divider {
+      height: 1px;
+      background: rgba(0,0,0,0.05);
+      margin: 1.5rem 1rem 1rem;
+    }
+    .nav-section-title {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0 1rem 0.5rem;
+    }
+    .admin-nav-group .nav-item:hover {
+      background: rgba(16, 185, 129, 0.08);
+      color: #10b981;
+    }
+    .admin-nav-group .nav-item.active {
+      color: #10b981;
+    }
     @media (max-width: 768px) {
       .side-bar {
         display: none;
@@ -110,5 +147,8 @@ import { WalletConnect } from '../../../shared/components/wallet-connect';
 })
 export class SideBarComponent {
   private auth = inject(AuthService);
+  private store = inject(Store);
+  
   public isLoggedIn = this.auth.isLoggedIn;
+  public isAdmin = toSignal(this.store.select(selectIsAdmin), { initialValue: false });
 }
