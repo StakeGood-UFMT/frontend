@@ -44,6 +44,11 @@ export const routes: Routes = [
         path: 'proposals/new',
         canActivate: [authGuard, kycGuard],
         loadComponent: () => import('./features/proposals/pages/propose-market/propose-market.component').then(m => m.ProposeMarketComponent)
+      },
+      {
+        path: 'voting',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/voting/voting.component').then(m => m.VotingPage)
       }
     ]
   }

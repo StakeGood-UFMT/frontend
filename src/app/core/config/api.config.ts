@@ -38,6 +38,12 @@ export const API_CONFIG = {
     },
     proposals: {
       base: '/proposals',
+    },
+    governance: {
+      organizations: '/governance/organizations',
+    },
+    voting: {
+      buildVote: '/transactions/build-vote',
     }
   }
 };
