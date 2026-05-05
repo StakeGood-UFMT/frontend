@@ -1,9 +1,8 @@
-import { Injectable, computed, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { API_CONFIG } from '../config/api.config';
-import { AuthState, AuthResponse, AuthProfile } from '../models/auth.model';
+import { AuthResponse, AuthProfile } from '../models/auth.model';
 import { AuthStorageService } from './auth-storage.service';
 import { WalletService } from './wallet.service';
 import { Store } from '@ngrx/store';
@@ -16,8 +15,6 @@ import { map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly baseUrl = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.base}`;
-  
   private http = inject(HttpClient);
   private storage = inject(AuthStorageService);
   private wallet = inject(WalletService);
@@ -57,7 +54,7 @@ export class AuthService {
       // 5. Update State via NgRx Action
       this.store.dispatch(AuthActions.loginSuccess({
         accessToken: response.jwt,
-        refreshToken: '', // Assuming refresh_token is not in verify response for now
+        refreshToken: response.refresh_token ?? '',
         profile: {
           public_key: response.wallet,
           role: response.user.role,
@@ -96,7 +93,7 @@ export class AuthService {
 
         this.store.dispatch(AuthActions.loginSuccess({
           accessToken: response.jwt,
-          refreshToken: '', 
+          refreshToken,
           profile: {
             public_key: response.wallet,
             role: response.user.role,
