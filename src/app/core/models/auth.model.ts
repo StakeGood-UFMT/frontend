@@ -7,6 +7,7 @@ export interface AuthProfile {
 }
 
 export interface AuthResponse {
+  refresh_token?: string;
   jwt: string;
   wallet: string;
   kyc_status: 'none' | 'pending' | 'verified' | 'rejected';

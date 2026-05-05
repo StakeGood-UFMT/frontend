@@ -33,9 +33,11 @@ export class ProposeMarketComponent {
       category: ['', [Validators.required]],
       description: ['', [Validators.required, Validators.minLength(50)]],
       lock_at: ['', [Validators.required]],
+      resolve_at: ['', [Validators.required]],
       resolution_rule: ['', [Validators.required]],
       resolution_source: ['', [Validators.required]],
-      image_url: ['', [Validators.pattern(/https?:\/\/.+/)]]
+      oracle_url: ['', [Validators.pattern(/^https?:\/\/[^\s`"]+$/)]],
+      image_url: ['', [Validators.pattern(/^https?:\/\/[^\s`"]+$/)]]
     });
   }
 

@@ -48,6 +48,18 @@
           <span class="error-msg" *ngIf="isInvalid('lock_at')">Lock date is required.</span>
         </div>
 
+        <!-- Resolve Date -->
+        <div class="form-group">
+          <label for="resolve_at">Resolve Date (UTC)</label>
+          <input
+            id="resolve_at"
+            type="datetime-local"
+            formControlName="resolve_at"
+            [class.invalid]="isInvalid('resolve_at')"
+          >
+          <span class="error-msg" *ngIf="isInvalid('resolve_at')">Resolve date is required.</span>
+        </div>
+
         <!-- Description -->
         <div class="form-group full-width">
           <label for="description">Context & Description</label>
@@ -87,6 +99,19 @@
             [class.invalid]="isInvalid('resolution_source')"
           >
           <span class="error-msg" *ngIf="isInvalid('resolution_source')">Source is required.</span>
+        </div>
+
+        <!-- Oracle URL -->
+        <div class="form-group">
+          <label for="oracle_url">Oracle URL (Optional)</label>
+          <input
+            id="oracle_url"
+            type="text"
+            formControlName="oracle_url"
+            placeholder="https://..."
+            [class.invalid]="isInvalid('oracle_url')"
+          >
+          <span class="error-msg" *ngIf="isInvalid('oracle_url')">Must be a valid URL.</span>
         </div>
 
         <!-- Image URL -->
