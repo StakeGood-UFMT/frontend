@@ -97,6 +97,10 @@ export const routes: Routes = [
           {
             path: 'markets',
             loadComponent: () => import('./features/admin/market-admin/market-admin.component').then(m => m.MarketAdminComponent)
+          },
+          {
+            path: 'proposals',
+            loadComponent: () => import('./features/admin/proposal-moderation/proposal-moderation.component').then(m => m.ProposalModerationComponent)
           }
         ]
       }

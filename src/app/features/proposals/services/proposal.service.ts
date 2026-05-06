@@ -15,6 +15,40 @@ export interface MarketProposal {
   oracle_url?: string;
 }
 
+export type ProposalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface ProposalUserSummary {
+  id: string;
+  primaryWallet: string;
+  role?: string;
+}
+
+export interface ProposalSummary {
+  id: string;
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  status: ProposalStatus;
+  rejectionReason?: string | null;
+  imageUrl?: string | null;
+  oracleUrl?: string | null;
+  resolutionRule?: string | null;
+  resolutionSource?: string | null;
+  reservedOnChainId?: string | null;
+  marketId?: string | null;
+  lockAt: string;
+  resolveAt: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: ProposalUserSummary;
+}
+
+export interface BuildApprovalResponse {
+  xdr: string;
+  txHash: string;
+  onChainId: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -62,5 +96,40 @@ export class ProposalService {
       resolutionRule: proposal.resolution_rule,
       resolutionSource: proposal.resolution_source,
     });
+  }
+
+  listMine(status?: ProposalStatus): Observable<ProposalSummary[]> {
+    return this.http.get<ProposalSummary[]>(
+      `${this.baseUrl}${this.endpoint}/mine`,
+      {
+        params: status ? { status } : {},
+      },
+    );
+  }
+
+  listAll(status?: ProposalStatus): Observable<ProposalSummary[]> {
+    return this.http.get<ProposalSummary[]>(
+      `${this.baseUrl}${this.endpoint}`,
+      {
+        params: status ? { status } : {},
+      },
+    );
+  }
+
+  moderate(
+    id: string,
+    payload: { status: ProposalStatus; rejectionReason?: string },
+  ): Observable<any> {
+    return this.http.patch(
+      `${this.baseUrl}${this.endpoint}/${id}/moderate`,
+      payload,
+    );
+  }
+
+  buildApprovalXdr(id: string): Observable<BuildApprovalResponse> {
+    return this.http.post<BuildApprovalResponse>(
+      `${this.baseUrl}${this.endpoint}/${id}/build-approval`,
+      {},
+    );
   }
 }
