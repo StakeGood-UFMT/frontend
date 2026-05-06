@@ -4,6 +4,7 @@ export interface UserSettings {
   twoFactorEnabled: boolean;
   monthlyLimit: number;
   monthlyConsumed: number;
+  kycStatus: 'pending' | 'verified' | 'rejected' | 'expired' | string;
   wallets: LinkedWallet[];
 }
 

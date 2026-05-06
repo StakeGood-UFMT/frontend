@@ -1,12 +1,27 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { map, filter } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import * as MarketActions from '../../../core/store/market/market.actions';
 import * as MarketSelectors from '../../../core/store/market/market.selectors';
 import { ProbabilityChartComponent } from '../components/probability-chart/probability-chart.component';
 import { StakeFormComponent } from '../components/stake-form/stake-form.component';
+import { MarketService } from '../../../core/services/market.service';
+
+type ChainStatus = 'pending' | 'confirmed' | 'failed' | 'unknown';
+type PositionOutcome = 'YES' | 'NO';
+
+interface MarketPositionRow {
+  id: string;
+  user: { display: string };
+  outcome: PositionOutcome;
+  amount: number | null;
+  position_status: string;
+  tx_hash: string | null;
+  chain_status: ChainStatus;
+  created_at: string;
+}
 
 @Component({
   selector: 'app-market-detail',
@@ -23,37 +38,119 @@ import { StakeFormComponent } from '../components/stake-form/stake-form.componen
         <div class="content-side">
           <div class="market-header">
             <span class="category-badge">{{ market.category }}</span>
+            <div class="close-row" *ngIf="market.lock_at">
+              <span class="close-label">Closes in</span>
+              <span class="close-pill">{{ formatCountdown(market.lock_at) }}</span>
+              <span class="close-at">{{ market.lock_at | date:'MMM d, y, HH:mm:ss' }}</span>
+            </div>
             <h1>{{ market.title }}</h1>
             <p class="description">{{ market.description }}</p>
           </div>
 
-          <div class="chart-section">
-            <app-probability-chart 
-              [history]="(history$ | async) || []" 
-              [selectedRange]="selectedRange"
-              (rangeChange)="onRangeChange($event)">
-            </app-probability-chart>
+          <div class="tabs">
+            <button class="tab" [class.active]="activeTab() === 'probability'" (click)="setTab('probability')">
+              Probability
+            </button>
+            <button class="tab" [class.active]="activeTab() === 'details'" (click)="setTab('details')">
+              Details
+            </button>
+            <button class="tab" [class.active]="activeTab() === 'predictions'" (click)="setTab('predictions')">
+              Predictions
+            </button>
           </div>
 
-          <div class="resolution-details">
-            <h2>Resolution Details</h2>
-            <div class="details-grid">
-              <div class="detail-item">
-                <span class="label">Rule</span>
-                <p>{{ market.resolution_rule }}</p>
+          <div class="tab-panel" *ngIf="activeTab() === 'probability'">
+            <div class="chart-section">
+              <app-probability-chart 
+                [history]="(history$ | async) || []" 
+                [selectedRange]="selectedRange"
+                (rangeChange)="onRangeChange($event)">
+              </app-probability-chart>
+            </div>
+          </div>
+
+          <div class="tab-panel" *ngIf="activeTab() === 'details'">
+            <div class="resolution-details">
+              <h2>Resolution Details</h2>
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span class="label">Rule</span>
+                  <p>{{ market.resolution_rule }}</p>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Source</span>
+                  <p>
+                    <a [href]="market.oracle_url" target="_blank" *ngIf="market.oracle_url; else noLink">
+                      {{ market.resolution_source }} ↗
+                    </a>
+                    <ng-template #noLink>{{ market.resolution_source }}</ng-template>
+                  </p>
+                </div>
+                <div class="detail-item" *ngIf="market.contract_address">
+                  <span class="label">Smart Contract</span>
+                  <p class="mono">{{ market.contract_address }}</p>
+                </div>
               </div>
-              <div class="detail-item">
-                <span class="label">Source</span>
-                <p>
-                  <a [href]="market.oracle_url" target="_blank" *ngIf="market.oracle_url; else noLink">
-                    {{ market.resolution_source }} ↗
-                  </a>
-                  <ng-template #noLink>{{ market.resolution_source }}</ng-template>
-                </p>
+            </div>
+          </div>
+
+          <div class="tab-panel" *ngIf="activeTab() === 'predictions'">
+            <div class="positions-section">
+              <div class="positions-header">
+                <h2>Predictions History</h2>
+                <button class="refresh-btn" (click)="loadPositions()" [disabled]="positionsLoading()">
+                  {{ positionsLoading() ? 'Loading…' : 'Refresh' }}
+                </button>
               </div>
-              <div class="detail-item" *ngIf="market.contract_address">
-                <span class="label">Smart Contract</span>
-                <p class="mono">{{ market.contract_address }}</p>
+
+              <div class="positions-loading" *ngIf="positionsLoading()">
+                <div class="mini-spinner"></div>
+                <span>Loading predictions…</span>
+              </div>
+
+              <div class="positions-error" *ngIf="positionsError()">
+                {{ positionsError() }}
+              </div>
+
+              <div class="positions-empty" *ngIf="!positionsLoading() && !positionsError() && positions().length === 0">
+                No predictions yet.
+              </div>
+
+              <div class="positions-table-wrap" *ngIf="positions().length > 0">
+                <table class="positions-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Outcome</th>
+                      <th>Amount</th>
+                      <th>Chain</th>
+                      <th>When</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let p of positions()">
+                      <td class="mono">{{ p.user.display }}</td>
+                      <td>
+                        <span class="pill" [class.yes]="p.outcome === 'YES'" [class.no]="p.outcome === 'NO'">
+                          {{ p.outcome }}
+                        </span>
+                      </td>
+                      <td>{{ p.amount === null ? 'Hidden' : (p.amount | number:'1.2-2') + ' XLM' }}</td>
+                      <td>
+                        <span class="status" [class.ok]="p.chain_status === 'confirmed'" [class.bad]="p.chain_status === 'failed'" [class.wait]="p.chain_status === 'pending'">
+                          {{ p.chain_status }}
+                        </span>
+                      </td>
+                      <td>{{ p.created_at | date:'short' }}</td>
+                      <td class="actions">
+                        <a *ngIf="p.tx_hash" [href]="'https://stellar.expert/explorer/testnet/tx/' + p.tx_hash" target="_blank" class="tx-link">
+                          Explorer ↗
+                        </a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -124,6 +221,39 @@ import { StakeFormComponent } from '../components/stake-form/stake-form.componen
       margin-bottom: 0.5rem;
       text-transform: uppercase;
     }
+    .close-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.8rem;
+      color: #6B7280;
+      font-weight: 700;
+      flex-wrap: wrap;
+    }
+    .close-label {
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.7rem;
+      font-weight: 900;
+      color: #9CA3AF;
+    }
+    .close-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(17, 212, 138, 0.25);
+      background: rgba(17, 212, 138, 0.12);
+      color: #065F46;
+      font-weight: 900;
+      font-size: 0.8rem;
+    }
+    .close-at {
+      color: #6B7280;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
 
     h1 {
       font-size: 2.25rem;
@@ -142,9 +272,38 @@ import { StakeFormComponent } from '../components/stake-form/stake-form.componen
       line-height: 1.5;
     }
 
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: #F3F4F6;
+      padding: 0.25rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      width: fit-content;
+    }
+    .tab {
+      border: none;
+      background: transparent;
+      padding: 0.45rem 0.85rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 900;
+      cursor: pointer;
+      color: #6B7280;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    .tab.active {
+      background: white;
+      color: #111827;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .tab-panel {
+      margin-bottom: 1.25rem;
+    }
+
     .chart-section {
       height: 340px;
-      margin-bottom: 1.5rem;
     }
 
     .resolution-details {
@@ -245,29 +404,156 @@ import { StakeFormComponent } from '../components/stake-form/stake-form.componen
       font-weight: 700;
       cursor: pointer;
     }
+
+    .positions-section {
+      background: white;
+      border: 1px solid #F3F4F6;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px -10px rgba(0, 0, 0, 0.1);
+      padding: 1rem 1.25rem;
+    }
+    .positions-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .positions-header h2 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 800;
+      color: #111827;
+    }
+    .refresh-btn {
+      border: 1px solid #E5E7EB;
+      background: #F9FAFB;
+      color: #374151;
+      border-radius: 10px;
+      padding: 0.5rem 0.8rem;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .refresh-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .positions-loading {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: #6B7280;
+      font-size: 0.9rem;
+      padding: 0.75rem 0;
+    }
+    .mini-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #F3F4F6;
+      border-top-color: #11D48A;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .positions-error {
+      color: #DC2626;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 0.75rem 0;
+    }
+    .positions-empty {
+      color: #6B7280;
+      font-size: 0.9rem;
+      padding: 0.75rem 0;
+    }
+
+    .positions-table-wrap { overflow-x: auto; }
+    .positions-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .positions-table th, .positions-table td {
+      text-align: left;
+      padding: 0.6rem 0.5rem;
+      border-bottom: 1px solid #F3F4F6;
+      white-space: nowrap;
+    }
+    .positions-table th {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9CA3AF;
+      font-weight: 800;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 0.75rem;
+      border: 1px solid #E5E7EB;
+      background: #F9FAFB;
+      color: #374151;
+    }
+    .pill.yes { border-color: #A7F3D0; background: #ECFDF5; color: #065F46; }
+    .pill.no { border-color: #FECACA; background: #FEF2F2; color: #991B1B; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 0.75rem;
+      border: 1px solid #E5E7EB;
+      background: #F9FAFB;
+      color: #374151;
+      text-transform: uppercase;
+    }
+    .status.ok { border-color: #A7F3D0; background: #ECFDF5; color: #065F46; }
+    .status.bad { border-color: #FECACA; background: #FEF2F2; color: #991B1B; }
+    .status.wait { border-color: #FDE68A; background: #FFFBEB; color: #92400E; }
+    .actions { text-align: right; }
+    .tx-link {
+      color: #11D48A;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+    .tx-link:hover { text-decoration: underline; }
   `]
 })
 export class MarketDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private store = inject(Store);
+  private marketService = inject(MarketService);
   
   marketId = this.route.snapshot.paramMap.get('id');
   selectedRange = '1D';
+  private now = signal(Date.now());
+  private nowInterval?: ReturnType<typeof setInterval>;
+  activeTab = signal<'probability' | 'details' | 'predictions'>('probability');
 
   market$ = this.store.select(MarketSelectors.selectSelectedMarket);
   history$ = this.store.select(MarketSelectors.selectMarketHistory);
   loading$ = this.store.select(MarketSelectors.selectLoadingMarket);
   error$ = this.store.select(MarketSelectors.selectMarketError);
 
+  positions = signal<MarketPositionRow[]>([]);
+  positionsLoading = signal(false);
+  positionsError = signal<string | null>(null);
+
   ngOnInit() {
     if (this.marketId) {
       this.store.dispatch(MarketActions.loadMarket({ id: this.marketId }));
       this.store.dispatch(MarketActions.loadHistory({ id: this.marketId, range: this.selectedRange }));
+      this.loadPositions();
     }
+    this.nowInterval = setInterval(() => this.now.set(Date.now()), 1000);
   }
 
   ngOnDestroy() {
     this.store.dispatch(MarketActions.clearSelectedMarket());
+    if (this.nowInterval) clearInterval(this.nowInterval);
   }
 
   onRangeChange(range: string) {
@@ -277,10 +563,64 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  setTab(tab: 'probability' | 'details' | 'predictions') {
+    this.activeTab.set(tab);
+  }
+
   retry() {
     if (this.marketId) {
       this.store.dispatch(MarketActions.loadMarket({ id: this.marketId }));
       this.store.dispatch(MarketActions.loadHistory({ id: this.marketId, range: this.selectedRange }));
+      this.loadPositions();
     }
+  }
+
+  async loadPositions() {
+    if (!this.marketId) return;
+    this.positionsLoading.set(true);
+    this.positionsError.set(null);
+    try {
+      const resp = await firstValueFrom(
+        this.marketService.getMarketPositions(this.marketId, 25, 0),
+      );
+      this.positions.set((resp?.positions ?? []) as MarketPositionRow[]);
+    } catch (e: any) {
+      this.positionsError.set(
+        e?.error?.message ?? 'Failed to load predictions history.',
+      );
+    } finally {
+      this.positionsLoading.set(false);
+    }
+  }
+
+  formatCountdown(lockAt: string) {
+    const target = new Date(lockAt).getTime();
+    const diff = Math.max(0, target - this.now());
+    if (!Number.isFinite(diff) || diff <= 0) return 'Closed';
+
+    const second = 1000;
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+    const month = 30 * day;
+
+    let remaining = diff;
+    const months = Math.floor(remaining / month);
+    remaining -= months * month;
+    const days = Math.floor(remaining / day);
+    remaining -= days * day;
+    const hours = Math.floor(remaining / hour);
+    remaining -= hours * hour;
+    const minutes = Math.floor(remaining / minute);
+    remaining -= minutes * minute;
+    const seconds = Math.floor(remaining / second);
+
+    const parts: string[] = [];
+    if (months > 0) parts.push(`${months}mo`);
+    parts.push(`${days}d`);
+    parts.push(`${String(hours).padStart(2, '0')}h`);
+    parts.push(`${String(minutes).padStart(2, '0')}m`);
+    parts.push(`${String(seconds).padStart(2, '0')}s`);
+    return parts.join(' ');
   }
 }

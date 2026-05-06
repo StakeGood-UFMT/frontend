@@ -22,17 +22,40 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
       ></app-user-position-selector>
 
       <div class="form-content">
+        <div class="pools" *ngIf="market.yes_pool !== undefined && market.no_pool !== undefined">
+          <div class="pool-row">
+            <span class="pool-label">YES Pool</span>
+            <span class="pool-value">{{ market.yes_pool | number:'1.2-2' }} XLM</span>
+          </div>
+          <div class="pool-row">
+            <span class="pool-label">NO Pool</span>
+            <span class="pool-value">{{ market.no_pool | number:'1.2-2' }} XLM</span>
+          </div>
+          <div class="pool-row total">
+            <span class="pool-label">Total Staked</span>
+            <span class="pool-value">{{ totalStaked().toFixed(2) }} XLM</span>
+          </div>
+        </div>
+
         <div class="input-group">
-          <label>Amount (USDC)</label>
+          <label>Amount (XLM)</label>
+          <div class="quick-row">
+            <button class="quick-btn" (click)="setAmount(5)" [disabled]="isSubmitting()">5</button>
+            <button class="quick-btn" (click)="setAmount(10)" [disabled]="isSubmitting()">10</button>
+            <button class="quick-btn" (click)="setAmount(20)" [disabled]="isSubmitting()">20</button>
+          </div>
           <div class="input-wrapper">
+            <button class="step-btn" (click)="increment(-1)" [disabled]="isSubmitting() || amount() <= 0">−</button>
             <input 
               type="number" 
-              [(ngModel)]="amount" 
+              [ngModel]="amount()" 
+              (ngModelChange)="onAmountChange($event)"
               placeholder="0.00"
-              min="0.01"
-              step="0.01"
+              min="0"
+              step="1"
             />
-            <span class="currency">USDC</span>
+            <button class="step-btn" (click)="increment(1)" [disabled]="isSubmitting()">+</button>
+            <span class="currency">XLM</span>
           </div>
         </div>
 
@@ -43,23 +66,23 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
           </div>
           <div class="summary-row">
             <span>Potential Payout</span>
-            <span class="value success">{{ potentialPayout().toFixed(2) }} USDC</span>
+            <span class="value success">{{ potentialPayout().toFixed(2) }} XLM</span>
           </div>
           
           <div class="divider"></div>
           
           <div class="fees-section">
             <div class="summary-row fee">
-              <span>NGO Fee ({{ market.fee_ngo }}%)</span>
-              <span>{{ fees().ngo.toFixed(4) }} USDC</span>
+              <span>NGO Fee ({{ (market.fee_ngo * 100).toFixed(2) }}%)</span>
+              <span>{{ fees().ngo.toFixed(4) }} XLM</span>
             </div>
             <div class="summary-row fee">
-              <span>Platform Fee ({{ market.fee_platform }}%)</span>
-              <span>{{ fees().platform.toFixed(4) }} USDC</span>
+              <span>Platform Fee ({{ (market.fee_platform * 100).toFixed(2) }}%)</span>
+              <span>{{ fees().platform.toFixed(4) }} XLM</span>
             </div>
             <div class="summary-row fee">
-              <span>Gamification ({{ market.fee_gamification }}%)</span>
-              <span>{{ fees().gamification.toFixed(4) }} USDC</span>
+              <span>Gamification ({{ (market.fee_gamification * 100).toFixed(3) }}%)</span>
+              <span>{{ fees().gamification.toFixed(4) }} XLM</span>
             </div>
           </div>
         </div>
@@ -113,6 +136,30 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
     .form-content {
       padding: 1rem;
     }
+    .pools {
+      background: #F9FAFB;
+      border: 1px solid #F3F4F6;
+      border-radius: 10px;
+      padding: 0.75rem;
+      margin-bottom: 0.9rem;
+    }
+    .pool-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: #6B7280;
+      margin-bottom: 0.25rem;
+    }
+    .pool-row.total {
+      margin-top: 0.4rem;
+      padding-top: 0.4rem;
+      border-top: 1px solid #E5E7EB;
+      font-weight: 800;
+      color: #111827;
+    }
+    .pool-value { font-weight: 800; color: #111827; }
+    .pool-label { font-weight: 700; }
     .input-group label {
       display: block;
       font-size: 0.7rem;
@@ -122,15 +169,48 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    .input-wrapper {
-      position: relative;
+    .quick-row {
       display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .quick-btn {
+      flex: 1;
+      border: 1px solid #E5E7EB;
+      background: #F9FAFB;
+      border-radius: 10px;
+      padding: 0.45rem 0.5rem;
+      font-weight: 900;
+      font-size: 0.8rem;
+      color: #374151;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .quick-btn:hover:not(:disabled) { border-color: #11D48A; background: white; }
+    .quick-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .input-wrapper {
+      display: grid;
+      grid-template-columns: 40px 1fr 40px auto;
+      gap: 0.5rem;
       align-items: center;
     }
+    .step-btn {
+      border: 2px solid #F3F4F6;
+      background: #F9FAFB;
+      width: 40px;
+      height: 38px;
+      border-radius: 10px;
+      font-weight: 900;
+      font-size: 1.05rem;
+      cursor: pointer;
+      color: #374151;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .step-btn:hover:not(:disabled) { border-color: #11D48A; background: white; }
+    .step-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .input-wrapper input {
       width: 100%;
       padding: 0.65rem;
-      padding-right: 3rem;
       border: 2px solid #F3F4F6;
       border-radius: 8px;
       font-size: 0.95rem;
@@ -144,11 +224,10 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
       background: white;
     }
     .currency {
-      position: absolute;
-      right: 0.65rem;
       font-weight: 700;
       color: #9CA3AF;
       font-size: 0.7rem;
+      padding-right: 0.25rem;
     }
 
     .summary {
@@ -248,7 +327,7 @@ export class StakeFormComponent implements OnInit, OnChanges {
   @Input({ required: true }) market!: Market;
   
   side = signal<'YES' | 'NO'>('YES');
-  amount = 0;
+  amount = signal(0);
   isSubmitting = signal(false);
 
   constructor() {
@@ -277,7 +356,7 @@ export class StakeFormComponent implements OnInit, OnChanges {
     const isOutcomeBlocked = this.market.user_position?.outcome && 
                             this.market.user_position.outcome !== this.side();
     
-    return this.amount > 0 && 
+    return this.amount() > 0 && 
            this.authService.isLoggedIn() && 
            !isOutcomeBlocked && 
            this.market.status === 'active';
@@ -291,10 +370,10 @@ export class StakeFormComponent implements OnInit, OnChanges {
       await this.stakeService.placeStake(
         this.market.id,
         this.side(),
-        this.amount
+        this.amount()
       );
       // Reset amount on success
-      this.amount = 0;
+      this.amount.set(0);
     } catch (error) {
       // Error handled by service toast
     } finally {
@@ -304,22 +383,43 @@ export class StakeFormComponent implements OnInit, OnChanges {
 
   estimatedShares = computed(() => {
     const price = this.side() === 'YES' ? (this.market.yes_price || 0) : (this.market.no_price || 0);
-    if (this.amount <= 0 || price <= 0) return 0;
-    return this.amount / price;
+    const amt = this.amount();
+    if (amt <= 0 || price <= 0) return 0;
+    return amt / price;
   });
 
   potentialPayout = computed(() => {
-    if (this.amount <= 0) return 0;
+    if (this.amount() <= 0) return 0;
     // Simplification: 1 share = 1 USDC on resolution
     return this.estimatedShares();
   });
 
   fees = computed(() => {
-    const amt = this.amount || 0;
+    const amt = this.amount() || 0;
     return {
-      ngo: amt * (this.market.fee_ngo / 100),
-      platform: amt * (this.market.fee_platform / 100),
-      gamification: amt * (this.market.fee_gamification / 100)
+      ngo: amt * (this.market.fee_ngo || 0),
+      platform: amt * (this.market.fee_platform || 0),
+      gamification: amt * (this.market.fee_gamification || 0)
     };
   });
+
+  totalStaked = computed(() => {
+    const yes = Number(this.market.yes_pool ?? 0);
+    const no = Number(this.market.no_pool ?? 0);
+    return yes + no;
+  });
+
+  onAmountChange(val: any) {
+    const next = Number(val);
+    this.amount.set(Number.isFinite(next) ? Math.max(0, next) : 0);
+  }
+
+  setAmount(val: number) {
+    this.amount.set(Math.max(0, Math.round(val)));
+  }
+
+  increment(delta: number) {
+    const next = (this.amount() || 0) + delta;
+    this.amount.set(Math.max(0, Math.round(next)));
+  }
 }

@@ -31,6 +31,12 @@ import { Notification } from '../../../core/services/notification.service';
              class="explorer-link">
             View on Explorer
           </a>
+          <button
+            *ngIf="notification.type === 'pending' && notification.txHash"
+            class="status-btn"
+            (click)="check.emit(notification.txHash!)">
+            Check status
+          </button>
         </div>
 
         <button class="close-btn" (click)="close.emit()">
@@ -127,6 +133,24 @@ import { Notification } from '../../../core/services/notification.service';
       text-decoration: underline;
     }
 
+    .status-btn {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.35rem 0.6rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .status-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
     .close-btn {
       background: none;
       border: none;
@@ -183,4 +207,5 @@ import { Notification } from '../../../core/services/notification.service';
 export class TxToastComponent {
   @Input({ required: true }) notification!: Notification;
   @Output() close = new EventEmitter<void>();
+  @Output() check = new EventEmitter<string>();
 }

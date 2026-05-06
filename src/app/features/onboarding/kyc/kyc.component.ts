@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import * as AuthActions from '../../../core/store/auth/auth.actions';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
+import { API_CONFIG } from '../../../core/config/api.config';
 
 @Component({
   selector: 'app-kyc',
@@ -179,20 +182,30 @@ import * as AuthActions from '../../../core/store/auth/auth.actions';
 export class KycComponent {
   private store = inject(Store);
   private router = inject(Router);
+  private http = inject(HttpClient);
   public isVerifying = signal(false);
 
   startMockVerification() {
     this.isVerifying.set(true);
     
-    // Simulate a 2-second KYC verification process
     setTimeout(() => {
-      this.isVerifying.set(false);
-      
-      // Update NgRx Profile with approved KYC
-      this.store.dispatch(AuthActions.updateProfile({ profile: { kyc_status: 'approved' } }));
-      
-      // Redirect to Arena after approval
-      this.router.navigate(['/arena']);
+      void (async () => {
+        try {
+          await lastValueFrom(
+            this.http.post(
+              `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.users.meKycMockVerify}`,
+              {},
+            ),
+          );
+
+          this.store.dispatch(
+            AuthActions.updateProfile({ profile: { kyc_status: 'approved' } }),
+          );
+          await this.router.navigate(['/arena']);
+        } finally {
+          this.isVerifying.set(false);
+        }
+      })();
     }, 2000);
   }
 

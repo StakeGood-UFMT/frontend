@@ -15,6 +15,60 @@ export class StakeService {
   private pendingTxStore = inject(PendingTxStore);
   private notificationService = inject(NotificationService);
 
+  private sleep(ms: number) {
+    return new Promise<void>((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async waitForConfirmation(txHash: string, toastId: string) {
+    const maxAttempts = 25;
+    const delayMs = 2000;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await this.sleep(delayMs);
+
+      try {
+        const statusResp = await firstValueFrom(
+          this.http.get<{ status?: string }>(
+            `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.transactions.status(txHash)}`,
+          ),
+        );
+
+        const status = (statusResp?.status ?? '').toLowerCase();
+
+        if (status === 'confirmed') {
+          this.pendingTxStore.updateStatus(txHash, 'confirmed');
+          this.notificationService.update(toastId, {
+            message: 'Transaction confirmed!',
+            type: 'success',
+            persistent: false,
+          });
+          setTimeout(() => this.notificationService.remove(toastId), 5000);
+          setTimeout(() => this.pendingTxStore.removeTx(txHash), 10000);
+          return;
+        }
+
+        if (status === 'failed') {
+          this.pendingTxStore.updateStatus(txHash, 'failed');
+          this.notificationService.update(toastId, {
+            message: 'Transaction failed. Check Explorer for details.',
+            type: 'error',
+            persistent: false,
+          });
+          setTimeout(() => this.notificationService.remove(toastId), 7000);
+          return;
+        }
+      } catch {
+      }
+    }
+
+    this.notificationService.update(toastId, {
+      message:
+        'Network congested. Your transaction may still be processing. Check Explorer in a few minutes.',
+      persistent: false,
+    });
+    setTimeout(() => this.notificationService.remove(toastId), 7000);
+  }
+
   async placeStake(marketId: string, outcome: string, amount: number): Promise<void> {
     const toastId = this.notificationService.show('Building transaction...', 'pending', undefined, true);
 
@@ -55,7 +109,13 @@ export class StakeService {
       await firstValueFrom(
         this.http.post(
           `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.transactions.base}/submit`,
-          { signedXdr: signedTxXdr }
+          {
+            signedXdr: signedTxXdr,
+            txHash,
+            market_id: marketId,
+            outcome,
+            amount: amount.toString(),
+          }
         )
       );
 
@@ -64,7 +124,8 @@ export class StakeService {
         txHash
       });
 
-      // Status will be updated via WebSocket in the store/service
+      this.pendingTxStore.updateStatus(txHash, 'submitted');
+      void this.waitForConfirmation(txHash, toastId);
     } catch (error: any) {
       console.error('[StakeService] Stake failed:', error);
       

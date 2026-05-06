@@ -95,4 +95,14 @@ export class MarketService {
     return this.http.get<MarketHistoryResponse>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.history(id)}`, { params })
       .pipe(map(res => res.snapshots));
   }
+
+  getMarketPositions(id: string, limit = 25, offset = 0) {
+    const params = new HttpParams()
+      .set('limit', String(limit))
+      .set('offset', String(offset));
+    return this.http.get<any>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.positions(id)}`,
+      { params },
+    );
+  }
 }

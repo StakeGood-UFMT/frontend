@@ -15,6 +15,8 @@ export interface Market {
   image_url?: string;
   yes_price?: number;
   no_price?: number;
+  yes_pool?: number;
+  no_pool?: number;
   total_liquidity: string;
   lock_at: string;
   settle_at?: string;
