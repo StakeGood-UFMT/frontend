@@ -57,10 +57,15 @@ import { AdminMarketTTL } from '../../../../core/models/admin.model';
                 <span class="status-badge" [class]="m.status">{{ m.status }}</span>
               </td>
               <td>
-                <div class="ttl-value">
-                  <span class="ledger-num">{{ m.ttl_ledger_expiry || '---' }}</span>
-                  <span class="unit">ledgers</span>
-                </div>
+                <ng-container *ngIf="m.ttl_ledger_expiry !== null && m.ttl_ledger_expiry !== undefined; else noTtl">
+                  <div class="ttl-cell">
+                    <span class="ttl-primary">{{ formatLedgersAsDuration(m.ttl_ledger_expiry) }}</span>
+                    <span class="ttl-secondary">{{ m.ttl_ledger_expiry | number }} ledgers</span>
+                  </div>
+                </ng-container>
+                <ng-template #noTtl>
+                  <span class="ttl-missing">---</span>
+                </ng-template>
               </td>
               <td>
                 <span class="eligibility-chip" [class.eligible]="m.is_eligible_for_bump">
@@ -194,19 +199,24 @@ import { AdminMarketTTL } from '../../../../core/models/admin.model';
     .status-badge.locked { background: #fef9c3; color: #854d0e; }
     .status-badge.resolved { background: #dbeafe; color: #1e40af; }
     
-    .ttl-value {
+    .ttl-cell {
       display: flex;
-      align-items: baseline;
-      gap: 4px;
+      flex-direction: column;
+      gap: 2px;
+      line-height: 1.1;
     }
-    .ledger-num {
+    .ttl-primary {
       font-weight: 800;
       color: #1e293b;
     }
-    .unit {
-      font-size: 0.75rem;
+    .ttl-secondary {
+      font-size: 0.72rem;
       color: #94a3b8;
-      font-weight: 600;
+      font-weight: 650;
+    }
+    .ttl-missing {
+      font-weight: 700;
+      color: #94a3b8;
     }
 
     .eligibility-chip {
@@ -305,5 +315,27 @@ export class KeeperTTLTableComponent {
 
   onBatchBump() {
     this.bumpBatch.emit(this.selectedIds());
+  }
+
+  formatLedgersAsDuration(ledgers: number): string {
+    const seconds = Math.max(0, Math.floor(ledgers * 5));
+    if (seconds === 0) return 'Expired';
+
+    const month = 30 * 24 * 60 * 60;
+    const day = 24 * 60 * 60;
+    const hour = 60 * 60;
+    const minute = 60;
+
+    const months = Math.floor(seconds / month);
+    const days = Math.floor((seconds % month) / day);
+    const hours = Math.floor((seconds % day) / hour);
+    const minutes = Math.floor((seconds % hour) / minute);
+    const secs = seconds % minute;
+
+    if (months > 0) return days > 0 ? `${months}mo ${days}d` : `${months}mo`;
+    if (days > 0) return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+    if (hours > 0) return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+    if (minutes > 0) return `${minutes}m`;
+    return `${secs}s`;
   }
 }

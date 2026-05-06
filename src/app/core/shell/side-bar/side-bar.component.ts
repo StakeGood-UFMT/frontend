@@ -78,6 +78,10 @@ import { UserNotificationsService } from '../../services/user-notifications.serv
               <span class="icon">🏢</span>
               <span class="label">Market Admin</span>
             </a>
+            <a routerLink="/admin/proposals" routerLinkActive="active" class="nav-item">
+              <span class="icon">📝</span>
+              <span class="label">Proposal Moderation</span>
+            </a>
           </li>
         </ul>
       </div>

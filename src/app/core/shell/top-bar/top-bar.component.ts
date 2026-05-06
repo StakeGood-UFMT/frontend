@@ -86,6 +86,10 @@ import { selectIsAdmin } from '../../store/auth/auth.selectors';
                     <span class="icon">🏢</span>
                     <span class="label">Market Admin</span>
                   </a>
+                  <a routerLink="/admin/proposals" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item admin-item">
+                    <span class="icon">📝</span>
+                    <span class="label">Proposal Moderation</span>
+                  </a>
                 </ng-container>
               </nav>
 

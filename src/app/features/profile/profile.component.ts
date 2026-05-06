@@ -2,11 +2,12 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ClaimsTabComponent } from './claims-tab/claims-tab.component';
+import { ProposedMarketsTabComponent } from './proposed-markets-tab/proposed-markets-tab.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, ClaimsTabComponent],
+  imports: [CommonModule, RouterModule, ClaimsTabComponent, ProposedMarketsTabComponent],
   template: `
     <div class="profile-page">
       <div class="page-header">
@@ -39,6 +40,12 @@ import { ClaimsTabComponent } from './claims-tab/claims-tab.component';
           Claims
         </button>
         <button 
+          (click)="activeTab.set('proposed')" 
+          [class.active]="activeTab() === 'proposed'"
+        >
+          Proposed Markets
+        </button>
+        <button 
           (click)="activeTab.set('settings')" 
           [class.active]="activeTab() === 'settings'"
         >
@@ -56,6 +63,10 @@ import { ClaimsTabComponent } from './claims-tab/claims-tab.component';
         </div>
 
         <app-claims-tab *ngIf="activeTab() === 'claims'"></app-claims-tab>
+
+        <app-proposed-markets-tab
+          *ngIf="activeTab() === 'proposed'"
+        ></app-proposed-markets-tab>
 
         <div *ngIf="activeTab() === 'settings'" class="state-container">
           <div class="state-card placeholder">
