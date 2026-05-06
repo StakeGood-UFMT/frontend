@@ -17,7 +17,7 @@ import { UserPosition } from '../../../../core/models/market.model';
           [title]="getBlockReason('YES')"
           class="tab-yes"
         >
-          YES {{ (yesPrice * 100).toFixed(0) }}¢
+          YES
         </button>
         
         <button 
@@ -28,7 +28,7 @@ import { UserPosition } from '../../../../core/models/market.model';
           [title]="getBlockReason('NO')"
           class="tab-no"
         >
-          NO {{ (noPrice * 100).toFixed(0) }}¢
+          NO
         </button>
       </div>
 

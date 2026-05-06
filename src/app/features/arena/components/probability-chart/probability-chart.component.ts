@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ElementRef, ViewChild, AfterViewInit, OnChanges, SimpleChanges, inject, PLATFORM_ID } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ElementRef, ViewChild, AfterViewInit, OnChanges, SimpleChanges, inject, PLATFORM_ID, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { MarketHistoryPoint } from '../../../../core/models/market.model';
@@ -13,6 +13,10 @@ Chart.register(...registerables);
     <div class="chart-container">
       <div class="chart-header">
         <span class="chart-title">Probability History</span>
+        <div class="view-selector">
+          <button (click)="setView('probability')" [class.active]="view() === 'probability'">Probability</button>
+          <button (click)="setView('pools')" [class.active]="view() === 'pools'">Pools</button>
+        </div>
         <div class="range-selector">
           <button (click)="onRangeChange('1D')" [class.active]="selectedRange === '1D'">1D</button>
           <button (click)="onRangeChange('1W')" [class.active]="selectedRange === '1W'">1W</button>
@@ -49,6 +53,30 @@ Chart.register(...registerables);
     .chart-title {
       font-weight: 600;
       color: #1F2937;
+    }
+    .view-selector {
+      display: flex;
+      gap: 0.5rem;
+      background: #F3F4F6;
+      padding: 0.25rem;
+      border-radius: 8px;
+    }
+    .view-selector button {
+      border: none;
+      background: transparent;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #6B7280;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .view-selector button.active {
+      background: white;
+      color: #111827;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .range-selector {
       display: flex;
@@ -88,6 +116,8 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
 
   private chart?: Chart;
   private platformId = inject(PLATFORM_ID);
+  view = signal<'pools' | 'probability'>('probability');
+  private pointRadii: number[] = [];
 
   ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -105,9 +135,17 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
     this.rangeChange.emit(range);
   }
 
+  setView(view: 'pools' | 'probability') {
+    this.view.set(view);
+    if (this.chart) this.updateChart();
+  }
+
   private createChart() {
     const ctx = this.chartCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
+
+    const isPools = this.view() === 'pools';
+    this.pointRadii = this.computePointRadii(this.history);
 
     const config: ChartConfiguration = {
       type: 'line',
@@ -115,16 +153,47 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
         labels: this.history.map(p => new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })),
         datasets: [
           {
-            label: 'Yes %',
-            data: this.history.map(p => p.yes_probability * 100),
+            label: 'YES pool (XLM)',
+            data: this.history.map((p) => Number(p.yes_pool ?? 0)),
             borderColor: '#11D48A',
-            backgroundColor: 'rgba(17, 212, 138, 0.1)',
-            fill: true,
-            tension: 0.4,
-            pointRadius: 0,
-            borderWidth: 2
-          }
-        ]
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.35,
+            pointRadius: this.pointRadii as any,
+            pointHoverRadius: 6,
+            borderWidth: 2,
+            yAxisID: 'y',
+          },
+          {
+            label: 'NO pool (XLM)',
+            data: this.history.map((p) => Number(p.no_pool ?? 0)),
+            borderColor: '#CC5A37',
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.35,
+            pointRadius: this.pointRadii as any,
+            pointHoverRadius: 6,
+            borderWidth: 2,
+            yAxisID: 'y',
+          },
+          {
+            label: 'YES probability (%)',
+            data: this.history.map((p) => (p.yes_probability ?? 0) * 100),
+            borderColor: '#111827',
+            segment: {
+              borderColor: (ctx: any) => (ctx?.p1?.parsed?.y >= 50 ? '#11D48A' : '#CC5A37'),
+            } as any,
+            pointBorderColor: (ctx: any) => (ctx?.parsed?.y >= 50 ? '#11D48A' : '#CC5A37'),
+            pointBackgroundColor: (ctx: any) => (ctx?.parsed?.y >= 50 ? '#11D48A' : '#CC5A37'),
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.35,
+            pointRadius: this.pointRadii as any,
+            pointHoverRadius: 6,
+            borderWidth: 2,
+            yAxisID: 'yPct',
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -136,9 +205,12 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
             intersect: false,
             callbacks: {
               label: (context) => {
+                const label = context.dataset.label ?? '';
                 const val = context.parsed.y;
-                return val !== null ? `Yes: ${val.toFixed(1)}%` : '';
-              }
+                if (val === null || val === undefined) return '';
+                if (label.includes('probability')) return `YES probability: ${val.toFixed(1)}%`;
+                return `${label}: ${val.toFixed(2)}`;
+              },
             }
           }
         },
@@ -150,8 +222,18 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
           },
           y: {
             display: true,
+            beginAtZero: true,
+            min: 0,
+            ticks: {
+              callback: (value) => `${value} XLM`
+            }
+          },
+          yPct: {
+            display: true,
+            position: 'right',
             min: 0,
             max: 100,
+            grid: { drawOnChartArea: false },
             ticks: {
               callback: (value) => `${value}%`
             }
@@ -161,17 +243,67 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
     };
 
     this.chart = new Chart(ctx, config);
+    this.chart.setDatasetVisibility(0, isPools);
+    this.chart.setDatasetVisibility(1, isPools);
+    this.chart.setDatasetVisibility(2, !isPools);
+    (this.chart.options.scales as any).y.display = isPools;
+    (this.chart.options.scales as any).yPct.display = !isPools;
+    this.chart.update();
   }
 
   private updateChart() {
     if (!this.chart) return;
+    const isPools = this.view() === 'pools';
+    this.pointRadii = this.computePointRadii(this.history);
     this.chart.data.labels = this.history.map(p => {
       const date = new Date(p.timestamp);
       return this.selectedRange === '1D' 
         ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     });
-    this.chart.data.datasets[0].data = this.history.map(p => p.yes_probability * 100);
+
+    const yesPool = this.history.map((p) => Number(p.yes_pool ?? 0));
+    const noPool = this.history.map((p) => Number(p.no_pool ?? 0));
+    const yesPct = this.history.map((p) => (p.yes_probability ?? 0) * 100);
+
+    const ds0 = (this.chart.data.datasets[0].data ?? []) as number[];
+    ds0.length = 0;
+    ds0.push(...yesPool);
+    const ds1 = (this.chart.data.datasets[1].data ?? []) as number[];
+    ds1.length = 0;
+    ds1.push(...noPool);
+    const ds2 = (this.chart.data.datasets[2].data ?? []) as number[];
+    ds2.length = 0;
+    ds2.push(...yesPct);
+
+    (this.chart.data.datasets[0] as any).pointRadius = this.pointRadii;
+    (this.chart.data.datasets[1] as any).pointRadius = this.pointRadii;
+    (this.chart.data.datasets[2] as any).pointRadius = this.pointRadii;
+
+    this.chart.setDatasetVisibility(0, isPools);
+    this.chart.setDatasetVisibility(1, isPools);
+    this.chart.setDatasetVisibility(2, !isPools);
+    (this.chart.options.scales as any).y.display = isPools;
+    (this.chart.options.scales as any).yPct.display = !isPools;
+
     this.chart.update();
+  }
+
+  private computePointRadii(history: MarketHistoryPoint[]) {
+    if (!history?.length) return [];
+    const radii: number[] = [];
+    let prevYes = Number(history[0]?.yes_pool ?? 0);
+    let prevNo = Number(history[0]?.no_pool ?? 0);
+    radii.push(0);
+
+    for (let i = 1; i < history.length; i++) {
+      const yes = Number(history[i]?.yes_pool ?? 0);
+      const no = Number(history[i]?.no_pool ?? 0);
+      const changed = yes !== prevYes || no !== prevNo;
+      radii.push(changed ? 3 : 0);
+      prevYes = yes;
+      prevNo = no;
+    }
+    return radii;
   }
 }

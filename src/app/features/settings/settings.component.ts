@@ -6,8 +6,10 @@ import { PrivacyToggleComponent } from './components/privacy-toggle/privacy-togg
 import { LinkedWalletsComponent } from './components/linked-wallets/linked-wallets.component';
 import { TwoFactorSetupComponent } from './components/two-factor-setup/two-factor-setup.component';
 import { ComplianceReportExportComponent } from './components/compliance-report-export/compliance-report-export.component';
+import { Store } from '@ngrx/store';
+import * as AuthActions from '../../core/store/auth/auth.actions';
 
-type SettingsTab = 'privacy' | 'wallets' | 'security' | 'compliance';
+type SettingsTab = 'privacy' | 'kyc' | 'wallets' | 'security' | 'compliance';
 
 @Component({
   selector: 'app-settings',
@@ -123,6 +125,35 @@ type SettingsTab = 'privacy' | 'wallets' | 'security' | 'compliance';
           </div>
 
           <div class="saved-toast" *ngIf="savedToast()" role="status" aria-live="polite">✅ Privacy settings saved!</div>
+        </section>
+
+        <section *ngIf="activeTab() === 'kyc'" aria-label="KYC status">
+          <div class="section-intro">
+            <h2>KYC Status</h2>
+            <p>Identity verification status for your account.</p>
+          </div>
+
+          <div class="kyc-card">
+            <div class="kyc-row">
+              <div class="kyc-meta">
+                <div class="kyc-title">Current status</div>
+                <div class="kyc-value">
+                  <span class="kyc-pill" [class.ok]="isKycVerified()" [class.warn]="!isKycVerified()">
+                    {{ settings()!.kycStatus }}
+                  </span>
+                </div>
+              </div>
+              <button
+                class="kyc-btn"
+                [disabled]="loading() || isKycVerified()"
+                (click)="startMockKyc()">
+                {{ isKycVerified() ? 'Verified' : (loading() ? 'Starting…' : 'Start Mock Verification') }}
+              </button>
+            </div>
+            <div class="kyc-hint" *ngIf="!isKycVerified()">
+              After mock verification, staking and predictions are unlocked for development.
+            </div>
+          </div>
         </section>
 
         <!-- WALLETS -->
@@ -332,10 +363,74 @@ type SettingsTab = 'privacy' | 'wallets' | 'security' | 'compliance';
       .settings-page { padding: 0.5rem 0 2rem; }
       .page-header h1 { font-size: 1.5rem; }
     }
+
+    .kyc-card {
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      background: white;
+    }
+    .kyc-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .kyc-title {
+      font-size: 0.85rem;
+      color: #6B7280;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.35rem;
+    }
+    .kyc-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      border: 1px solid #E5E7EB;
+      color: #374151;
+      background: #F9FAFB;
+    }
+    .kyc-pill.ok {
+      border-color: #A7F3D0;
+      color: #065F46;
+      background: #ECFDF5;
+    }
+    .kyc-pill.warn {
+      border-color: #FDE68A;
+      color: #92400E;
+      background: #FFFBEB;
+    }
+    .kyc-btn {
+      background: linear-gradient(135deg, #111827, #0F172A);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.7rem 1rem;
+      font-weight: 800;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .kyc-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .kyc-hint {
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+      color: #6B7280;
+    }
   `]
 })
 export class SettingsPage implements OnInit {
   private svc = inject(SettingsService);
+  private store = inject(Store);
 
   settings      = this.svc.settings;
   loading       = this.svc.loading;
@@ -343,6 +438,7 @@ export class SettingsPage implements OnInit {
   canRemoveWallet = this.svc.canRemoveWallet;
 
   activeTab = signal<SettingsTab>('privacy');
+  isKycVerified = computed(() => this.settings()?.kycStatus === 'verified');
 
   // Local privacy draft
   privacyDraft = signal<{ publicVisibility: boolean; privateMode: boolean } | null>(null);
@@ -364,6 +460,7 @@ export class SettingsPage implements OnInit {
 
   tabs: { id: SettingsTab; label: string; icon: string }[] = [
     { id: 'privacy',    label: 'Privacy',    icon: '🛡️' },
+    { id: 'kyc',        label: 'KYC',        icon: '🪪' },
     { id: 'wallets',    label: 'Wallets',    icon: '💳' },
     { id: 'security',   label: 'Security',   icon: '🔐' },
     { id: 'compliance', label: 'Compliance', icon: '📋' },
@@ -414,5 +511,14 @@ export class SettingsPage implements OnInit {
     } catch (e: any) {
       this.walletError.set(e?.error?.message ?? 'Failed to remove wallet');
     }
+  }
+
+  async startMockKyc() {
+    try {
+      await this.svc.mockVerifyKyc();
+      this.store.dispatch(
+        AuthActions.updateProfile({ profile: { kyc_status: 'approved' } }),
+      );
+    } catch {}
   }
 }

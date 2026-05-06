@@ -25,6 +25,7 @@ export const API_CONFIG = {
       base: '/markets',
       detail: (id: string) => `/markets/${id}`,
       history: (id: string) => `/markets/${id}/history`,
+      positions: (id: string) => `/markets/${id}/positions`,
     },
     transactions: {
       base: '/transactions',
@@ -39,6 +40,7 @@ export const API_CONFIG = {
       mePrivacy: '/users/me/privacy',
       me2faEnable: '/users/me/2fa/enable',
       me2faVerify: '/users/me/2fa/verify',
+      meKycMockVerify: '/users/me/kyc/mock-verify',
       meComplianceExport: '/users/me/compliance-report/export',
       meWallets: '/users/me/wallets',
       meWalletRemove: (address: string) => `/users/me/wallets/${address}`,

@@ -95,6 +95,25 @@ export class SettingsService {
     return blob;
   }
 
+  async mockVerifyKyc(): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      await lastValueFrom(
+        this.http.post(
+          `${this.base}${API_CONFIG.endpoints.users.meKycMockVerify}`,
+          {},
+        ),
+      );
+      this.settings.update((s) => (s ? { ...s, kycStatus: 'verified' } : s));
+    } catch (e: any) {
+      this.error.set(e?.error?.message ?? 'Unable to start mock verification.');
+      throw e;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
   // ── Wallets ──────────────────────────────────────────────────────────────
   async addWallet(address: string): Promise<void> {
     const data = await lastValueFrom(
@@ -135,6 +154,7 @@ export class SettingsService {
       twoFactorEnabled: data.security?.totpEnabled ?? false,
       monthlyLimit: data.spending?.spendingLimitUsd ?? 0,
       monthlyConsumed: 0, // Placeholder
+      kycStatus: data.profile?.kycStatus ?? 'pending',
       wallets: [
         {
           id: 'primary',
