@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Market } from '../../../../core/models/market.model';
 import { StakeService } from '../../../../core/services/stake.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 
 import { UserPositionSelectorComponent } from '../user-position-selector/user-position-selector.component';
 
@@ -97,8 +98,8 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
           <span *ngIf="isSubmitting()" class="btn-spinner"></span>
         </button>
 
-        <p class="status-msg" *ngIf="market.status !== 'active'">
-          This market is {{ market.status }} and closed for new stakes.
+        <p class="status-msg" *ngIf="isMarketClosed()">
+          This market is closed for new stakes.
         </p>
       </div>
     </div>
@@ -323,12 +324,20 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
 export class StakeFormComponent implements OnInit, OnChanges {
   private stakeService = inject(StakeService);
   private authService = inject(AuthService);
+  private notify = inject(NotificationService);
 
   @Input({ required: true }) market!: Market;
   
   side = signal<'YES' | 'NO'>('YES');
   amount = signal(0);
   isSubmitting = signal(false);
+  isMarketClosed = computed(() => {
+    if (!this.market) return true;
+    if (this.market.status !== 'active') return true;
+    const lockAt = new Date(this.market.lock_at);
+    if (!Number.isFinite(lockAt.getTime())) return false;
+    return new Date() >= lockAt;
+  });
 
   constructor() {
     // Effect to ensure side is not blocked when user position changes
@@ -359,11 +368,16 @@ export class StakeFormComponent implements OnInit, OnChanges {
     return this.amount() > 0 && 
            this.authService.isLoggedIn() && 
            !isOutcomeBlocked && 
-           this.market.status === 'active';
+           !this.isMarketClosed();
   }
 
   async submitStake() {
-    if (!this.isValid() || this.isSubmitting()) return;
+    if (this.isSubmitting()) return;
+    if (this.isMarketClosed()) {
+      this.notify.error('Market is closed for new stakes.');
+      return;
+    }
+    if (!this.isValid()) return;
 
     this.isSubmitting.set(true);
     try {

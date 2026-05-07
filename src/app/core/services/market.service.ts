@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { lastValueFrom, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { API_CONFIG } from '../config/api.config';
-import { Market, MarketListResponse, MarketCategory, MarketHistoryPoint, MarketHistoryResponse } from '../models/market.model';
+import { Market, MarketListResponse, MarketCategory, MarketHistoryPoint, MarketHistoryResponse, MarketResults } from '../models/market.model';
 
 export interface MarketFiltersState {
   search: string;
@@ -103,6 +103,12 @@ export class MarketService {
     return this.http.get<any>(
       `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.positions(id)}`,
       { params },
+    );
+  }
+
+  getMarketResults(id: string) {
+    return this.http.get<MarketResults>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.results(id)}`,
     );
   }
 }

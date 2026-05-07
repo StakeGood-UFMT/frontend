@@ -8,7 +8,14 @@ function loadInitialState(): AuthState {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored) as AuthState;
+      const kyc = parsed?.profile?.kyc_status as any;
+      if (kyc === 'verified') {
+        parsed.profile = { ...(parsed.profile as any), kyc_status: 'approved' };
+      } else if (kyc === 'none') {
+        parsed.profile = { ...(parsed.profile as any), kyc_status: 'not_started' };
+      }
+      return parsed;
     }
   } catch (e) {
     console.error('[AuthReducer] Error parsing auth state', e);

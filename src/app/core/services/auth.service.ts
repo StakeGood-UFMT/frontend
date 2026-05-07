@@ -27,6 +27,12 @@ export class AuthService {
 
   constructor() {}
 
+  private mapKycStatus(status: AuthResponse['kyc_status']): AuthProfile['kyc_status'] {
+    if (status === 'verified') return 'approved';
+    if (status === 'none') return 'not_started';
+    return status as any;
+  }
+
   async login(): Promise<void> {
     try {
       // 1. Get Wallet Address
@@ -58,7 +64,7 @@ export class AuthService {
         profile: {
           public_key: response.wallet,
           role: response.user.role,
-          kyc_status: response.kyc_status as any,
+          kyc_status: this.mapKycStatus(response.kyc_status),
           terms_accepted: true // Default for now
         }
       }));
@@ -97,7 +103,7 @@ export class AuthService {
           profile: {
             public_key: response.wallet,
             role: response.user.role,
-            kyc_status: response.kyc_status as any,
+            kyc_status: this.mapKycStatus(response.kyc_status),
             terms_accepted: true
           }
         }));

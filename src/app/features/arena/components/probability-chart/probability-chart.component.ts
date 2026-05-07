@@ -18,6 +18,7 @@ Chart.register(...registerables);
           <button (click)="setView('pools')" [class.active]="view() === 'pools'">Pools</button>
         </div>
         <div class="range-selector">
+          <button (click)="onRangeChange('1H')" [class.active]="selectedRange === '1H'">1H</button>
           <button (click)="onRangeChange('1D')" [class.active]="selectedRange === '1D'">1D</button>
           <button (click)="onRangeChange('1W')" [class.active]="selectedRange === '1W'">1W</button>
           <button (click)="onRangeChange('ALL')" [class.active]="selectedRange === 'ALL'">ALL</button>
@@ -150,7 +151,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
     const config: ChartConfiguration = {
       type: 'line',
       data: {
-        labels: this.history.map(p => new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })),
+        labels: this.history.map((p) => this.formatLabel(p.timestamp)),
         datasets: [
           {
             label: 'YES pool (XLM)',
@@ -255,12 +256,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
     if (!this.chart) return;
     const isPools = this.view() === 'pools';
     this.pointRadii = this.computePointRadii(this.history);
-    this.chart.data.labels = this.history.map(p => {
-      const date = new Date(p.timestamp);
-      return this.selectedRange === '1D' 
-        ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    });
+    this.chart.data.labels = this.history.map((p) => this.formatLabel(p.timestamp));
 
     const yesPool = this.history.map((p) => Number(p.yes_pool ?? 0));
     const noPool = this.history.map((p) => Number(p.no_pool ?? 0));
@@ -287,6 +283,14 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
     (this.chart.options.scales as any).yPct.display = !isPools;
 
     this.chart.update();
+  }
+
+  private formatLabel(ts: string) {
+    const date = new Date(ts);
+    const useTime = this.selectedRange === '1H' || this.selectedRange === '1D';
+    return useTime
+      ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   }
 
   private computePointRadii(history: MarketHistoryPoint[]) {

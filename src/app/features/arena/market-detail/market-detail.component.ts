@@ -8,6 +8,7 @@ import * as MarketSelectors from '../../../core/store/market/market.selectors';
 import { ProbabilityChartComponent } from '../components/probability-chart/probability-chart.component';
 import { StakeFormComponent } from '../components/stake-form/stake-form.component';
 import { MarketService } from '../../../core/services/market.service';
+import { MarketResults } from '../../../core/models/market.model';
 
 type ChainStatus = 'pending' | 'confirmed' | 'failed' | 'unknown';
 type PositionOutcome = 'YES' | 'NO';
@@ -56,6 +57,9 @@ interface MarketPositionRow {
             </button>
             <button class="tab" [class.active]="activeTab() === 'predictions'" (click)="setTab('predictions')">
               Predictions
+            </button>
+            <button class="tab" [class.active]="activeTab() === 'results'" (click)="setTab('results')">
+              Results
             </button>
           </div>
 
@@ -152,6 +156,147 @@ interface MarketPositionRow {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" *ngIf="activeTab() === 'results'">
+            <div class="positions-section">
+              <div class="positions-header">
+                <h2>Results</h2>
+                <button class="refresh-btn" (click)="loadResults()" [disabled]="resultsLoading()">
+                  {{ resultsLoading() ? 'Loading…' : 'Refresh' }}
+                </button>
+              </div>
+
+              <div class="positions-loading" *ngIf="resultsLoading()">
+                <div class="mini-spinner"></div>
+                <span>Loading results…</span>
+              </div>
+
+              <div class="positions-error" *ngIf="resultsError()">
+                {{ resultsError() }}
+              </div>
+
+              <ng-container *ngIf="!resultsLoading() && !resultsError() && results() as r">
+                <div class="positions-empty" *ngIf="!r.resolved && r.closed === false">
+                  Market is still open.
+                </div>
+
+                <div *ngIf="!r.resolved && r.closed && r.projections as proj" class="results-wrap">
+                  <div class="scenario-tabs">
+                    <button class="scenario-tab" [class.active]="projectionOutcome() === 'YES'" (click)="projectionOutcome.set('YES')">
+                      If YES wins
+                    </button>
+                    <button class="scenario-tab" [class.active]="projectionOutcome() === 'NO'" (click)="projectionOutcome.set('NO')">
+                      If NO wins
+                    </button>
+                  </div>
+
+                  <ng-container *ngIf="proj[projectionOutcome()] as s">
+                    <div class="results-cards">
+                      <div class="result-card">
+                        <div class="result-title">Charity</div>
+                        <div class="result-value">{{ s.fees.charity.amount | number:'1.2-2' }} XLM</div>
+                        <div class="result-sub">{{ s.fees.charity.pct * 100 | number:'1.2-2' }}%</div>
+                      </div>
+
+                      <div class="result-card">
+                        <div class="result-title">Platform Fee</div>
+                        <div class="result-value">{{ s.fees.platform.amount | number:'1.2-2' }} XLM</div>
+                        <div class="result-sub">{{ s.fees.platform.pct * 100 | number:'1.2-2' }}%</div>
+                      </div>
+
+                      <div class="result-card">
+                        <div class="result-title">Gamification</div>
+                        <div class="result-value">{{ s.fees.gamification.amount | number:'1.2-2' }} XLM</div>
+                        <div class="result-sub">{{ s.fees.gamification.pct * 100 | number:'1.2-2' }}%</div>
+                      </div>
+
+                      <div class="result-card">
+                        <div class="result-title">Winners (Total Payout)</div>
+                        <div class="result-value">{{ s.winners_total_payout | number:'1.2-2' }} XLM</div>
+                        <div class="result-sub">Profit: {{ s.winners_profit_total | number:'1.2-2' }} XLM</div>
+                      </div>
+                    </div>
+
+                    <div class="positions-table-wrap" *ngIf="(s.winners?.length ?? 0) > 0; else noWinnersProjection">
+                      <table class="positions-table">
+                        <thead>
+                          <tr>
+                            <th>Wallet</th>
+                            <th>Invested</th>
+                            <th>Profit</th>
+                            <th>Payout</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let w of s.winners">
+                            <td class="mono">{{ w.wallet || 'Anonymous' }}</td>
+                            <td>{{ w.invested === null ? 'Hidden' : (w.invested | number:'1.2-2') + ' XLM' }}</td>
+                            <td>{{ w.profit === null ? 'Hidden' : (w.profit | number:'1.2-2') + ' XLM' }}</td>
+                            <td>{{ w.payout === null ? 'Hidden' : (w.payout | number:'1.2-2') + ' XLM' }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <ng-template #noWinnersProjection>
+                      <div class="positions-empty">No winners found.</div>
+                    </ng-template>
+                  </ng-container>
+                </div>
+
+                <div *ngIf="r.resolved" class="results-wrap">
+                  <div class="results-cards">
+                    <div class="result-card">
+                      <div class="result-title">Charity</div>
+                      <div class="result-value">{{ r.fees!.charity.amount | number:'1.2-2' }} XLM</div>
+                      <div class="result-sub">{{ r.fees!.charity.pct * 100 | number:'1.2-2' }}%</div>
+                    </div>
+
+                    <div class="result-card">
+                      <div class="result-title">Platform Fee</div>
+                      <div class="result-value">{{ r.fees!.platform.amount | number:'1.2-2' }} XLM</div>
+                      <div class="result-sub">{{ r.fees!.platform.pct * 100 | number:'1.2-2' }}%</div>
+                    </div>
+
+                    <div class="result-card">
+                      <div class="result-title">Gamification</div>
+                      <div class="result-value">{{ r.fees!.gamification.amount | number:'1.2-2' }} XLM</div>
+                      <div class="result-sub">{{ r.fees!.gamification.pct * 100 | number:'1.2-2' }}%</div>
+                    </div>
+
+                    <div class="result-card">
+                      <div class="result-title">Winners (Total Payout)</div>
+                      <div class="result-value">{{ r.winners_total_payout! | number:'1.2-2' }} XLM</div>
+                      <div class="result-sub">Profit: {{ r.winners_profit_total! | number:'1.2-2' }} XLM</div>
+                    </div>
+                  </div>
+
+                  <div class="positions-table-wrap" *ngIf="(r.winners?.length ?? 0) > 0; else noWinners">
+                    <table class="positions-table">
+                      <thead>
+                        <tr>
+                          <th>Wallet</th>
+                          <th>Invested</th>
+                          <th>Profit</th>
+                          <th>Payout</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let w of r.winners!">
+                          <td class="mono">{{ w.wallet || 'Anonymous' }}</td>
+                          <td>{{ w.invested === null ? 'Hidden' : (w.invested | number:'1.2-2') + ' XLM' }}</td>
+                          <td>{{ w.profit === null ? 'Hidden' : (w.profit | number:'1.2-2') + ' XLM' }}</td>
+                          <td>{{ w.payout === null ? 'Hidden' : (w.payout | number:'1.2-2') + ' XLM' }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <ng-template #noWinners>
+                    <div class="positions-empty">No winners found.</div>
+                  </ng-template>
+                </div>
+              </ng-container>
             </div>
           </div>
         </div>
@@ -520,6 +665,48 @@ interface MarketPositionRow {
       font-size: 0.85rem;
     }
     .tx-link:hover { text-decoration: underline; }
+
+    .results-wrap { display: grid; gap: 1rem; }
+    .scenario-tabs {
+      display: inline-flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .scenario-tab {
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      color: #111827;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .scenario-tab.active {
+      border-color: rgba(17, 212, 138, 0.45);
+      background: #E8FBF4;
+      color: #065F46;
+    }
+    .results-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+    @media (max-width: 1024px) {
+      .results-cards { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px) {
+      .results-cards { grid-template-columns: 1fr; }
+    }
+    .result-card {
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      border-radius: 0.85rem;
+      padding: 0.9rem 1rem;
+    }
+    .result-title { color: #6B7280; font-weight: 800; font-size: 0.8rem; }
+    .result-value { margin-top: 0.2rem; font-weight: 950; font-size: 1.15rem; color: #111827; }
+    .result-sub { margin-top: 0.15rem; color: #6B7280; font-weight: 700; font-size: 0.8rem; }
   `]
 })
 export class MarketDetailComponent implements OnInit, OnDestroy {
@@ -531,7 +718,10 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
   selectedRange = '1D';
   private now = signal(Date.now());
   private nowInterval?: ReturnType<typeof setInterval>;
-  activeTab = signal<'probability' | 'details' | 'predictions'>('probability');
+  private refreshInterval?: ReturnType<typeof setInterval>;
+  activeTab = signal<'probability' | 'details' | 'predictions' | 'results'>(
+    'probability',
+  );
 
   market$ = this.store.select(MarketSelectors.selectSelectedMarket);
   history$ = this.store.select(MarketSelectors.selectMarketHistory);
@@ -542,6 +732,11 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
   positionsLoading = signal(false);
   positionsError = signal<string | null>(null);
 
+  results = signal<MarketResults | null>(null);
+  resultsLoading = signal(false);
+  resultsError = signal<string | null>(null);
+  projectionOutcome = signal<'YES' | 'NO'>('YES');
+
   ngOnInit() {
     if (this.marketId) {
       this.store.dispatch(MarketActions.loadMarket({ id: this.marketId }));
@@ -549,11 +744,25 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
       this.loadPositions();
     }
     this.nowInterval = setInterval(() => this.now.set(Date.now()), 1000);
+    this.refreshInterval = setInterval(() => {
+      if (!this.marketId) return;
+      this.store.dispatch(MarketActions.loadMarket({ id: this.marketId }));
+      this.store.dispatch(
+        MarketActions.loadHistory({ id: this.marketId, range: this.selectedRange }),
+      );
+      if (this.activeTab() === 'predictions' && !this.positionsLoading()) {
+        this.loadPositions();
+      }
+      if (this.activeTab() === 'results' && !this.resultsLoading()) {
+        this.loadResults();
+      }
+    }, 5000);
   }
 
   ngOnDestroy() {
     this.store.dispatch(MarketActions.clearSelectedMarket());
     if (this.nowInterval) clearInterval(this.nowInterval);
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
   }
 
   onRangeChange(range: string) {
@@ -563,8 +772,11 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  setTab(tab: 'probability' | 'details' | 'predictions') {
+  setTab(tab: 'probability' | 'details' | 'predictions' | 'results') {
     this.activeTab.set(tab);
+    if (tab === 'results' && !this.results()) {
+      this.loadResults();
+    }
   }
 
   retry() {
@@ -590,6 +802,20 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
       );
     } finally {
       this.positionsLoading.set(false);
+    }
+  }
+
+  async loadResults() {
+    if (!this.marketId) return;
+    this.resultsLoading.set(true);
+    this.resultsError.set(null);
+    try {
+      const resp = await firstValueFrom(this.marketService.getMarketResults(this.marketId));
+      this.results.set(resp ?? null);
+    } catch (e: any) {
+      this.resultsError.set(e?.error?.message ?? 'Failed to load results.');
+    } finally {
+      this.resultsLoading.set(false);
     }
   }
 

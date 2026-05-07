@@ -58,6 +58,64 @@ export interface MarketListResponse {
   };
 }
 
+export interface MarketResultsFeeLine {
+  pct: number;
+  amount: number;
+}
+
+export interface MarketWinnerResultRow {
+  user_id: string;
+  wallet: string | null;
+  invested: number | null;
+  payout: number | null;
+  profit: number | null;
+}
+
+export interface MarketResultsScenario {
+  outcome: 'YES' | 'NO';
+  pools: {
+    winning_pool: number;
+    losing_pool: number;
+  };
+  fees: {
+    charity: MarketResultsFeeLine;
+    platform: MarketResultsFeeLine;
+    gamification: MarketResultsFeeLine;
+    total: MarketResultsFeeLine;
+  };
+  winners_total_payout: number;
+  winners_profit_total: number;
+  winners: MarketWinnerResultRow[];
+}
+
+export interface MarketResults {
+  market_id: string;
+  resolved: boolean;
+  closed?: boolean;
+  status?: MarketStatus;
+  outcome: 'YES' | 'NO' | null;
+  pools: {
+    yes_pool: number;
+    no_pool: number;
+    total_liquidity: number;
+    winning_pool?: number;
+    losing_pool?: number;
+  };
+  fees?: {
+    charity: MarketResultsFeeLine;
+    platform: MarketResultsFeeLine;
+    gamification: MarketResultsFeeLine;
+    total: MarketResultsFeeLine;
+  };
+  winners_total_payout?: number;
+  winners_profit_total?: number;
+  winners?: MarketWinnerResultRow[];
+  projections?: {
+    YES: MarketResultsScenario;
+    NO: MarketResultsScenario;
+  };
+}
+
 /** Derived display status: if market is OPEN but past lock_ts, show as LOCKED */
 export function derivedStatus(market: Market): MarketStatus {
   if (market.status === 'active' && new Date() >= new Date(market.lock_at)) {
