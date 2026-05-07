@@ -25,4 +25,11 @@ export class AdminService {
       {}
     );
   }
+
+  resolveMarket(marketId: string, outcome: 'YES' | 'NO'): Observable<{ xdr: string; action: string }> {
+    return this.http.post<{ xdr: string; action: string }>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.resolveMarket(marketId)}`,
+      { outcome },
+    );
+  }
 }

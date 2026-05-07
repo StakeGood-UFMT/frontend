@@ -1,15 +1,20 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { RouterModule } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { MarketService } from '../../../core/services/market.service';
 import { Market, MarketListResponse } from '../../../core/models/market.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { DistributeImpactButtonComponent } from './components/distribute-impact-button.component';
+import { WalletService } from '../../../core/services/wallet.service';
+import { API_CONFIG } from '../../../core/config/api.config';
 
 @Component({
   selector: 'app-market-admin',
   standalone: true,
-  imports: [CommonModule, DistributeImpactButtonComponent],
+  imports: [CommonModule, RouterModule, DistributeImpactButtonComponent],
   template: `
     <div class="admin-page">
       <header class="admin-header">
@@ -39,10 +44,36 @@ import { DistributeImpactButtonComponent } from './components/distribute-impact-
               <div class="market-meta">
                 <span class="status-badge" [class]="m.status">{{ m.status }}</span>
                 <span class="id-tag">ID: {{ m.id.substring(0, 8) }}</span>
+                <a class="view-link" [routerLink]="['/arena', m.id]">
+                  Open Market →
+                </a>
               </div>
             </div>
             
             <div class="impact-section">
+              <div class="resolve-block">
+                <span class="label">Resolve</span>
+                <div class="resolve-actions">
+                  <button
+                    class="resolve-btn yes"
+                    [disabled]="m.status === 'resolved' || isResolving(m.id) || !isAfterLock(m)"
+                    (click)="resolveMarket(m.id, 'YES')"
+                  >
+                    {{ isResolving(m.id) ? 'Processing…' : 'Set YES' }}
+                  </button>
+                  <button
+                    class="resolve-btn no"
+                    [disabled]="m.status === 'resolved' || isResolving(m.id) || !isAfterLock(m)"
+                    (click)="resolveMarket(m.id, 'NO')"
+                  >
+                    {{ isResolving(m.id) ? 'Processing…' : 'Set NO' }}
+                  </button>
+                </div>
+                <div class="resolve-hint" *ngIf="m.status !== 'resolved' && !isAfterLock(m)">
+                  Available after lock time ({{ m.lock_at | date:'short' }}).
+                </div>
+              </div>
+
               <div class="impact-info">
                 <span class="label">Projected Impact</span>
                 <span class="value">{{ m.total_liquidity }} XLM</span>
@@ -160,6 +191,7 @@ import { DistributeImpactButtonComponent } from './components/distribute-impact-
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-wrap: wrap;
     }
     .status-badge {
       font-size: 0.7rem;
@@ -181,6 +213,19 @@ import { DistributeImpactButtonComponent } from './components/distribute-impact-
       padding: 2px 8px;
       border-radius: 4px;
     }
+    .view-link {
+      font-size: 0.8rem;
+      font-weight: 900;
+      color: #10b981;
+      text-decoration: none;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(16, 185, 129, 0.18);
+      background: #ecfdf5;
+    }
+    .view-link:hover {
+      text-decoration: underline;
+    }
 
     .impact-section {
       display: flex;
@@ -188,6 +233,52 @@ import { DistributeImpactButtonComponent } from './components/distribute-impact-
       gap: 32px;
       padding-left: 32px;
       border-left: 1px solid #f1f5f9;
+    }
+    .resolve-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .resolve-actions {
+      display: inline-flex;
+      gap: 8px;
+    }
+    .resolve-hint {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #b45309;
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      padding: 6px 10px;
+      border-radius: 12px;
+      max-width: 260px;
+      text-align: right;
+    }
+    .resolve-btn {
+      border: 1px solid #E5E7EB;
+      background: #ffffff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 900;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-width: 92px;
+    }
+    .resolve-btn.yes:hover:not(:disabled) {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: #dcfce7;
+    }
+    .resolve-btn.no:hover:not(:disabled) {
+      border-color: rgba(239, 68, 68, 0.35);
+      background: #fef2f2;
+    }
+    .resolve-btn:disabled {
+      background: #f1f5f9;
+      color: #cbd5e1;
+      cursor: not-allowed;
+      border-color: #f1f5f9;
     }
     .impact-info {
       display: flex;
@@ -241,11 +332,15 @@ import { DistributeImpactButtonComponent } from './components/distribute-impact-
   `]
 })
 export class MarketAdminComponent implements OnInit {
+  private adminService = inject(AdminService);
   private marketService = inject(MarketService);
+  private http = inject(HttpClient);
+  private wallet = inject(WalletService);
   private notify = inject(NotificationService);
 
   markets = signal<Market[]>([]);
   loading = signal(true);
+  resolving = signal<Record<string, boolean>>({});
 
   resolvedCount = signal(0);
 
@@ -271,5 +366,67 @@ export class MarketAdminComponent implements OnInit {
   onImpactDistributed(res: any) {
     this.notify.success(`Impact distributed: ${res.amount_distributed} units`);
     this.loadMarkets();
+  }
+
+  isResolving(marketId: string) {
+    return !!this.resolving()[marketId];
+  }
+
+  isAfterLock(m: Market) {
+    const lockAt = new Date(m.lock_at);
+    if (!Number.isFinite(lockAt.getTime())) return false;
+    return new Date() >= lockAt;
+  }
+
+  async resolveMarket(marketId: string, outcome: 'YES' | 'NO') {
+    if (this.isResolving(marketId)) return;
+
+    const market = this.markets().find((m) => m.id === marketId);
+    if (!market || !this.isAfterLock(market)) {
+      this.notify.error('You can only resolve a market after the lock time.');
+      return;
+    }
+
+    if (!this.wallet.publicKey()) {
+      this.notify.error('Connect your wallet first.');
+      return;
+    }
+
+    if (!confirm(`Resolve this market as ${outcome}? This will send a transaction to the smart contract.`)) {
+      return;
+    }
+
+    this.resolving.update((m) => ({ ...m, [marketId]: true }));
+    const toastId = this.notify.show('Preparing resolution...', 'pending', undefined, true);
+
+    try {
+      const built = await firstValueFrom(this.adminService.resolveMarket(marketId, outcome));
+      this.notify.update(toastId, { message: 'Awaiting signature in wallet...' });
+
+      const { signedTxXdr } = await this.wallet.signTransaction(built.xdr);
+      this.notify.update(toastId, { message: 'Submitting transaction...' });
+
+      await firstValueFrom(
+        this.http.post(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.transactions.base}/submit`,
+          { signedXdr: signedTxXdr },
+        ),
+      );
+
+      this.notify.update(toastId, {
+        message: `Resolution submitted (${outcome}).`,
+        type: 'success',
+        persistent: false,
+      });
+      this.loadMarkets();
+    } catch (e: any) {
+      this.notify.update(toastId, {
+        message: e?.error?.message ?? 'Failed to resolve market.',
+        type: 'error',
+        persistent: false,
+      });
+    } finally {
+      this.resolving.update((m) => ({ ...m, [marketId]: false }));
+    }
   }
 }

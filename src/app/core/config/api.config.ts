@@ -26,6 +26,7 @@ export const API_CONFIG = {
       detail: (id: string) => `/markets/${id}`,
       history: (id: string) => `/markets/${id}/history`,
       positions: (id: string) => `/markets/${id}/positions`,
+      results: (id: string) => `/markets/${id}/results`,
     },
     transactions: {
       base: '/transactions',
@@ -72,6 +73,7 @@ export const API_CONFIG = {
       base: '/admin',
       keeperBatchBump: '/admin/keeper/batch-bump-ttl',
       distributeImpact: (id: string) => `/admin/markets/${id}/distribute-impact`,
+      resolveMarket: (id: string) => `/admin/markets/${id}/resolve`,
     }
   }
 };

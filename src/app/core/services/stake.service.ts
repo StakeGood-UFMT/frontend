@@ -131,17 +131,40 @@ export class StakeService {
       
       let errorMessage = 'Failed to place stake';
       
+      const backendMsg =
+        typeof error?.error?.message === 'string' ? error.error.message : '';
+      const backendCode =
+        typeof error?.error?.error === 'string' ? error.error.error : '';
+
       // Handle backend specific errors
       if (error.error?.error === 'KYC_REQUIRED') {
         errorMessage = 'KYC Required: Please verify your identity in settings.';
       } else if (error.error?.error === 'SPENDING_LIMIT_EXCEEDED') {
         errorMessage = `Limit Exceeded: Only $${error.error.remaining} remaining in your limit.`;
+      } else if (
+        backendMsg &&
+        (backendMsg.toLowerCase().includes('locked') ||
+          backendMsg.toLowerCase().includes('not active') ||
+          backendMsg.toLowerCase().includes('closed'))
+      ) {
+        errorMessage = 'Market is closed for new stakes.';
+      } else if (backendCode === 'HEDGE_LOCK_VIOLATION' || error.status === 409) {
+        const existing = error?.error?.existing_outcome;
+        if (existing === 'YES' || existing === 'NO') {
+          errorMessage = `You already have a position on ${existing}. Hedging is not allowed in this market.`;
+        } else {
+          errorMessage =
+            backendMsg ||
+            'Hedging is not allowed. You already have a position on the opposite outcome in this market.';
+        }
       } else if (error.error?.code === 'HEDGE_LOCK') {
         errorMessage = 'Hedge Lock: Market is locked for this side of the prediction.';
       } else if (error.status === 403) {
         errorMessage = 'Forbidden: Access denied by security policy.';
       } else if (error.message === 'User canceled') {
          errorMessage = 'Transaction canceled by user';
+      } else if (backendMsg) {
+        errorMessage = backendMsg;
       }
 
       this.notificationService.update(toastId, { 
