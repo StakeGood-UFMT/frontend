@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ViewChild, ElementRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { ReactiveFormsModule, FormControl, FormBuilder, Validators } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { NgosService } from '../../services/ngos.service';
 import { NgoCardComponent } from '../../components/ngo-card/ngo-card.component';
+import { NotificationService } from '../../../../core/services/notification.service';
 
 @Component({
   selector: 'app-ngo-directory',
@@ -27,6 +28,7 @@ import { NgoCardComponent } from '../../components/ngo-card/ngo-card.component';
             <span class="stat-value">{{ ngosService.filteredNgos().length }}</span>
             <span class="stat-label">Organizations</span>
           </div>
+          <button class="propose-btn" (click)="openProposal()">Propose NGO</button>
         </div>
       </div>
 
@@ -113,10 +115,11 @@ import { NgoCardComponent } from '../../components/ngo-card/ngo-card.component';
         <div class="state-card empty-state">
           <div class="state-icon">🔍</div>
           <h2 class="state-title">No NGOs found</h2>
-          <p class="state-message">Try adjusting your filters or search term.</p>
+          <p class="state-message">Try adjusting your filters or submit a new NGO proposal.</p>
           <button class="clear-filters-btn" (click)="clearFilters()">
             Clear All Filters
           </button>
+          <button class="propose-empty-btn" (click)="openProposal()">Propose NGO</button>
         </div>
       </div>
 
@@ -130,6 +133,86 @@ import { NgoCardComponent } from '../../components/ngo-card/ngo-card.component';
           [ngo]="ngo"
           class="grid-item"
         ></app-ngo-card>
+      </div>
+
+      <div *ngIf="proposalOpen()" class="modal-overlay" (click)="closeProposal()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <header class="modal-header">
+            <div class="modal-title">
+              <h3>Propose an NGO</h3>
+              <p>Submit details for review. Admin approval registers the NGO on-chain.</p>
+            </div>
+            <div class="modal-header-actions">
+              <button type="button" class="action-icon-btn" (click)="copyExampleJson()" title="Copy JSON Template">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                Template
+              </button>
+              <button type="button" class="action-icon-btn" (click)="pasteJsonFromClipboard()" title="Paste JSON from Clipboard">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M11 14h2"></path><path d="M12 11v6"></path></svg>
+                Paste
+              </button>
+              <button class="close-btn" (click)="closeProposal()">✕</button>
+            </div>
+          </header>
+
+          <form class="modal-body" [formGroup]="proposalForm" (ngSubmit)="submitProposal()">
+            <div class="form-grid">
+              <label class="field">
+                <span class="label">Name</span>
+                <input class="input" formControlName="name" placeholder="Organization name" />
+              </label>
+
+              <label class="field">
+                <span class="label">Cause</span>
+                <input class="input" formControlName="category" placeholder="e.g. Environment, Education" />
+              </label>
+
+              <label class="field full">
+                <span class="label">Description</span>
+                <textarea class="textarea" formControlName="description" rows="4" placeholder="What does this organization do?"></textarea>
+              </label>
+
+              <label class="field">
+                <span class="label">Treasury Wallet (Stellar)</span>
+                <input class="input" formControlName="walletAddress" placeholder="G..." />
+              </label>
+
+              <label class="field">
+                <span class="label">Website</span>
+                <input class="input" formControlName="website" placeholder="https://..." />
+              </label>
+
+              <label class="field">
+                <span class="label">Logo URL</span>
+                <input class="input" formControlName="logoUrl" placeholder="https://..." />
+              </label>
+
+              <label class="field">
+                <span class="label">Audit URL</span>
+                <input class="input" formControlName="auditUrl" placeholder="https://..." />
+              </label>
+
+              <label class="field">
+                <span class="label">Treasury Explorer URL</span>
+                <input class="input" formControlName="treasuryUrl" placeholder="https://..." />
+              </label>
+
+              <label class="field">
+                <span class="label">Certification URL</span>
+                <input class="input" formControlName="certificationUrl" placeholder="https://..." />
+              </label>
+            </div>
+
+            <div class="error-text" *ngIf="proposalError()">{{ proposalError() }}</div>
+
+            <div class="modal-actions">
+              <button type="button" class="secondary-btn" (click)="closeProposal()" [disabled]="proposalSubmitting()">Cancel</button>
+              <button type="submit" class="primary-btn" [disabled]="proposalSubmitting()">
+                {{ proposalSubmitting() ? 'Submitting...' : 'Submit' }}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   `,
@@ -198,6 +281,214 @@ import { NgoCardComponent } from '../../components/ngo-card/ngo-card.component';
       font-weight: 600;
       color: #6b7280;
       text-transform: uppercase;
+    }
+
+    .propose-btn {
+      border: none;
+      background: #11D48A;
+      color: #0b1220;
+      font-weight: 900;
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .propose-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(17, 212, 138, 0.18);
+    }
+
+    .propose-empty-btn {
+      margin-top: 10px;
+      background: #11D48A;
+      border: none;
+      color: #0b1220;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .propose-empty-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(17, 212, 138, 0.18);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 50;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 720px;
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .modal-title h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #111815;
+    }
+
+    .modal-title p {
+      margin: 6px 0 0;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+
+    .modal-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .action-icon-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0, 0, 0, 0.08);
+      background: #f8fafc;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-icon-btn:hover {
+      background: #f1f5f9;
+      color: #11D48A;
+      border-color: rgba(17, 212, 138, 0.3);
+    }
+
+    .close-btn {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1.05rem;
+      color: #6b7280;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background-color 0.2s;
+    }
+
+    .close-btn:hover {
+      background-color: #f1f5f9;
+      color: #ef4444;
+    }
+
+    .modal-body {
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .label {
+      font-size: 0.75rem;
+      font-weight: 900;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .input,
+    .textarea {
+      border: 2px solid rgba(0, 0, 0, 0.06);
+      border-radius: 12px;
+      padding: 12px 12px;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input:focus,
+    .textarea:focus {
+      border-color: #11D48A;
+      box-shadow: 0 0 0 4px rgba(17, 212, 138, 0.12);
+    }
+
+    .error-text {
+      color: #b91c1c;
+      background: rgba(185, 28, 28, 0.08);
+      border: 1px solid rgba(185, 28, 28, 0.15);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .secondary-btn {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 900;
+      cursor: pointer;
+      color: #6b7280;
+    }
+
+    .primary-btn {
+      background: #11D48A;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-weight: 900;
+      cursor: pointer;
+      color: #0b1220;
+    }
+
+    @media (max-width: 720px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* ---- Filters ---- */
@@ -387,9 +678,27 @@ import { NgoCardComponent } from '../../components/ngo-card/ngo-card.component';
 })
 export class NgoDirectoryPage implements OnInit, OnDestroy {
   public ngosService = inject(NgosService);
+  private fb = inject(FormBuilder);
+  private notifications = inject(NotificationService);
 
   searchControl = new FormControl('', { nonNullable: true });
   sortControl = new FormControl<'newest' | 'trending'>('trending', { nonNullable: true });
+
+  protected proposalOpen = signal(false);
+  protected proposalSubmitting = signal(false);
+  protected proposalError = signal<string | null>(null);
+
+  protected proposalForm = this.fb.group({
+    name: ['', Validators.required],
+    category: [''],
+    description: [''],
+    walletAddress: ['', Validators.required],
+    website: [''],
+    logoUrl: [''],
+    auditUrl: [''],
+    treasuryUrl: [''],
+    certificationUrl: [''],
+  });
 
   causes = [
     { value: 'ALL', label: 'All Causes' },
@@ -426,6 +735,52 @@ export class NgoDirectoryPage implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  openProposal(): void {
+    this.proposalError.set(null);
+    this.proposalOpen.set(true);
+  }
+
+  closeProposal(): void {
+    this.proposalSubmitting.set(false);
+    this.proposalError.set(null);
+    this.proposalOpen.set(false);
+  }
+
+  async submitProposal(): Promise<void> {
+    this.proposalError.set(null);
+    if (this.proposalForm.invalid) {
+      this.proposalForm.markAllAsTouched();
+      this.proposalError.set('Please fill the required fields.');
+      return;
+    }
+
+    this.proposalSubmitting.set(true);
+    try {
+      const v = this.proposalForm.getRawValue();
+      await this.ngosService.submitNgoProposal({
+        name: v.name || '',
+        description: v.description || undefined,
+        category: v.category || undefined,
+        walletAddress: v.walletAddress || '',
+        website: v.website || undefined,
+        logoUrl: v.logoUrl || undefined,
+        auditUrl: v.auditUrl || undefined,
+        treasuryUrl: v.treasuryUrl || undefined,
+        certificationUrl: v.certificationUrl || undefined,
+      });
+      this.notifications.success('NGO proposal submitted for review.');
+      this.proposalSubmitting.set(false);
+      this.closeProposal();
+    } catch (e: any) {
+      const msg =
+        e?.error?.message ||
+        e?.message ||
+        'Failed to submit NGO proposal.';
+      this.proposalError.set(msg);
+      this.proposalSubmitting.set(false);
+    }
+  }
+
   setCause(cause: string): void {
     this.ngosService.setCause(cause);
   }
@@ -442,6 +797,81 @@ export class NgoDirectoryPage implements OnInit, OnDestroy {
 
   retry(): void {
     this.ngosService.fetchNgos();
+  }
+
+  get exampleNgoJson(): string {
+    const example = {
+      name: 'Global Relief Foundation',
+      category: 'Humanitarian Aid',
+      description: 'Providing emergency medical assistance and food security to disaster-stricken regions worldwide.',
+      walletAddress: 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGH',
+      website: 'https://globalrelief.org',
+      logoUrl: 'https://globalrelief.org/logo.png',
+      auditUrl: 'https://globalrelief.org/audit2023.pdf',
+      treasuryUrl: 'https://stellar.expert/explorer/public/account/GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGH',
+      certificationUrl: 'https://globalrelief.org/certification.pdf'
+    };
+    return JSON.stringify(example, null, 2);
+  }
+
+  async copyExampleJson() {
+    try {
+      const text = this.exampleNgoJson;
+      const nav = (globalThis as any).navigator as Navigator | undefined;
+
+      if (nav?.clipboard?.writeText) {
+        await nav.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', 'true');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+
+      this.notifications.success('JSON template copied to clipboard.');
+    } catch {
+      this.notifications.error('Could not copy JSON. Please try manually.');
+    }
+  }
+
+  async pasteJsonFromClipboard() {
+    try {
+      const nav = (globalThis as any).navigator as Navigator | undefined;
+      const text = await nav?.clipboard?.readText?.();
+      
+      if (!text) {
+        this.notifications.error('Clipboard is empty or access was denied.');
+        return;
+      }
+
+      const parsed = JSON.parse(text);
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Invalid JSON format');
+      }
+
+      this.proposalForm.patchValue({
+        name: parsed.name || '',
+        category: parsed.category || '',
+        description: parsed.description || '',
+        walletAddress: parsed.walletAddress || parsed.wallet_address || '',
+        website: parsed.website || '',
+        logoUrl: parsed.logoUrl || parsed.logo_url || '',
+        auditUrl: parsed.auditUrl || parsed.audit_url || '',
+        treasuryUrl: parsed.treasuryUrl || parsed.treasury_url || '',
+        certificationUrl: parsed.certificationUrl || parsed.certification_url || '',
+      });
+
+      this.proposalForm.markAllAsTouched();
+      this.notifications.success('Form filled from clipboard JSON.');
+    } catch (e) {
+      console.error('[NgoDirectoryPage] Failed to paste/parse JSON:', e);
+      this.notifications.error('Could not parse JSON from clipboard. Make sure it follows the correct format.');
+    }
   }
 
   trackById(_: number, ngo: any): string {

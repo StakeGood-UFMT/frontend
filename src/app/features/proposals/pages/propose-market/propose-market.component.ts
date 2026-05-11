@@ -1,10 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ProposalService, MarketProposal } from '../../services/proposal.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { MarketCategory } from '../../../../core/models/market.model';
+import { HttpClient } from '@angular/common/http';
+import { API_CONFIG } from '../../../../core/config/api.config';
+import { Ngo } from '../../../../core/models/ngo.model';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-propose-market',
@@ -13,16 +17,18 @@ import { MarketCategory } from '../../../../core/models/market.model';
   templateUrl: './propose-market.component.html',
   styleUrls: ['./propose-market.component.scss']
 })
-export class ProposeMarketComponent {
+export class ProposeMarketComponent implements OnInit {
   private fb = inject(FormBuilder);
   private proposalService = inject(ProposalService);
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+  private http = inject(HttpClient);
 
   proposalForm: FormGroup;
   isSubmitting = false;
   showJsonModal = false;
   jsonText = '';
+  ngos: Ngo[] = [];
 
   categories: MarketCategory[] = [
     'Sports', 'Finance', 'Environment', 'Tech', 'Politics', 
@@ -39,8 +45,37 @@ export class ProposeMarketComponent {
       resolution_rule: ['', [Validators.required]],
       resolution_source: ['', [Validators.required]],
       oracle_url: ['', [Validators.pattern(/^https?:\/\/[^\s`"]+$/)]],
-      image_url: ['', [Validators.pattern(/^https?:\/\/[^\s`"]+$/)]]
+      image_url: ['', [Validators.pattern(/^https?:\/\/[^\s`"]+$/)]],
+      ngo_candidate_1: ['', [Validators.required]],
+      ngo_candidate_2: ['', [Validators.required]],
+      ngo_candidate_3: ['', [Validators.required]],
     });
+  }
+
+  async ngOnInit() {
+    try {
+      const resp = await firstValueFrom(
+        this.http.get<{ ngos: Ngo[] }>(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.ngos.base}`,
+          {
+            params: {
+              verified: 'true',
+              limit: '200',
+              offset: '0',
+              sort: 'newest',
+            } as any,
+          },
+        ),
+      );
+
+      const list = (resp?.ngos ?? [])
+        .filter((n) => typeof n.on_chain_id === 'number' && (n.on_chain_id ?? 0) > 0)
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+      this.ngos = list;
+    } catch {
+      this.ngos = [];
+    }
   }
 
   onSubmit() {
@@ -50,7 +85,29 @@ export class ProposeMarketComponent {
     }
 
     this.isSubmitting = true;
-    const proposal: MarketProposal = this.proposalForm.value;
+    const v = this.proposalForm.getRawValue() as any;
+    const ngoIds = [v.ngo_candidate_1, v.ngo_candidate_2, v.ngo_candidate_3]
+      .map((x: any) => Number(x))
+      .filter((n: any) => Number.isInteger(n) && n > 0);
+
+    if (ngoIds.length !== 3 || new Set(ngoIds).size !== 3) {
+      this.notificationService.error('Select 3 distinct NGOs for this market.');
+      this.isSubmitting = false;
+      return;
+    }
+
+    const proposal: MarketProposal = {
+      title: v.title,
+      category: v.category,
+      description: v.description,
+      lock_at: v.lock_at,
+      resolve_at: v.resolve_at,
+      resolution_rule: v.resolution_rule,
+      resolution_source: v.resolution_source,
+      oracle_url: v.oracle_url,
+      image_url: v.image_url,
+      ngo_candidate_ids: ngoIds,
+    };
 
     this.proposalService.submitProposal(proposal).subscribe({
       next: () => {
@@ -80,6 +137,7 @@ export class ProposeMarketComponent {
       description: 'Provide background information about this market, including context, key sources, and why it matters.',
       resolution_rule: 'YES if NASA publishes an official statement confirming humans landed on Mars by 2030; otherwise NO.',
       resolution_source: 'nasa.gov',
+      ngo_candidate_ids: [10, 11, 12],
       oracle_url: 'https://example.com/oracle',
       image_url: 'https://example.com/image.png'
     };
@@ -152,6 +210,10 @@ export class ProposeMarketComponent {
       const imageUrl = (parsed.image_url ?? parsed.imageUrl ?? '').toString();
       const lockAt = this.toDatetimeLocal(parsed.lock_at ?? parsed.lockAt);
       const resolveAt = this.toDatetimeLocal(parsed.resolve_at ?? parsed.resolveAt);
+      const ngoCandidateIdsRaw = parsed.ngo_candidate_ids ?? parsed.ngoCandidateIds ?? [];
+      const ngoCandidateIds = Array.isArray(ngoCandidateIdsRaw)
+        ? ngoCandidateIdsRaw.map((x: any) => Number(x)).filter((n: any) => Number.isInteger(n) && n > 0)
+        : [];
 
       this.proposalForm.patchValue({
         title,
@@ -163,6 +225,9 @@ export class ProposeMarketComponent {
         image_url: imageUrl,
         lock_at: lockAt ?? '',
         resolve_at: resolveAt ?? '',
+        ngo_candidate_1: ngoCandidateIds[0] ?? '',
+        ngo_candidate_2: ngoCandidateIds[1] ?? '',
+        ngo_candidate_3: ngoCandidateIds[2] ?? '',
       });
 
       this.proposalForm.markAllAsTouched();

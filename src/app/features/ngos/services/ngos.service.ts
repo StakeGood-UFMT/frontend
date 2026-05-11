@@ -16,6 +16,7 @@ export interface NgoFiltersState {
 export class NgosService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.ngos.base}`;
+  private readonly proposalsUrl = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.ngoProposals.base}`;
 
   // State signals
   private _ngos = signal<Ngo[]>([]);
@@ -114,5 +115,20 @@ export class NgosService {
 
   clearFilters(): void {
     this._filters.set({ search: '', cause: 'ALL', sortBy: 'trending' });
+  }
+
+  async submitNgoProposal(data: {
+    name: string;
+    description?: string;
+    category?: string;
+    walletAddress: string;
+    website?: string;
+    logoUrl?: string;
+    coverUrl?: string;
+    auditUrl?: string;
+    treasuryUrl?: string;
+    certificationUrl?: string;
+  }): Promise<any> {
+    return lastValueFrom(this.http.post<any>(this.proposalsUrl, data));
   }
 }

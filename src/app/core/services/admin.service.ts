@@ -19,10 +19,10 @@ export class AdminService {
     return this.http.post(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.keeperBatchBump}`, payload);
   }
 
-  distributeImpact(marketId: string, winnerNgoId: number): Observable<{ xdr: string; txHash: string; action: string }> {
+  distributeImpact(marketId: string): Observable<{ xdr: string; txHash: string; action: string }> {
     return this.http.post<{ xdr: string; txHash: string; action: string }>(
       `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.distributeImpact(marketId)}`,
-      { winner_ngo_id: winnerNgoId },
+      {},
     );
   }
 

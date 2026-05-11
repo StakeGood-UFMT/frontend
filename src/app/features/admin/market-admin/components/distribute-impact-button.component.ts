@@ -92,14 +92,7 @@ export class DistributeImpactButtonComponent {
       return;
     }
 
-    const rawNgoId = prompt('Winner NGO ID (u32):');
-    const winnerNgoId = Number(rawNgoId);
-    if (!Number.isInteger(winnerNgoId) || winnerNgoId <= 0) {
-      this.notify.error('Invalid NGO ID.');
-      return;
-    }
-
-    if (!confirm(`Distribute impact to NGO #${winnerNgoId}? This action is irreversible.`)) {
+    if (!confirm(`Distribute impact now? Winner NGO is computed from winners' selections. This action is irreversible.`)) {
       return;
     }
 
@@ -107,7 +100,7 @@ export class DistributeImpactButtonComponent {
     const toastId = this.notify.show('Preparing impact distribution...', 'pending', undefined, true);
 
     try {
-      const built = await firstValueFrom(this.adminService.distributeImpact(this.marketId, winnerNgoId));
+      const built = await firstValueFrom(this.adminService.distributeImpact(this.marketId));
       this.notify.update(toastId, { message: 'Awaiting signature in wallet...' });
 
       const { signedTxXdr } = await this.wallet.signTransaction(built.xdr);

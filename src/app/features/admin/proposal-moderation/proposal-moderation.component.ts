@@ -11,6 +11,25 @@ import { WalletService } from '../../../core/services/wallet.service';
 import { HttpClient } from '@angular/common/http';
 import { API_CONFIG } from '../../../core/config/api.config';
 
+type ModerationMode = 'MARKETS' | 'NGOS';
+
+interface NgoProposalSummary {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  walletAddress: string;
+  website?: string;
+  links?: Record<string, any>;
+  status: ProposalStatus;
+  createdAt: string;
+  updatedAt?: string;
+  rejectionReason?: string;
+  reservedOnChainId?: number;
+  ngoId?: string;
+  user?: { primaryWallet?: string };
+}
+
 @Component({
   selector: 'app-proposal-moderation',
   standalone: true,
@@ -19,18 +38,37 @@ import { API_CONFIG } from '../../../core/config/api.config';
     <div class="admin-page">
       <header class="admin-header">
         <div class="header-content">
-          <h1 class="title">Proposal Moderation</h1>
-          <p class="subtitle">Review and approve/reject proposed markets.</p>
+          <h1 class="title">{{ mode() === 'MARKETS' ? 'Market Proposals' : 'NGO Proposals' }}</h1>
+          <p class="subtitle">
+            {{ mode() === 'MARKETS'
+              ? 'Review and approve/reject proposed markets.'
+              : 'Review and approve/reject NGO proposals (registers NGOs on-chain).'
+            }}
+          </p>
         </div>
         <div class="header-stats">
           <div class="stat-card">
             <span class="stat-label">Pending</span>
-            <span class="stat-value">{{ pendingCount() }}</span>
+            <span class="stat-value">{{ mode() === 'MARKETS' ? pendingCount() : ngoPendingCount() }}</span>
           </div>
         </div>
       </header>
 
       <nav class="filters">
+        <button
+          class="filter-btn"
+          [class.active]="mode() === 'MARKETS'"
+          (click)="setMode('MARKETS')"
+        >
+          Markets
+        </button>
+        <button
+          class="filter-btn"
+          [class.active]="mode() === 'NGOS'"
+          (click)="setMode('NGOS')"
+        >
+          NGOs
+        </button>
         <button
           class="filter-btn"
           [class.active]="statusFilter() === 'PENDING'"
@@ -59,7 +97,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
 
       <div *ngIf="loading()" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading proposals...</p>
+        <p>{{ mode() === 'MARKETS' ? 'Loading market proposals...' : 'Loading NGO proposals...' }}</p>
       </div>
 
       <div *ngIf="!loading() && !!error()" class="empty-state">
@@ -67,12 +105,17 @@ import { API_CONFIG } from '../../../core/config/api.config';
         <p>{{ error() }}</p>
       </div>
 
-      <div *ngIf="!loading() && !error() && proposals().length === 0" class="empty-state">
+      <div *ngIf="!loading() && !error() && mode() === 'MARKETS' && proposals().length === 0" class="empty-state">
         <div class="empty-icon">📝</div>
         <p>No proposals found for this filter.</p>
       </div>
 
-      <div *ngIf="!loading() && !error() && proposals().length > 0" class="proposal-grid">
+      <div *ngIf="!loading() && !error() && mode() === 'NGOS' && ngoProposals().length === 0" class="empty-state">
+        <div class="empty-icon">🏛️</div>
+        <p>No NGO proposals found for this filter.</p>
+      </div>
+
+      <div *ngIf="!loading() && !error() && mode() === 'MARKETS' && proposals().length > 0" class="proposal-grid">
         <div *ngFor="let p of proposals()" class="proposal-card">
           <div class="proposal-main">
             <div class="top-line">
@@ -96,7 +139,30 @@ import { API_CONFIG } from '../../../core/config/api.config';
         </div>
       </div>
 
-      <div *ngIf="selectedProposal()" class="modal-overlay" (click)="closeDetails()">
+      <div *ngIf="!loading() && !error() && mode() === 'NGOS' && ngoProposals().length > 0" class="proposal-grid">
+        <div *ngFor="let p of ngoProposals()" class="proposal-card">
+          <div class="proposal-main">
+            <div class="top-line">
+              <span class="category-chip">{{ p.category || 'Uncategorized' }}</span>
+              <span class="status-badge" [class]="statusClass(p.status)">{{ p.status }}</span>
+            </div>
+            <h3 class="proposal-title">{{ p.name }}</h3>
+            <div class="meta">
+              <span>Wallet: {{ shortWallet(p.walletAddress) }}</span>
+              <span>Proposer: {{ proposerLabel(p) }}</span>
+              <span>Created: {{ p.createdAt | date:'mediumDate' }}</span>
+            </div>
+            <div *ngIf="p.status === 'REJECTED' && p.rejectionReason" class="reason">
+              Reason: {{ p.rejectionReason }}
+            </div>
+          </div>
+          <div class="proposal-actions">
+            <button class="review-btn" (click)="openNgoDetails(p)">Review</button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="mode() === 'MARKETS' && selectedProposal()" class="modal-overlay" (click)="closeDetails()">
         <div class="modal" (click)="$event.stopPropagation()">
           <header class="modal-header">
             <div class="modal-title">
@@ -201,6 +267,125 @@ import { API_CONFIG } from '../../../core/config/api.config';
               </div>
               <div class="hint">
                 Approving generates an XDR to create the market on-chain. You'll be asked to sign it in your wallet.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="mode() === 'NGOS' && selectedNgoProposal()" class="modal-overlay" (click)="closeNgoDetails()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <header class="modal-header">
+            <div class="modal-title">
+              <h3>{{ selectedNgoProposal()!.name }}</h3>
+              <span class="status-badge" [class]="statusClass(selectedNgoProposal()!.status)">
+                {{ selectedNgoProposal()!.status }}
+              </span>
+            </div>
+            <button class="close-btn" (click)="closeNgoDetails()">✕</button>
+          </header>
+
+          <div class="modal-body">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-label">Proposer</span>
+                <span class="detail-value">{{ proposerLabel(selectedNgoProposal()) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Category</span>
+                <span class="detail-value">{{ selectedNgoProposal()!.category || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Wallet</span>
+                <span class="detail-value mono">{{ selectedNgoProposal()!.walletAddress }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Website</span>
+                <span class="detail-value">{{ selectedNgoProposal()!.website || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Created At</span>
+                <span class="detail-value">{{ selectedNgoProposal()!.createdAt | date:'medium' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Proposal ID</span>
+                <span class="detail-value mono">{{ selectedNgoProposal()!.id }}</span>
+              </div>
+            </div>
+
+            <div class="detail-block" *ngIf="selectedNgoProposal()!.description">
+              <div class="detail-label">Description</div>
+              <div class="detail-text">{{ selectedNgoProposal()!.description }}</div>
+            </div>
+
+            <div class="detail-links">
+              <a
+                *ngIf="selectedNgoProposal()!.links?.['audit_url']"
+                class="link"
+                [href]="selectedNgoProposal()!.links!['audit_url']"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open Audit URL
+              </a>
+              <a
+                *ngIf="selectedNgoProposal()!.links?.['treasury_url']"
+                class="link"
+                [href]="selectedNgoProposal()!.links!['treasury_url']"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open Treasury URL
+              </a>
+              <a
+                *ngIf="selectedNgoProposal()!.links?.['certification_url']"
+                class="link"
+                [href]="selectedNgoProposal()!.links!['certification_url']"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open Certification URL
+              </a>
+              <a
+                *ngIf="selectedNgoProposal()!.links?.['logo_url']"
+                class="link"
+                [href]="selectedNgoProposal()!.links!['logo_url']"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open Logo URL
+              </a>
+            </div>
+
+            <div class="decision">
+              <label class="text-label" for="ngoRejectionReason">Rejection reason (required to reject)</label>
+              <textarea
+                id="ngoRejectionReason"
+                class="text-area"
+                [value]="rejectionReason()"
+                (input)="rejectionReason.set(($any($event.target).value || '').toString())"
+                rows="3"
+                placeholder="Explain why this NGO proposal is rejected..."
+              ></textarea>
+
+              <div class="decision-actions">
+                <button
+                  class="approve-btn"
+                  (click)="approveSelectedNgo()"
+                  [disabled]="actionLoading() || !canApproveSelectedNgo()"
+                >
+                  Approve
+                </button>
+                <button
+                  class="reject-btn"
+                  (click)="rejectSelectedNgo()"
+                  [disabled]="actionLoading() || selectedNgoProposal()!.status !== 'PENDING'"
+                >
+                  Reject
+                </button>
+              </div>
+              <div class="hint">
+                Approving generates an XDR to register the NGO on-chain. You'll be asked to sign it in your wallet.
               </div>
             </div>
           </div>
@@ -754,14 +939,18 @@ export class ProposalModerationComponent implements OnInit {
   private walletService = inject(WalletService);
   private http = inject(HttpClient);
 
+  protected mode = signal<ModerationMode>('MARKETS');
   protected statusFilter = signal<ProposalStatus>('PENDING');
   protected proposals = signal<ProposalSummary[]>([]);
+  protected ngoProposals = signal<NgoProposalSummary[]>([]);
   protected loading = signal(false);
   protected error = signal<string | null>(null);
 
   protected pendingCount = signal(0);
+  protected ngoPendingCount = signal(0);
 
   protected selectedProposal = signal<ProposalSummary | null>(null);
+  protected selectedNgoProposal = signal<NgoProposalSummary | null>(null);
   protected rejectionReason = signal('');
   protected actionLoading = signal(false);
 
@@ -774,17 +963,40 @@ export class ProposalModerationComponent implements OnInit {
     this.load();
   }
 
+  setMode(mode: ModerationMode): void {
+    this.mode.set(mode);
+    this.closeDetails();
+    this.closeNgoDetails();
+    this.load();
+  }
+
+  private listNgo(status: ProposalStatus) {
+    return this.http.get<NgoProposalSummary[]>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.ngoProposals.base}`,
+      { params: { status } as any },
+    );
+  }
+
   async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
 
     try {
-      const [pending, filtered] = await Promise.all([
-        firstValueFrom(this.proposalService.listAll('PENDING')),
-        firstValueFrom(this.proposalService.listAll(this.statusFilter())),
-      ]);
-      this.pendingCount.set((pending ?? []).length);
-      this.proposals.set(filtered ?? []);
+      if (this.mode() === 'MARKETS') {
+        const [pending, filtered] = await Promise.all([
+          firstValueFrom(this.proposalService.listAll('PENDING')),
+          firstValueFrom(this.proposalService.listAll(this.statusFilter())),
+        ]);
+        this.pendingCount.set((pending ?? []).length);
+        this.proposals.set(filtered ?? []);
+      } else {
+        const [pending, filtered] = await Promise.all([
+          firstValueFrom(this.listNgo('PENDING')),
+          firstValueFrom(this.listNgo(this.statusFilter())),
+        ]);
+        this.ngoPendingCount.set((pending ?? []).length);
+        this.ngoProposals.set(filtered ?? []);
+      }
     } catch {
       this.error.set('Unable to load proposals.');
     } finally {
@@ -796,8 +1008,13 @@ export class ProposalModerationComponent implements OnInit {
     return status.toLowerCase();
   }
 
-  proposerLabel(p: ProposalSummary): string {
-    const wallet = p.user?.primaryWallet;
+  proposerLabel(p: any): string {
+    const wallet = p?.user?.primaryWallet;
+    if (!wallet) return '-';
+    return `${wallet.slice(0, 6)}...${wallet.slice(-6)}`;
+  }
+
+  shortWallet(wallet: string | undefined | null): string {
     if (!wallet) return '-';
     return `${wallet.slice(0, 6)}...${wallet.slice(-6)}`;
   }
@@ -810,6 +1027,18 @@ export class ProposalModerationComponent implements OnInit {
 
   closeDetails(): void {
     this.selectedProposal.set(null);
+    this.rejectionReason.set('');
+    this.actionLoading.set(false);
+  }
+
+  openNgoDetails(p: NgoProposalSummary): void {
+    this.selectedNgoProposal.set(p);
+    this.rejectionReason.set(p.rejectionReason ?? '');
+    this.actionLoading.set(false);
+  }
+
+  closeNgoDetails(): void {
+    this.selectedNgoProposal.set(null);
     this.rejectionReason.set('');
     this.actionLoading.set(false);
   }
@@ -873,6 +1102,113 @@ export class ProposalModerationComponent implements OnInit {
     if (!p) return false;
     if (p.status === 'PENDING') return true;
     return p.status === 'APPROVED' && !p.marketId;
+  }
+
+  canApproveSelectedNgo(): boolean {
+    const p = this.selectedNgoProposal();
+    if (!p) return false;
+    if (p.status === 'PENDING') return true;
+    return p.status === 'APPROVED' && !p.ngoId;
+  }
+
+  async approveSelectedNgo(): Promise<void> {
+    const p = this.selectedNgoProposal();
+    if (!p) return;
+    const repair = p.status === 'APPROVED' && !p.ngoId;
+    if (p.status !== 'PENDING' && !repair) return;
+
+    this.actionLoading.set(true);
+    const toastId = this.notificationService.show(
+      repair ? 'Preparing repair transaction...' : 'Preparing approval transaction...',
+      'pending',
+      undefined,
+      true,
+    );
+
+    try {
+      const build = await firstValueFrom(
+        this.http.post<any>(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.ngoProposals.buildApproval(p.id)}`,
+          {},
+        ),
+      );
+
+      this.notificationService.update(toastId, { message: 'Awaiting signature...' });
+      const { signedTxXdr } = await this.walletService.signTransaction(build.xdr);
+      this.notificationService.update(toastId, { message: 'Submitting transaction...' });
+
+      await firstValueFrom(
+        this.http.post(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.transactions.submit}`, {
+          signedXdr: signedTxXdr,
+        }),
+      );
+
+      this.notificationService.update(toastId, { message: 'Finalizing approval...' });
+
+      await firstValueFrom(
+        this.http.patch(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.ngoProposals.moderate(p.id)}`,
+          { status: 'APPROVED' },
+        ),
+      );
+
+      this.notificationService.update(toastId, {
+        message: 'Approval submitted successfully.',
+        type: 'success',
+        persistent: false,
+      });
+
+      await this.load();
+      this.closeNgoDetails();
+    } catch (e: any) {
+      const msg = e?.error?.message || e?.message || 'Failed to approve NGO proposal.';
+      this.notificationService.update(toastId, {
+        message: msg,
+        type: 'error',
+        persistent: false,
+      });
+      this.actionLoading.set(false);
+    }
+  }
+
+  async rejectSelectedNgo(): Promise<void> {
+    const p = this.selectedNgoProposal();
+    if (!p || p.status !== 'PENDING') return;
+
+    const reason = (this.rejectionReason() || '').trim();
+    if (!reason) {
+      this.notificationService.error('Rejection reason is required.');
+      return;
+    }
+
+    this.actionLoading.set(true);
+    const toastId = this.notificationService.show('Rejecting proposal...', 'pending', undefined, true);
+
+    try {
+      await firstValueFrom(
+        this.http.patch(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.ngoProposals.moderate(p.id)}`,
+          { status: 'REJECTED', rejectionReason: reason },
+        ),
+      );
+
+      this.notificationService.update(toastId, {
+        message: 'Proposal rejected.',
+        type: 'success',
+        persistent: false,
+      });
+
+      await this.load();
+      this.closeNgoDetails();
+    } catch (e: any) {
+      const msg = e?.error?.message || e?.message || 'Failed to reject NGO proposal.';
+      this.notificationService.update(toastId, {
+        message: msg,
+        type: 'error',
+        persistent: false,
+      });
+      this.actionLoading.set(false);
+    }
   }
 
   async rejectSelected(): Promise<void> {

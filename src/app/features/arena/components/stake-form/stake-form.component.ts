@@ -60,6 +60,26 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
           </div>
         </div>
 
+        <div class="input-group" *ngIf="(market.ngo_candidates || []).length === 3">
+          <label>Impact NGO (your vote counts if you win)</label>
+          <div class="ngo-options">
+            <button
+              type="button"
+              class="ngo-option"
+              *ngFor="let ngo of market.ngo_candidates"
+              [class.active]="selectedNgoId() === ngo.on_chain_id"
+              (click)="selectedNgoId.set(ngo.on_chain_id)"
+              [disabled]="isSubmitting()"
+            >
+              <img class="ngo-logo" [src]="ngo.logo_url || '/logo.webp'" [alt]="ngo.name" />
+              <div class="ngo-meta">
+                <div class="ngo-name">{{ ngo.name }}</div>
+                <div class="ngo-id">#{{ ngo.on_chain_id }}</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         <div class="summary">
           <div class="summary-row">
             <span>Est. Shares</span>
@@ -231,6 +251,69 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
       padding-right: 0.25rem;
     }
 
+    .ngo-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .ngo-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #ffffff;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+      text-align: left;
+    }
+
+    .ngo-option:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+      border-color: rgba(17, 212, 138, 0.35);
+    }
+
+    .ngo-option.active {
+      border-color: rgba(17, 212, 138, 0.7);
+      box-shadow: 0 0 0 4px rgba(17, 212, 138, 0.12);
+    }
+
+    .ngo-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #f3f4f6;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .ngo-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .ngo-name {
+      font-weight: 900;
+      font-size: 0.9rem;
+      color: #111827;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 260px;
+    }
+
+    .ngo-id {
+      font-size: 0.75rem;
+      color: #6B7280;
+      font-weight: 800;
+    }
+
     .summary {
       margin-top: 1rem;
       background: #F9FAFB;
@@ -331,6 +414,7 @@ export class StakeFormComponent implements OnInit, OnChanges {
   side = signal<'YES' | 'NO'>('YES');
   amount = signal(0);
   isSubmitting = signal(false);
+  selectedNgoId = signal<number | null>(null);
   isMarketClosed = computed(() => {
     if (!this.market) return true;
     if (this.market.status !== 'active') return true;
@@ -346,11 +430,13 @@ export class StakeFormComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.enforceNoHedge();
+    this.ensureSelectedNgo();
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['market']) {
       this.enforceNoHedge();
+      this.ensureSelectedNgo();
     }
   }
 
@@ -361,14 +447,32 @@ export class StakeFormComponent implements OnInit, OnChanges {
     }
   }
 
+  private ensureSelectedNgo() {
+    const candidates = this.market?.ngo_candidates ?? [];
+    if (!Array.isArray(candidates) || candidates.length !== 3) {
+      this.selectedNgoId.set(null);
+      return;
+    }
+    const ids = candidates.map((c) => c.on_chain_id);
+    const current = this.selectedNgoId();
+    if (typeof current === 'number' && ids.includes(current)) return;
+    this.selectedNgoId.set(ids[0]);
+  }
+
   isValid() {
     const isOutcomeBlocked = this.market.user_position?.outcome && 
                             this.market.user_position.outcome !== this.side();
+    const ngoOk =
+      typeof this.selectedNgoId() === 'number' &&
+      (this.market?.ngo_candidates ?? []).some(
+        (n) => n.on_chain_id === this.selectedNgoId(),
+      );
     
     return this.amount() > 0 && 
            this.authService.isLoggedIn() && 
            !isOutcomeBlocked && 
-           !this.isMarketClosed();
+           !this.isMarketClosed() &&
+           ngoOk;
   }
 
   async submitStake() {
@@ -384,7 +488,8 @@ export class StakeFormComponent implements OnInit, OnChanges {
       await this.stakeService.placeStake(
         this.market.id,
         this.side(),
-        this.amount()
+        this.amount(),
+        this.selectedNgoId() as number,
       );
       // Reset amount on success
       this.amount.set(0);

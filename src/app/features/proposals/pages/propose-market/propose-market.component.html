@@ -36,6 +36,28 @@
           <span class="error-msg" *ngIf="isInvalid('category')">Category is required.</span>
         </div>
 
+        <!-- NGO Candidates -->
+        <div class="form-group full-width">
+          <label>Impact NGOs (pick 3)</label>
+          <div class="ngo-grid">
+            <select formControlName="ngo_candidate_1" [class.invalid]="isInvalid('ngo_candidate_1')">
+              <option value="" disabled selected>Select NGO #1</option>
+              <option *ngFor="let ngo of ngos" [value]="ngo.on_chain_id">{{ ngo.name }} ({{ ngo.on_chain_id }})</option>
+            </select>
+            <select formControlName="ngo_candidate_2" [class.invalid]="isInvalid('ngo_candidate_2')">
+              <option value="" disabled selected>Select NGO #2</option>
+              <option *ngFor="let ngo of ngos" [value]="ngo.on_chain_id">{{ ngo.name }} ({{ ngo.on_chain_id }})</option>
+            </select>
+            <select formControlName="ngo_candidate_3" [class.invalid]="isInvalid('ngo_candidate_3')">
+              <option value="" disabled selected>Select NGO #3</option>
+              <option *ngFor="let ngo of ngos" [value]="ngo.on_chain_id">{{ ngo.name }} ({{ ngo.on_chain_id }})</option>
+            </select>
+          </div>
+          <span class="error-msg" *ngIf="isInvalid('ngo_candidate_1') || isInvalid('ngo_candidate_2') || isInvalid('ngo_candidate_3')">
+            Select 3 NGOs (distinct).
+          </span>
+        </div>
+
         <!-- Lock Date -->
         <div class="form-group">
           <label for="lock_at">Lock Date (UTC)</label>
