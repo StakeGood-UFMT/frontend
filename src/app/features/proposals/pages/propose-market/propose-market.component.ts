@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ProposalService, MarketProposal } from '../../services/proposal.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -13,7 +13,7 @@ import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-propose-market',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule],
   templateUrl: './propose-market.component.html',
   styleUrls: ['./propose-market.component.scss']
 })
@@ -29,6 +29,9 @@ export class ProposeMarketComponent implements OnInit {
   showJsonModal = false;
   jsonText = '';
   ngos: Ngo[] = [];
+  showNgoModal = false;
+  ngoSearchQuery = '';
+  selectedNgoIds: number[] = [];
 
   categories: MarketCategory[] = [
     'Sports', 'Finance', 'Environment', 'Tech', 'Politics', 
@@ -73,6 +76,13 @@ export class ProposeMarketComponent implements OnInit {
         .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
       this.ngos = list;
+
+      // Sync selectedNgoIds from form values (if any)
+      const v = this.proposalForm.value;
+      const ids = [v.ngo_candidate_1, v.ngo_candidate_2, v.ngo_candidate_3]
+        .map((x: any) => Number(x))
+        .filter((n: any) => Number.isInteger(n) && n > 0);
+      this.selectedNgoIds = [...new Set(ids)].slice(0, 3);
     } catch {
       this.ngos = [];
     }
@@ -119,6 +129,55 @@ export class ProposeMarketComponent implements OnInit {
         this.notificationService.show('Failed to submit proposal. Please try again.', 'error');
         this.isSubmitting = false;
       }
+    });
+  }
+
+  get filteredNgos(): Ngo[] {
+    if (!this.ngoSearchQuery.trim()) return this.ngos;
+    const query = this.ngoSearchQuery.toLowerCase();
+    return this.ngos.filter(ngo => 
+      ngo.name?.toLowerCase().includes(query) || 
+      ngo.description?.toLowerCase().includes(query) ||
+      ngo.cause?.toLowerCase().includes(query)
+    );
+  }
+
+  openNgoModal() {
+    this.showNgoModal = true;
+    this.ngoSearchQuery = '';
+  }
+
+  closeNgoModal() {
+    this.showNgoModal = false;
+  }
+
+  toggleNgoSelection(ngoId: number) {
+    const index = this.selectedNgoIds.indexOf(ngoId);
+    if (index > -1) {
+      this.selectedNgoIds.splice(index, 1);
+    } else {
+      if (this.selectedNgoIds.length < 3) {
+        this.selectedNgoIds.push(ngoId);
+      } else {
+        this.notificationService.show('You can only select up to 3 NGOs.', 'error');
+      }
+    }
+    this.updateFormNgos();
+  }
+
+  isNgoSelected(ngoId: number): boolean {
+    return this.selectedNgoIds.includes(ngoId);
+  }
+
+  getNgoById(id: number): Ngo | undefined {
+    return this.ngos.find(n => n.on_chain_id === id);
+  }
+
+  updateFormNgos() {
+    this.proposalForm.patchValue({
+      ngo_candidate_1: this.selectedNgoIds[0] || '',
+      ngo_candidate_2: this.selectedNgoIds[1] || '',
+      ngo_candidate_3: this.selectedNgoIds[2] || '',
     });
   }
 
@@ -229,6 +288,8 @@ export class ProposeMarketComponent implements OnInit {
         ngo_candidate_2: ngoCandidateIds[1] ?? '',
         ngo_candidate_3: ngoCandidateIds[2] ?? '',
       });
+
+      this.selectedNgoIds = ngoCandidateIds.slice(0, 3);
 
       this.proposalForm.markAllAsTouched();
       this.notificationService.success('JSON imported into the form.');
