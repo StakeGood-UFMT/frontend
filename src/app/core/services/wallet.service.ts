@@ -9,45 +9,49 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class WalletService {
+  private static initialized = false;
   public publicKey = signal<string | null>(null);
   public isConnecting = signal<boolean>(false);
 
   constructor() {
-    StellarWalletsKit.init({
-      network: Networks[environment.stellar.network as keyof typeof Networks] || Networks.TESTNET,
-      modules: [
-        ...defaultModules(),
-        new WalletConnectModule({
-          projectId: 'dd7ad1f9a9784ee8bc5f6a7a99074cba',
-          metadata: {
-            name: 'StakeGood',
-            description: 'StakeGood - Impact Ledger & Prediction Market',
-            url: 'https://stakegood.onrender.com/',
-            icons: ['https://stakegood.onrender.com/logo.png'],
-          }
-        })
-      ],
-      theme: {
-        // StakeGood brand theme
-        'background': '#111815',
-        'background-secondary': '#0d1f17',
-        'foreground-strong': '#ffffff',
-        'foreground': '#f1f5f2',
-        'foreground-secondary': '#9ca3af',
-        'primary': '#11D48A',
-        'primary-foreground': '#111815',
-        'transparent': 'rgba(0,0,0,0)',
-        'lighter': '#1a2e26',
-        'light': '#162820',
-        'light-gray': 'rgba(255,255,255,0.08)',
-        'gray': 'rgba(255,255,255,0.15)',
-        'danger': 'oklch(57.7% 0.245 27.325)',
-        'border': 'rgba(17,212,138,0.15)',
-        'shadow': '0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(17,212,138,0.1)',
-        'border-radius': '1rem',
-        'font-family': "'Inter', 'system-ui', sans-serif",
-      }
-    });
+    if (!WalletService.initialized) {
+      StellarWalletsKit.init({
+        network: Networks[environment.stellar.network as keyof typeof Networks] || Networks.TESTNET,
+        modules: [
+          ...defaultModules(),
+          new WalletConnectModule({
+            projectId: 'dd7ad1f9a9784ee8bc5f6a7a99074cba',
+            metadata: {
+              name: 'StakeGood',
+              description: 'StakeGood - Impact Ledger & Prediction Market',
+              url: 'https://stakegood.onrender.com/',
+              icons: ['https://stakegood.onrender.com/logo.png'],
+            }
+          })
+        ],
+        theme: {
+          // StakeGood brand theme
+          'background': '#111815',
+          'background-secondary': '#0d1f17',
+          'foreground-strong': '#ffffff',
+          'foreground': '#f1f5f2',
+          'foreground-secondary': '#9ca3af',
+          'primary': '#11D48A',
+          'primary-foreground': '#111815',
+          'transparent': 'rgba(0,0,0,0)',
+          'lighter': '#1a2e26',
+          'light': '#162820',
+          'light-gray': 'rgba(255,255,255,0.08)',
+          'gray': 'rgba(255,255,255,0.15)',
+          'danger': 'oklch(57.7% 0.245 27.325)',
+          'border': 'rgba(17,212,138,0.15)',
+          'shadow': '0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(17,212,138,0.1)',
+          'border-radius': '1rem',
+          'font-family': "'Inter', 'system-ui', sans-serif",
+        }
+      });
+      WalletService.initialized = true;
+    }
 
     this.hydratePublicKeyFromAuthStorage();
   }
