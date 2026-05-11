@@ -33,6 +33,14 @@ export interface Market {
   fee_ngo: number;
   fee_platform: number;
   fee_gamification: number;
+
+  ngo_candidate_ids?: number[];
+  ngo_candidates?: Array<{
+    on_chain_id: number;
+    id: string | null;
+    name: string;
+    logo_url?: string;
+  }>;
 }
 
 export interface MarketHistoryPoint {

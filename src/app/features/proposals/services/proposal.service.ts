@@ -11,6 +11,7 @@ export interface MarketProposal {
   resolve_at: string;
   resolution_rule: string;
   resolution_source: string;
+  ngo_candidate_ids: number[];
   image_url?: string;
   oracle_url?: string;
 }
@@ -95,6 +96,7 @@ export class ProposalService {
       resolveAt: resolveAtIso,
       resolutionRule: proposal.resolution_rule,
       resolutionSource: proposal.resolution_source,
+      ngoCandidateIds: proposal.ngo_candidate_ids,
     });
   }
 

@@ -69,10 +69,14 @@ export class StakeService {
     setTimeout(() => this.notificationService.remove(toastId), 7000);
   }
 
-  async placeStake(marketId: string, outcome: string, amount: number): Promise<void> {
+  async placeStake(marketId: string, outcome: string, amount: number, ngoId: number): Promise<void> {
     const toastId = this.notificationService.show('Building transaction...', 'pending', undefined, true);
 
     try {
+      if (!Number.isInteger(ngoId) || ngoId <= 0) {
+        throw new Error('Invalid NGO selection');
+      }
+
       // 1. Build XDR
       const response = await firstValueFrom(
         this.http.post<{ xdr: string; txHash: string }>(
@@ -80,7 +84,8 @@ export class StakeService {
           { 
             market_id: marketId, 
             outcome, 
-            amount: amount.toString() 
+            amount: amount.toString(),
+            ngo_id: ngoId,
           }
         )
       );
@@ -115,6 +120,7 @@ export class StakeService {
             market_id: marketId,
             outcome,
             amount: amount.toString(),
+            ngo_id: ngoId,
           }
         )
       );

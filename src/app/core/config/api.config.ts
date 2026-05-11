@@ -49,6 +49,12 @@ export const API_CONFIG = {
     proposals: {
       base: '/proposals',
     },
+    ngoProposals: {
+      base: '/ngo-proposals',
+      mine: '/ngo-proposals/mine',
+      buildApproval: (id: string) => `/ngo-proposals/${id}/build-approval`,
+      moderate: (id: string) => `/ngo-proposals/${id}/moderate`,
+    },
     governance: {
       organizations: '/governance/organizations',
     },

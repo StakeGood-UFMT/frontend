@@ -11,7 +11,7 @@ import { Ngo } from '../../../../core/models/ngo.model';
     <a class="ngo-card" [routerLink]="['/ngos', ngo.id]" id="ngo-card-{{ngo.id}}">
       <div class="card-header">
         <div class="ngo-info">
-          <img [src]="ngo.logo_url" [alt]="ngo.name" class="ngo-logo">
+          <img [src]="ngo.logo_url || '/logo.webp'" [alt]="ngo.name" class="ngo-logo">
           <div class="name-container">
             <h3 class="ngo-name">{{ ngo.name }}</h3>
             <div class="badges">

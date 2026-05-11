@@ -1,5 +1,6 @@
 export interface Ngo {
   id: string;
+  on_chain_id?: number | null;
   name: string;
   description: string;
   logo_url: string;

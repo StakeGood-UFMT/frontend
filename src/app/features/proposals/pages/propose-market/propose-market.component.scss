@@ -118,6 +118,16 @@
         padding-right: 40px;
       }
 
+      .ngo-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+
+        @media (max-width: 900px) {
+          grid-template-columns: 1fr;
+        }
+      }
+
       .error-msg {
         color: #ef4444;
         font-size: 0.8rem;

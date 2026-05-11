@@ -20,7 +20,7 @@ import { TimelineComponent } from '../../components/timeline/timeline.component'
           
           <div class="ngo-header-main">
             <div class="logo-wrapper">
-              <img [src]="ngo.logo_url" [alt]="ngo.name" class="profile-logo">
+              <img [src]="ngo.logo_url || '/logo.webp'" [alt]="ngo.name" class="profile-logo">
               <div class="verified-indicator" *ngIf="ngo.verified">
                 <span class="v-icon">✓</span>
               </div>
