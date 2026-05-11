@@ -39,22 +39,24 @@
         <!-- NGO Candidates -->
         <div class="form-group full-width">
           <label>Impact NGOs (pick 3)</label>
-          <div class="ngo-grid">
-            <select formControlName="ngo_candidate_1" [class.invalid]="isInvalid('ngo_candidate_1')">
-              <option value="" disabled selected>Select NGO #1</option>
-              <option *ngFor="let ngo of ngos" [value]="ngo.on_chain_id">{{ ngo.name }} ({{ ngo.on_chain_id }})</option>
-            </select>
-            <select formControlName="ngo_candidate_2" [class.invalid]="isInvalid('ngo_candidate_2')">
-              <option value="" disabled selected>Select NGO #2</option>
-              <option *ngFor="let ngo of ngos" [value]="ngo.on_chain_id">{{ ngo.name }} ({{ ngo.on_chain_id }})</option>
-            </select>
-            <select formControlName="ngo_candidate_3" [class.invalid]="isInvalid('ngo_candidate_3')">
-              <option value="" disabled selected>Select NGO #3</option>
-              <option *ngFor="let ngo of ngos" [value]="ngo.on_chain_id">{{ ngo.name }} ({{ ngo.on_chain_id }})</option>
-            </select>
+          <div 
+            class="selected-ngos-display" 
+            (click)="openNgoModal()" 
+            [class.invalid]="isInvalid('ngo_candidate_1') || isInvalid('ngo_candidate_2') || isInvalid('ngo_candidate_3')"
+          >
+            <div class="placeholder" *ngIf="selectedNgoIds.length === 0">
+              Select 3 NGOs to be candidates for this market...
+            </div>
+            <div class="selected-list" *ngIf="selectedNgoIds.length > 0">
+              <div class="selected-ngo-tag" *ngFor="let id of selectedNgoIds">
+                <span class="ngo-name">{{ getNgoById(id)?.name || 'Unknown' }}</span>
+                <button type="button" class="remove-btn" (click)="$event.stopPropagation(); toggleNgoSelection(id)">✕</button>
+              </div>
+            </div>
+            <div class="selection-count">{{ selectedNgoIds.length }}/3</div>
           </div>
           <span class="error-msg" *ngIf="isInvalid('ngo_candidate_1') || isInvalid('ngo_candidate_2') || isInvalid('ngo_candidate_3')">
-            Select 3 NGOs (distinct).
+            Please select exactly 3 distinct NGOs.
           </span>
         </div>
 
@@ -162,6 +164,71 @@
     </form>
   </div>
 
+  <!-- NGO Selection Modal -->
+  <div *ngIf="showNgoModal" class="modal-overlay" (click)="closeNgoModal()">
+    <div class="modal ngo-selection-modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div class="modal-title">
+          <h3>Select NGOs</h3>
+          <span class="count-badge">{{ selectedNgoIds.length }}/3 Selected</span>
+        </div>
+        <button class="close-btn" (click)="closeNgoModal()">✕</button>
+      </header>
+
+      <div class="modal-body">
+        <p class="modal-description">
+          Search and select 3 non-profit organizations to participate in this market.
+        </p>
+
+        <div class="search-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input 
+            type="text" 
+            placeholder="Search by name, description or cause..." 
+            [(ngModel)]="ngoSearchQuery"
+            (click)="$event.stopPropagation()"
+          >
+        </div>
+
+        <div class="ngo-list-container">
+          <div 
+            class="ngo-item" 
+            *ngFor="let ngo of filteredNgos" 
+            [class.selected]="isNgoSelected(ngo.on_chain_id!)"
+            (click)="toggleNgoSelection(ngo.on_chain_id!)"
+          >
+            <div class="ngo-info">
+              <div class="ngo-main">
+                <span class="name">{{ ngo.name }}</span>
+                <span class="id">#{{ ngo.on_chain_id }}</span>
+              </div>
+              <p class="desc">{{ ngo.description | slice:0:100 }}{{ (ngo.description?.length || 0) > 100 ? '...' : '' }}</p>
+              <div class="meta">
+                <span class="cat-tag">{{ ngo.cause }}</span>
+              </div>
+            </div>
+            <div class="selection-indicator">
+              <div class="check-box" [class.checked]="isNgoSelected(ngo.on_chain_id!)">
+                <svg *ngIf="isNgoSelected(ngo.on_chain_id!)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+            </div>
+          </div>
+          
+          <div class="no-results" *ngIf="filteredNgos.length === 0">
+            <p>No NGOs found matching "{{ ngoSearchQuery }}"</p>
+          </div>
+        </div>
+      </div>
+
+      <footer class="modal-footer">
+        <button class="copy-btn" (click)="closeNgoModal()" [disabled]="selectedNgoIds.length !== 3">
+          Done ({{ selectedNgoIds.length }}/3)
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Import JSON Modal -->
   <div *ngIf="showJsonModal" class="modal-overlay" (click)="closeJsonModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <header class="modal-header">
