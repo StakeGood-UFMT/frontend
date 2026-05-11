@@ -254,22 +254,22 @@ export class ProposeMarketComponent implements OnInit {
 
   importJson() {
     try {
-      const parsed = JSON.parse(this.jsonText || '{}') as any;
+      const parsed = JSON.parse(this.jsonText || '{}') as Record<string, any>;
       if (!parsed || typeof parsed !== 'object') {
         this.notificationService.error('Invalid JSON.');
         return;
       }
 
-      const title = (parsed.title ?? '').toString();
-      const category = (parsed.category ?? '').toString();
-      const description = (parsed.description ?? '').toString();
-      const resolutionRule = (parsed.resolution_rule ?? parsed.resolutionRule ?? '').toString();
-      const resolutionSource = (parsed.resolution_source ?? parsed.resolutionSource ?? '').toString();
-      const oracleUrl = (parsed.oracle_url ?? parsed.oracleUrl ?? '').toString();
-      const imageUrl = (parsed.image_url ?? parsed.imageUrl ?? '').toString();
-      const lockAt = this.toDatetimeLocal(parsed.lock_at ?? parsed.lockAt);
-      const resolveAt = this.toDatetimeLocal(parsed.resolve_at ?? parsed.resolveAt);
-      const ngoCandidateIdsRaw = parsed.ngo_candidate_ids ?? parsed.ngoCandidateIds ?? [];
+      const title = (parsed['title'] ?? '').toString();
+      const category = (parsed['category'] ?? '').toString();
+      const description = (parsed['description'] ?? '').toString();
+      const resolutionRule = (parsed['resolution_rule'] ?? parsed['resolutionRule'] ?? '').toString();
+      const resolutionSource = (parsed['resolution_source'] ?? parsed['resolutionSource'] ?? '').toString();
+      const oracleUrl = (parsed['oracle_url'] ?? parsed['oracleUrl'] ?? '').toString();
+      const imageUrl = (parsed['image_url'] ?? parsed['imageUrl'] ?? '').toString();
+      const lockAt = this.toDatetimeLocal(parsed['lock_at'] ?? parsed['lockAt']);
+      const resolveAt = this.toDatetimeLocal(parsed['resolve_at'] ?? parsed['resolveAt']);
+      const ngoCandidateIdsRaw = parsed['ngo_candidate_ids'] ?? parsed['ngoCandidateIds'] ?? [];
       const ngoCandidateIds = Array.isArray(ngoCandidateIdsRaw)
         ? ngoCandidateIdsRaw.map((x: any) => Number(x)).filter((n: any) => Number.isInteger(n) && n > 0)
         : [];

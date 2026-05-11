@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
 import { Networks } from '@creit.tech/stellar-wallets-kit/types';
 import { defaultModules } from '@creit.tech/stellar-wallets-kit/modules/utils';
+import { WalletConnectModule } from '@creit.tech/stellar-wallets-kit/modules/wallet-connect';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -14,7 +15,18 @@ export class WalletService {
   constructor() {
     StellarWalletsKit.init({
       network: Networks[environment.stellar.network as keyof typeof Networks] || Networks.TESTNET,
-      modules: defaultModules(),
+      modules: [
+        ...defaultModules(),
+        new WalletConnectModule({
+          projectId: 'dd7ad1f9a9784ee8bc5f6a7a99074cba',
+          metadata: {
+            name: 'StakeGood',
+            description: 'StakeGood - Impact Ledger & Prediction Market',
+            url: 'https://stakegood.onrender.com/',
+            icons: ['https://stakegood.onrender.com/logo.png'],
+          }
+        })
+      ],
       theme: {
         // StakeGood brand theme
         'background': '#111815',
@@ -65,7 +77,7 @@ export class WalletService {
     this.isConnecting.set(true);
     try {
       const { address } = await StellarWalletsKit.authModal();
-      
+
       this.publicKey.set(address);
       return address;
     } catch (error) {
@@ -80,7 +92,7 @@ export class WalletService {
     if (!this.publicKey()) {
       throw new Error('No wallet connected');
     }
-    
+
     try {
       const { signedMessage } = await StellarWalletsKit.signMessage(message, {
         address: this.publicKey()!,
@@ -88,16 +100,16 @@ export class WalletService {
       });
       return signedMessage;
     } catch (error) {
-       console.error('[WalletService] Signing error:', error);
-       throw error;
+      console.error('[WalletService] Signing error:', error);
+      throw error;
     }
   }
 
   async signTransaction(xdr: string): Promise<{ signedTxXdr: string }> {
-     return await StellarWalletsKit.signTransaction(xdr, {
-        address: this.publicKey()!,
-        networkPassphrase: Networks[environment.stellar.network as keyof typeof Networks] || Networks.TESTNET
-     });
+    return await StellarWalletsKit.signTransaction(xdr, {
+      address: this.publicKey()!,
+      networkPassphrase: Networks[environment.stellar.network as keyof typeof Networks] || Networks.TESTNET
+    });
   }
 
   disconnect() {

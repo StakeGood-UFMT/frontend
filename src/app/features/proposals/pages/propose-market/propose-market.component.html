@@ -202,7 +202,7 @@
                 <span class="name">{{ ngo.name }}</span>
                 <span class="id">#{{ ngo.on_chain_id }}</span>
               </div>
-              <p class="desc">{{ ngo.description | slice:0:100 }}{{ (ngo.description?.length || 0) > 100 ? '...' : '' }}</p>
+              <p class="desc">{{ ngo.description | slice:0:100 }}{{ ngo.description.length > 100 ? '...' : '' }}</p>
               <div class="meta">
                 <span class="cat-tag">{{ ngo.cause }}</span>
               </div>
