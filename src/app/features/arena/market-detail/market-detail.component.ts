@@ -756,7 +756,7 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
       if (this.activeTab() === 'results' && !this.resultsLoading()) {
         this.loadResults();
       }
-    }, 5000);
+    }, 30000);
   }
 
   ngOnDestroy() {

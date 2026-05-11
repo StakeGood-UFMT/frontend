@@ -87,7 +87,7 @@ export class DistributeImpactButtonComponent {
   processing = signal(false);
 
   async onClick() {
-    if (!this.wallet.publicKey()) {
+    if (!this.wallet.ensurePublicKey()) {
       this.notify.error('Connect your wallet first.');
       return;
     }
