@@ -1,4 +1,4 @@
-export type MarketStatus = 'active' | 'locked' | 'resolved' | 'CANCELLED';
+export type MarketStatus = 'draft' | 'active' | 'locked' | 'resolved' | 'CANCELLED';
 export type MarketCategory = 'ALL' | 'Sports' | 'Finance' | 'Environment' | 'Tech' | 'Politics' | 'Science' | 'Health' | 'Education' | 'Animals' | 'Entertainment';
 
 export interface UserPosition {
@@ -12,6 +12,7 @@ export interface Market {
   description: string;
   category: MarketCategory;
   status: MarketStatus;
+  derived_status?: string;
   image_url?: string;
   yes_price?: number;
   no_price?: number;

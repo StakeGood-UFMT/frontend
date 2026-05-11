@@ -2,6 +2,10 @@ import { Component, Input, Output, EventEmitter, inject, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../../../core/services/admin.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { WalletService } from '../../../../core/services/wallet.service';
+import { HttpClient } from '@angular/common/http';
+import { API_CONFIG } from '../../../../core/config/api.config';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-distribute-impact-button',
@@ -77,24 +81,59 @@ export class DistributeImpactButtonComponent {
 
   private adminService = inject(AdminService);
   private notify = inject(NotificationService);
+  private wallet = inject(WalletService);
+  private http = inject(HttpClient);
 
   processing = signal(false);
 
-  onClick() {
-    if (!confirm('Are you sure you want to distribute impact for this market? This action is irreversible and will distribute funds to the associated NGO.')) {
+  async onClick() {
+    if (!this.wallet.publicKey()) {
+      this.notify.error('Connect your wallet first.');
+      return;
+    }
+
+    const rawNgoId = prompt('Winner NGO ID (u32):');
+    const winnerNgoId = Number(rawNgoId);
+    if (!Number.isInteger(winnerNgoId) || winnerNgoId <= 0) {
+      this.notify.error('Invalid NGO ID.');
+      return;
+    }
+
+    if (!confirm(`Distribute impact to NGO #${winnerNgoId}? This action is irreversible.`)) {
       return;
     }
 
     this.processing.set(true);
-    this.adminService.distributeImpact(this.marketId).subscribe({
-      next: (res: any) => {
-        this.distributed.emit(res);
-        this.processing.set(false);
-      },
-      error: (err: any) => {
-        this.notify.error('Failed to distribute impact. Please check blockchain status.');
-        this.processing.set(false);
-      }
-    });
+    const toastId = this.notify.show('Preparing impact distribution...', 'pending', undefined, true);
+
+    try {
+      const built = await firstValueFrom(this.adminService.distributeImpact(this.marketId, winnerNgoId));
+      this.notify.update(toastId, { message: 'Awaiting signature in wallet...' });
+
+      const { signedTxXdr } = await this.wallet.signTransaction(built.xdr);
+      this.notify.update(toastId, { message: 'Submitting transaction...' });
+
+      const submit = await firstValueFrom(
+        this.http.post(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.transactions.submit}`,
+          { signedXdr: signedTxXdr, txHash: built.txHash },
+        ),
+      );
+
+      this.distributed.emit(submit);
+      this.notify.update(toastId, {
+        message: 'Impact distribution submitted.',
+        type: 'success',
+        persistent: false,
+      });
+    } catch (err: any) {
+      this.notify.update(toastId, {
+        message: err?.error?.message ?? 'Failed to distribute impact.',
+        type: 'error',
+        persistent: false,
+      });
+    } finally {
+      this.processing.set(false);
+    }
   }
 }
