@@ -36,6 +36,29 @@ export class WalletService {
         'font-family': "'Inter', 'system-ui', sans-serif",
       }
     });
+
+    this.hydratePublicKeyFromAuthStorage();
+  }
+
+  private hydratePublicKeyFromAuthStorage() {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      const raw = localStorage.getItem('stakegood_auth');
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as any;
+      const addr = parsed?.profile?.public_key;
+      if (typeof addr === 'string' && addr.length > 0 && !this.publicKey()) {
+        this.publicKey.set(addr);
+      }
+    } catch {
+      return;
+    }
+  }
+
+  ensurePublicKey() {
+    if (this.publicKey()) return this.publicKey();
+    this.hydratePublicKeyFromAuthStorage();
+    return this.publicKey();
   }
 
   async connect(): Promise<string> {

@@ -129,11 +129,53 @@
       </div>
 
       <div class="actions">
+        <button type="button" class="import-btn" (click)="openJsonModal()" [disabled]="isSubmitting">
+          Import JSON
+        </button>
         <button type="submit" class="submit-btn" [disabled]="isSubmitting">
           <span *ngIf="!isSubmitting">Submit Proposal</span>
           <span *ngIf="isSubmitting" class="loader"></span>
         </button>
       </div>
     </form>
+  </div>
+
+  <div *ngIf="showJsonModal" class="modal-overlay" (click)="closeJsonModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div class="modal-title">
+          <h3>Import JSON</h3>
+        </div>
+        <button class="close-btn" (click)="closeJsonModal()">✕</button>
+      </header>
+
+      <div class="modal-body">
+        <p class="modal-description">
+          Paste JSON below and click “Import”, or load the example.
+        </p>
+
+        <textarea
+          class="json-area"
+          [value]="jsonText"
+          (input)="onJsonTextChange($event)"
+          spellcheck="false"
+        ></textarea>
+
+        <div class="modal-actions">
+          <button type="button" class="secondary-btn" (click)="setExampleJson()">
+            Load example
+          </button>
+          <button type="button" class="secondary-btn" (click)="pasteJsonFromClipboard()">
+            Paste from clipboard
+          </button>
+          <button type="button" class="secondary-btn" (click)="copyExampleJson()">
+            Copy example
+          </button>
+          <button type="button" class="copy-btn" (click)="importJson()">
+            Import
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

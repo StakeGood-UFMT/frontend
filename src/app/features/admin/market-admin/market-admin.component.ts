@@ -52,7 +52,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
                   Open Market →
                 </a>
                 <button class="manage-link" (click)="openManage(m)">
-                  Administrar
+                  Manage
                 </button>
               </div>
             </div>
@@ -139,7 +139,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
       <div class="modal-card" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <div class="modal-title-wrap">
-            <div class="modal-kicker">Administrar Market</div>
+            <div class="modal-kicker">Manage Market</div>
             <div class="modal-title">{{ selectedMarket()!.title }}</div>
           </div>
           <button class="modal-close" (click)="closeManage()">×</button>
@@ -188,14 +188,14 @@ import { API_CONFIG } from '../../../core/config/api.config';
             </div>
 
             <div class="panel">
-              <div class="panel-title">Ações</div>
+              <div class="panel-title">Actions</div>
               <div class="actions">
                 <button
                   class="action-btn"
                   [disabled]="manageActionBusy() || !canToggleActive()"
                   (click)="toggleActive()"
                 >
-                  {{ selectedMarket()!.status === 'draft' ? 'Ativar' : 'Desativar' }}
+                  {{ selectedMarket()!.status === 'draft' ? 'Activate' : 'Deactivate' }}
                 </button>
 
                 <button
@@ -203,7 +203,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
                   [disabled]="manageActionBusy() || selectedMarket()!.status === 'resolved'"
                   (click)="cancelSelected()"
                 >
-                  Cancelar Market
+                  Cancel Market
                 </button>
 
                 <div class="action-block">
@@ -236,7 +236,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
                 </div>
               </div>
               <div class="panel-note">
-                Resolve e Impact exigem assinatura da wallet do admin.
+                Resolve and Impact actions require the admin wallet signature.
               </div>
             </div>
 
@@ -315,7 +315,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
             </div>
 
             <div class="panel wide">
-              <div class="panel-title">Apostadores</div>
+              <div class="panel-title">Bettors</div>
               <div *ngIf="marketPositions()?.positions?.length; else noPositionsTpl" class="table">
                 <div class="thead">
                   <div>User</div>
@@ -1023,7 +1023,7 @@ export class MarketAdminComponent implements OnInit {
     const m = this.selectedMarket();
     if (!m) return;
     const nextStatus = m.status === 'draft' ? 'active' : 'draft';
-    if (!confirm(`${nextStatus === 'active' ? 'Ativar' : 'Desativar'} este market?`)) return;
+    if (!confirm(`${nextStatus === 'active' ? 'Activate' : 'Deactivate'} this market?`)) return;
 
     this.manageActionBusy.set(true);
     try {
@@ -1053,11 +1053,11 @@ export class MarketAdminComponent implements OnInit {
   async cancelSelected() {
     const m = this.selectedMarket();
     if (!m) return;
-    if (!this.wallet.publicKey()) {
+    if (!this.wallet.ensurePublicKey()) {
       this.notify.error('Connect your wallet first.');
       return;
     }
-    if (!confirm('Cancelar este market on-chain?')) return;
+    if (!confirm('Cancel this market on-chain?')) return;
 
     this.manageActionBusy.set(true);
     const toastId = this.notify.show('Preparing cancel...', 'pending', undefined, true);
@@ -1080,7 +1080,7 @@ export class MarketAdminComponent implements OnInit {
   async resolveSelected(outcome: 'YES' | 'NO') {
     const m = this.selectedMarket();
     if (!m) return;
-    if (!this.wallet.publicKey()) {
+    if (!this.wallet.ensurePublicKey()) {
       this.notify.error('Connect your wallet first.');
       return;
     }
@@ -1146,7 +1146,7 @@ export class MarketAdminComponent implements OnInit {
       return;
     }
 
-    if (!this.wallet.publicKey()) {
+    if (!this.wallet.ensurePublicKey()) {
       this.notify.error('Connect your wallet first.');
       return;
     }

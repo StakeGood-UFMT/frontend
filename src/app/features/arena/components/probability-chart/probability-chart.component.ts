@@ -120,6 +120,30 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
   view = signal<'pools' | 'probability'>('probability');
   private pointRadii: number[] = [];
 
+  private parseNumeric(value: unknown): number | null {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    if (typeof value === 'string') {
+      const cleaned = value.trim().replace(/[^\d.,-]/g, '').replace(',', '.');
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? n : null;
+    }
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  private computeYesProbabilityPct(point: MarketHistoryPoint): number {
+    const yesPool = this.parseNumeric((point as any)?.yes_pool) ?? 0;
+    const noPool = this.parseNumeric((point as any)?.no_pool) ?? 0;
+    const total = yesPool + noPool;
+    if (Number.isFinite(total) && total > 0) return (yesPool / total) * 100;
+
+    const rawProb = this.parseNumeric((point as any)?.yes_probability);
+    if (rawProb === null) return 50;
+    if (rawProb >= 0 && rawProb <= 1) return rawProb * 100;
+    if (rawProb >= 0 && rawProb <= 100) return rawProb;
+    return 50;
+  }
+
   ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {
       this.createChart();
@@ -179,7 +203,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
           },
           {
             label: 'YES probability (%)',
-            data: this.history.map((p) => (p.yes_probability ?? 0) * 100),
+            data: this.history.map((p) => this.computeYesProbabilityPct(p)),
             borderColor: '#111827',
             segment: {
               borderColor: (ctx: any) => (ctx?.p1?.parsed?.y >= 50 ? '#11D48A' : '#CC5A37'),
@@ -258,9 +282,9 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
     this.pointRadii = this.computePointRadii(this.history);
     this.chart.data.labels = this.history.map((p) => this.formatLabel(p.timestamp));
 
-    const yesPool = this.history.map((p) => Number(p.yes_pool ?? 0));
-    const noPool = this.history.map((p) => Number(p.no_pool ?? 0));
-    const yesPct = this.history.map((p) => (p.yes_probability ?? 0) * 100);
+    const yesPool = this.history.map((p) => this.parseNumeric((p as any)?.yes_pool) ?? 0);
+    const noPool = this.history.map((p) => this.parseNumeric((p as any)?.no_pool) ?? 0);
+    const yesPct = this.history.map((p) => this.computeYesProbabilityPct(p));
 
     const ds0 = (this.chart.data.datasets[0].data ?? []) as number[];
     ds0.length = 0;
@@ -296,13 +320,13 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
   private computePointRadii(history: MarketHistoryPoint[]) {
     if (!history?.length) return [];
     const radii: number[] = [];
-    let prevYes = Number(history[0]?.yes_pool ?? 0);
-    let prevNo = Number(history[0]?.no_pool ?? 0);
+    let prevYes = this.parseNumeric((history[0] as any)?.yes_pool) ?? 0;
+    let prevNo = this.parseNumeric((history[0] as any)?.no_pool) ?? 0;
     radii.push(0);
 
     for (let i = 1; i < history.length; i++) {
-      const yes = Number(history[i]?.yes_pool ?? 0);
-      const no = Number(history[i]?.no_pool ?? 0);
+      const yes = this.parseNumeric((history[i] as any)?.yes_pool) ?? 0;
+      const no = this.parseNumeric((history[i] as any)?.no_pool) ?? 0;
       const changed = yes !== prevYes || no !== prevNo;
       radii.push(changed ? 3 : 0);
       prevYes = yes;
