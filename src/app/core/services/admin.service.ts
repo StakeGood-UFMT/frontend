@@ -19,17 +19,37 @@ export class AdminService {
     return this.http.post(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.keeperBatchBump}`, payload);
   }
 
-  distributeImpact(marketId: string): Observable<DistributeImpactResponse> {
-    return this.http.post<DistributeImpactResponse>(
-      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.distributeImpact(marketId)}`, 
-      {}
+  distributeImpact(marketId: string, winnerNgoId: number): Observable<{ xdr: string; txHash: string; action: string }> {
+    return this.http.post<{ xdr: string; txHash: string; action: string }>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.distributeImpact(marketId)}`,
+      { winner_ngo_id: winnerNgoId },
     );
   }
 
-  resolveMarket(marketId: string, outcome: 'YES' | 'NO'): Observable<{ xdr: string; action: string }> {
-    return this.http.post<{ xdr: string; action: string }>(
+  resolveMarket(marketId: string, outcome: 'YES' | 'NO'): Observable<{ xdr: string; txHash: string; action: string }> {
+    return this.http.post<{ xdr: string; txHash: string; action: string }>(
       `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.resolveMarket(marketId)}`,
       { outcome },
+    );
+  }
+
+  cancelMarket(marketId: string): Observable<{ xdr: string; txHash: string; action: string }> {
+    return this.http.post<{ xdr: string; txHash: string; action: string }>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.cancelMarket(marketId)}`,
+      {},
+    );
+  }
+
+  setMarketStatus(marketId: string, status: 'draft' | 'active'): Observable<{ ok: boolean; id: string; status: string }> {
+    return this.http.post<{ ok: boolean; id: string; status: string }>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.setMarketStatus(marketId)}`,
+      { status },
+    );
+  }
+
+  getOnChainMarket(marketId: string): Observable<any> {
+    return this.http.get<any>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.onChainMarket(marketId)}`,
     );
   }
 }

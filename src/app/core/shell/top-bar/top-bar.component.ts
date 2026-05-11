@@ -173,6 +173,7 @@ import { selectIsAdmin } from '../../store/auth/auth.selectors';
         left: 0;
         width: 100vw;
         height: 100vh;
+        height: 100dvh;
         background: rgba(0,0,0,0.4);
         backdrop-filter: blur(4px);
         z-index: 1000;
@@ -233,6 +234,8 @@ import { selectIsAdmin } from '../../store/auth/auth.selectors';
         display: flex;
         flex-direction: column;
         gap: 20px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
 
       .drawer-nav {
@@ -296,7 +299,7 @@ import { selectIsAdmin } from '../../store/auth/auth.selectors';
 
       .wallet-section {
         margin-top: auto;
-        padding-bottom: 20px;
+        padding-bottom: max(64px, calc(20px + env(safe-area-inset-bottom)));
       }
 
       @keyframes slideIn {

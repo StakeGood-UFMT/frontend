@@ -74,6 +74,9 @@ export const API_CONFIG = {
       keeperBatchBump: '/admin/keeper/batch-bump-ttl',
       distributeImpact: (id: string) => `/admin/markets/${id}/distribute-impact`,
       resolveMarket: (id: string) => `/admin/markets/${id}/resolve`,
+      cancelMarket: (id: string) => `/admin/markets/${id}/cancel`,
+      setMarketStatus: (id: string) => `/admin/markets/${id}/status`,
+      onChainMarket: (id: string) => `/admin/markets/${id}/onchain`,
     }
   }
 };
