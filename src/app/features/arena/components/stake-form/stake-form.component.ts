@@ -8,10 +8,12 @@ import { NotificationService } from '../../../../core/services/notification.serv
 
 import { UserPositionSelectorComponent } from '../user-position-selector/user-position-selector.component';
 
+import { RouterModule } from '@angular/router';
+
 @Component({
   selector: 'app-stake-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, UserPositionSelectorComponent],
+  imports: [CommonModule, FormsModule, RouterModule, UserPositionSelectorComponent],
   template: `
     <div class="stake-card">
       <app-user-position-selector
@@ -23,87 +25,108 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
       ></app-user-position-selector>
 
       <div class="form-content">
-        <div class="pools" *ngIf="market.yes_pool !== undefined && market.no_pool !== undefined">
-          <div class="pool-row">
-            <span class="pool-label">YES Pool</span>
-            <span class="pool-value">{{ market.yes_pool | number:'1.2-2' }} XLM</span>
+        <!-- Compact Liquidity Stats -->
+        <div class="liquidity-summary" *ngIf="market.yes_pool !== undefined">
+          <div class="stat-item">
+            <span class="stat-label">YES Pool</span>
+            <span class="stat-value">{{ market.yes_pool | number:'1.2-2' }}</span>
           </div>
-          <div class="pool-row">
-            <span class="pool-label">NO Pool</span>
-            <span class="pool-value">{{ market.no_pool | number:'1.2-2' }} XLM</span>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-label">NO Pool</span>
+            <span class="stat-value">{{ market.no_pool | number:'1.2-2' }}</span>
           </div>
-          <div class="pool-row total">
-            <span class="pool-label">Total Staked</span>
-            <span class="pool-value">{{ totalStaked().toFixed(2) }} XLM</span>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-label">Total</span>
+            <span class="stat-value">{{ totalStaked().toFixed(2) }}</span>
           </div>
         </div>
 
         <div class="input-group">
-          <label>Amount (XLM)</label>
-          <div class="quick-row">
-            <button class="quick-btn" (click)="setAmount(5)" [disabled]="isSubmitting()">5</button>
-            <button class="quick-btn" (click)="setAmount(10)" [disabled]="isSubmitting()">10</button>
-            <button class="quick-btn" (click)="setAmount(20)" [disabled]="isSubmitting()">20</button>
+          <div class="label-row">
+            <label>Amount (XLM)</label>
           </div>
           <div class="input-wrapper">
-            <button class="step-btn" (click)="increment(-1)" [disabled]="isSubmitting() || amount() <= 0">−</button>
-            <input 
-              type="number" 
-              [ngModel]="amount()" 
-              (ngModelChange)="onAmountChange($event)"
-              placeholder="0.00"
-              min="0"
-              step="1"
-            />
-            <button class="step-btn" (click)="increment(1)" [disabled]="isSubmitting()">+</button>
-            <span class="currency">XLM</span>
+            <div class="quick-chips">
+              <button class="chip" (click)="setAmount(5)" [disabled]="isSubmitting()">5</button>
+              <button class="chip" (click)="setAmount(10)" [disabled]="isSubmitting()">10</button>
+              <button class="chip" (click)="setAmount(20)" [disabled]="isSubmitting()">20</button>
+            </div>
+            <div class="main-input">
+              <button class="step-btn" (click)="increment(-1)" [disabled]="isSubmitting() || amount() <= 0">−</button>
+              <input 
+                type="number" 
+                [ngModel]="amount()" 
+                (ngModelChange)="onAmountChange($event)"
+                placeholder="0.00"
+                min="0"
+                step="1"
+              />
+              <button class="step-btn" (click)="increment(1)" [disabled]="isSubmitting()">+</button>
+            </div>
           </div>
         </div>
 
         <div class="input-group" *ngIf="(market.ngo_candidates || []).length === 3">
-          <label>Impact NGO (your vote counts if you win)</label>
-          <div class="ngo-options">
+          <label>Vote for NGO <span class="label-hint">(Counts if you win)</span></label>
+          <div class="ngo-grid">
             <button
               type="button"
-              class="ngo-option"
+              class="ngo-card"
               *ngFor="let ngo of market.ngo_candidates"
               [class.active]="selectedNgoId() === ngo.on_chain_id"
               (click)="selectedNgoId.set(ngo.on_chain_id)"
               [disabled]="isSubmitting()"
+              [title]="ngo.name"
             >
-              <img class="ngo-logo" [src]="ngo.logo_url || '/logo.webp'" [alt]="ngo.name" />
-              <div class="ngo-meta">
-                <div class="ngo-name">{{ ngo.name }}</div>
-                <div class="ngo-id">#{{ ngo.on_chain_id }}</div>
-              </div>
+              <a 
+                *ngIf="ngo.id"
+                [routerLink]="['/ngos', ngo.id]" 
+                target="_blank" 
+                class="ngo-link"
+                (click)="$event.stopPropagation()"
+                title="View NGO details"
+              >
+                ↗
+              </a>
+              <img class="ngo-card-logo" [src]="ngo.logo_url || '/logo.webp'" [alt]="ngo.name" />
+              <span class="ngo-card-name">{{ ngo.name }}</span>
             </button>
           </div>
         </div>
 
-        <div class="summary">
-          <div class="summary-row">
-            <span>Est. Shares</span>
-            <span class="value">{{ estimatedShares().toFixed(2) }}</span>
-          </div>
-          <div class="summary-row">
-            <span>Potential Payout</span>
-            <span class="value success">{{ potentialPayout().toFixed(2) }} XLM</span>
+        <div class="summary-section">
+          <div class="summary-row main">
+            <div class="summary-item">
+              <span class="label">Est. Shares</span>
+              <span class="value">{{ estimatedShares().toFixed(2) }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Potential Payout</span>
+              <span class="value success">{{ potentialPayout().toFixed(2) }} XLM</span>
+            </div>
           </div>
           
-          <div class="divider"></div>
-          
-          <div class="fees-section">
-            <div class="summary-row fee">
-              <span>NGO Fee ({{ (market.fee_ngo * 100).toFixed(2) }}%)</span>
-              <span>{{ fees().ngo.toFixed(4) }} XLM</span>
-            </div>
-            <div class="summary-row fee">
-              <span>Platform Fee ({{ (market.fee_platform * 100).toFixed(2) }}%)</span>
-              <span>{{ fees().platform.toFixed(4) }} XLM</span>
-            </div>
-            <div class="summary-row fee">
-              <span>Gamification ({{ (market.fee_gamification * 100).toFixed(3) }}%)</span>
-              <span>{{ fees().gamification.toFixed(4) }} XLM</span>
+          <div class="fees-collapsible">
+            <button class="fees-toggle" (click)="showFees.set(!showFees())">
+              <span>Fees Details</span>
+              <span class="arrow" [class.open]="showFees()">▾</span>
+            </button>
+            
+            <div class="fees-content" *ngIf="showFees()">
+              <div class="fee-row">
+                <span>NGO ({{ (market.fee_ngo * 100).toFixed(1) }}%)</span>
+                <span>{{ fees().ngo.toFixed(4) }} XLM</span>
+              </div>
+              <div class="fee-row">
+                <span>Platform ({{ (market.fee_platform * 100).toFixed(1) }}%)</span>
+                <span>{{ fees().platform.toFixed(4) }} XLM</span>
+              </div>
+              <div class="fee-row">
+                <span>Gamification ({{ (market.fee_gamification * 100).toFixed(2) }}%)</span>
+                <span>{{ fees().gamification.toFixed(4) }} XLM</span>
+              </div>
             </div>
           </div>
         </div>
@@ -119,7 +142,7 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
         </button>
 
         <p class="status-msg" *ngIf="isMarketClosed()">
-          This market is closed for new stakes.
+          This market is closed.
         </p>
       </div>
     </div>
@@ -127,281 +150,289 @@ import { UserPositionSelectorComponent } from '../user-position-selector/user-po
   styles: [`
     .stake-card {
       background: white;
-      border-radius: 16px;
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.15);
       position: sticky;
       top: 2rem;
+      border: 1px solid #F3F4F6;
     }
-    .tabs {
-      display: flex;
-      padding: 0.5rem;
-      gap: 0.5rem;
-      background: #F9FAFB;
-    }
-    .tabs button {
-      flex: 1;
-      border: none;
-      padding: 0.5rem;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.85rem;
-    }
-    .tab-yes { color: #11D48A; background: transparent; }
-    .tab-yes.active { background: #11D48A; color: white; }
-    .tab-no { color: #CC5A37; background: transparent; }
-    .tab-no.active { background: #CC5A37; color: white; }
 
     .form-content {
       padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
     }
-    .pools {
-      background: #F9FAFB;
-      border: 1px solid #F3F4F6;
-      border-radius: 10px;
-      padding: 0.75rem;
-      margin-bottom: 0.9rem;
-    }
-    .pool-row {
+
+    .liquidity-summary {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.78rem;
-      color: #6B7280;
-      margin-bottom: 0.25rem;
+      background: #F9FAFB;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      border: 1px solid #F3F4F6;
     }
-    .pool-row.total {
-      margin-top: 0.4rem;
-      padding-top: 0.4rem;
-      border-top: 1px solid #E5E7EB;
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .stat-label {
+      font-size: 0.65rem;
       font-weight: 800;
+      color: #9CA3AF;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .stat-value {
+      font-size: 0.85rem;
+      font-weight: 900;
       color: #111827;
     }
-    .pool-value { font-weight: 800; color: #111827; }
-    .pool-label { font-weight: 700; }
+    .stat-divider {
+      width: 1px;
+      height: 20px;
+      background: #E5E7EB;
+    }
+
     .input-group label {
       display: block;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 800;
-      color: #9CA3AF;
-      margin-bottom: 0.3rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .quick-row {
-      display: flex;
-      gap: 0.5rem;
+      color: #374151;
       margin-bottom: 0.5rem;
     }
-    .quick-btn {
+    .label-hint {
+      color: #9CA3AF;
+      font-weight: 600;
+      font-size: 0.7rem;
+    }
+
+    .input-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .quick-chips {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .chip {
       flex: 1;
       border: 1px solid #E5E7EB;
-      background: #F9FAFB;
-      border-radius: 10px;
-      padding: 0.45rem 0.5rem;
-      font-weight: 900;
-      font-size: 0.8rem;
-      color: #374151;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .quick-btn:hover:not(:disabled) { border-color: #11D48A; background: white; }
-    .quick-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .input-wrapper {
-      display: grid;
-      grid-template-columns: 40px 1fr 40px auto;
-      gap: 0.5rem;
-      align-items: center;
-    }
-    .step-btn {
-      border: 2px solid #F3F4F6;
-      background: #F9FAFB;
-      width: 40px;
-      height: 38px;
-      border-radius: 10px;
-      font-weight: 900;
-      font-size: 1.05rem;
-      cursor: pointer;
-      color: #374151;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .step-btn:hover:not(:disabled) { border-color: #11D48A; background: white; }
-    .step-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .input-wrapper input {
-      width: 100%;
-      padding: 0.65rem;
-      border: 2px solid #F3F4F6;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      outline: none;
-      transition: all 0.2s;
-      background: #F9FAFB;
-    }
-    .input-wrapper input:focus {
-      border-color: #11D48A;
       background: white;
+      border-radius: 8px;
+      padding: 0.4rem;
+      font-weight: 800;
+      font-size: 0.8rem;
+      color: #4B5563;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .currency {
-      font-weight: 700;
-      color: #9CA3AF;
-      font-size: 0.7rem;
-      padding-right: 0.25rem;
-    }
+    .chip:hover:not(:disabled) { border-color: #11D48A; color: #11D48A; background: #E8FBF4; }
+    .chip:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .ngo-options {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-top: 8px;
-    }
-
-    .ngo-option {
+    .main-input {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
+      gap: 0.5rem;
+      background: #F9FAFB;
+      border: 2px solid #F3F4F6;
       border-radius: 12px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      background: #ffffff;
+      padding: 0.25rem;
+      transition: border-color 0.2s;
+    }
+    .main-input:focus-within { border-color: #11D48A; background: white; }
+
+    .step-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: white;
+      color: #374151;
+      font-weight: 900;
+      font-size: 1.1rem;
       cursor: pointer;
-      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
-      text-align: left;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    .step-btn:hover:not(:disabled) { background: #F3F4F6; }
 
-    .ngo-option:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
-      border-color: rgba(17, 212, 138, 0.35);
+    .main-input input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 0.5rem;
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #111827;
+      text-align: center;
+      outline: none;
+      width: 100%;
     }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-    .ngo-option.active {
-      border-color: rgba(17, 212, 138, 0.7);
-      box-shadow: 0 0 0 4px rgba(17, 212, 138, 0.12);
+    .ngo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      width: 100%;
     }
-
-    .ngo-logo {
-      width: 34px;
-      height: 34px;
+    .ngo-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
       border-radius: 10px;
+      border: 1px solid #F3F4F6;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 0; /* Important for grid truncation */
+      position: relative; /* For the link positioning */
+    }
+    .ngo-link {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      font-size: 0.7rem;
+      color: #9CA3AF;
+      text-decoration: none;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      background: rgba(243, 244, 246, 0.5);
+      transition: all 0.2s;
+      z-index: 2;
+    }
+    .ngo-link:hover {
+      background: #11D48A;
+      color: white;
+    }
+    .ngo-card:hover:not(:disabled) { border-color: #11D48A; transform: translateY(-1px); }
+    .ngo-card.active { border-color: #11D48A; background: #E8FBF4; box-shadow: 0 0 0 2px rgba(17, 212, 138, 0.1); }
+    .ngo-card-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
       object-fit: cover;
-      background: #f3f4f6;
-      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .ngo-card-name {
+      font-size: 0.6rem;
+      font-weight: 800;
+      color: #374151;
+      text-align: center;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.2;
+      height: 1.5rem; /* Fixed height for 2 lines to keep grid aligned */
     }
 
-    .ngo-meta {
+    .summary-section {
+      background: #F9FAFB;
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid #F3F4F6;
+    }
+    .summary-row.main {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .summary-item {
       display: flex;
       flex-direction: column;
       gap: 2px;
-      min-width: 0;
     }
+    .summary-item .label { font-size: 0.65rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; }
+    .summary-item .value { font-size: 0.9rem; font-weight: 900; color: #111827; }
+    .summary-item .value.success { color: #11D48A; }
 
-    .ngo-name {
-      font-weight: 900;
-      font-size: 0.9rem;
-      color: #111827;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 260px;
+    .fees-collapsible {
+      border-top: 1px solid #E5E7EB;
+      padding-top: 0.5rem;
     }
-
-    .ngo-id {
-      font-size: 0.75rem;
-      color: #6B7280;
-      font-weight: 800;
-    }
-
-    .summary {
-      margin-top: 1rem;
-      background: #F9FAFB;
-      padding: 0.75rem;
-      border-radius: 8px;
-    }
-    .summary-row {
+    .fees-toggle {
+      width: 100%;
+      border: none;
+      background: transparent;
       display: flex;
       justify-content: space-between;
-      font-size: 0.75rem;
+      align-items: center;
+      padding: 0.25rem 0;
+      font-size: 0.7rem;
+      font-weight: 800;
       color: #6B7280;
-      margin-bottom: 0.25rem;
+      cursor: pointer;
     }
-    .summary-row.fee {
+    .fees-toggle .arrow { transition: transform 0.2s; }
+    .fees-toggle .arrow.open { transform: rotate(180deg); }
+
+    .fees-content {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .fee-row {
+      display: flex;
+      justify-content: space-between;
       font-size: 0.65rem;
-      opacity: 0.7;
-    }
-    .value {
       font-weight: 600;
-      color: #1F2937;
-    }
-    .value.success {
-      color: #11D48A;
-    }
-    .divider {
-      height: 1px;
-      background: #E5E7EB;
-      margin: 0.5rem 0;
+      color: #9CA3AF;
     }
 
     .submit-btn {
       width: 100%;
-      margin-top: 1rem;
-      padding: 0.75rem;
+      padding: 1rem;
       border: none;
-      border-radius: 8px;
+      border-radius: 14px;
       background: #11D48A;
       color: white;
-      font-weight: 700;
-      font-size: 0.9rem;
+      font-weight: 800;
+      font-size: 1rem;
       cursor: pointer;
       transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(17, 212, 138, 0.3);
     }
-    .submit-btn:hover { 
-      background: #0FB978;
-      box-shadow: 0 10px 15px -3px rgba(17, 212, 138, 0.3);
-      transform: translateY(-1px);
-    }
-    .submit-btn:active { transform: translateY(0); }
-    .submit-btn.no { 
-      background: #CC5A37;
-      box-shadow: 0 4px 6px -1px rgba(204, 90, 55, 0.2);
-    }
-    .submit-btn.no:hover {
-      background: #B54D2E;
-      box-shadow: 0 10px 15px -3px rgba(204, 90, 55, 0.3);
-    }
-    .submit-btn:disabled {
-      background: #D1D5DB;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
+    .submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(17, 212, 138, 0.4); }
+    .submit-btn.no { background: #EF4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+    .submit-btn.no:hover:not(:disabled) { box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
+    .submit-btn:disabled { background: #D1D5DB; cursor: not-allowed; box-shadow: none; }
+
+    .status-msg {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: #6B7280;
+      text-align: center;
+      font-weight: 700;
     }
 
     .btn-spinner {
       display: inline-block;
-      width: 1.25rem;
-      height: 1.25rem;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      width: 1.2rem;
+      height: 1.2rem;
+      border: 3px solid rgba(255, 255, 255, 0.3);
       border-top-color: white;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
 
-    .status-msg {
-      margin-top: 0.75rem;
-      font-size: 0.75rem;
-      color: #6B7280;
-      text-align: center;
-      background: #F3F4F6;
-      padding: 0.5rem;
-      border-radius: 6px;
-      font-style: italic;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   `]
 })
 export class StakeFormComponent implements OnInit, OnChanges {
@@ -415,6 +446,8 @@ export class StakeFormComponent implements OnInit, OnChanges {
   amount = signal(0);
   isSubmitting = signal(false);
   selectedNgoId = signal<number | null>(null);
+  showFees = signal(false);
+
   isMarketClosed = computed(() => {
     if (!this.market) return true;
     if (this.market.status !== 'active') return true;
@@ -423,10 +456,7 @@ export class StakeFormComponent implements OnInit, OnChanges {
     return new Date() >= lockAt;
   });
 
-  constructor() {
-    // Effect to ensure side is not blocked when user position changes
-    // We can use ngOnInit or a simple effect if we want it reactive
-  }
+  constructor() {}
 
   ngOnInit() {
     this.enforceNoHedge();
@@ -491,7 +521,6 @@ export class StakeFormComponent implements OnInit, OnChanges {
         this.amount(),
         this.selectedNgoId() as number,
       );
-      // Reset amount on success
       this.amount.set(0);
     } catch (error) {
       // Error handled by service toast
@@ -509,7 +538,6 @@ export class StakeFormComponent implements OnInit, OnChanges {
 
   potentialPayout = computed(() => {
     if (this.amount() <= 0) return 0;
-    // Simplification: 1 share = 1 USDC on resolution
     return this.estimatedShares();
   });
 
