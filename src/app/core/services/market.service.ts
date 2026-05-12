@@ -111,4 +111,10 @@ export class MarketService {
       `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.results(id)}`,
     );
   }
+
+  getMarketVoting(id: string) {
+    return this.http.get<any[]>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.detail(id)}/voting`,
+    );
+  }
 }

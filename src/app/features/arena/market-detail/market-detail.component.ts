@@ -58,6 +58,9 @@ interface MarketPositionRow {
             <button class="tab" [class.active]="activeTab() === 'predictions'" (click)="setTab('predictions')">
               Predictions
             </button>
+            <button class="tab" [class.active]="activeTab() === 'voting'" (click)="setTab('voting')">
+              Voting
+            </button>
             <button class="tab" [class.active]="activeTab() === 'results'" (click)="setTab('results')">
               Results
             </button>
@@ -155,6 +158,48 @@ interface MarketPositionRow {
                     </tr>
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" *ngIf="activeTab() === 'voting'">
+            <div class="voting-section">
+              <div class="voting-header">
+                <h2>NGO Voting Stats</h2>
+                <button class="refresh-btn" (click)="loadVotingStats()" [disabled]="votingLoading()">
+                  {{ votingLoading() ? 'Loading…' : 'Refresh' }}
+                </button>
+              </div>
+
+              <div class="voting-loading" *ngIf="votingLoading()">
+                <div class="mini-spinner"></div>
+                <span>Loading stats…</span>
+              </div>
+
+              <div class="voting-grid" *ngIf="!votingLoading() && votingStats().length > 0">
+                <div class="voting-card" *ngFor="let v of votingStats()">
+                  <div class="voting-card-header">
+                    <img [src]="v.logo_url || '/logo.webp'" [alt]="v.name" class="ngo-logo" />
+                    <div class="ngo-info">
+                      <div class="ngo-name">{{ v.name }}</div>
+                      <div class="ngo-id">#{{ v.on_chain_id }}</div>
+                    </div>
+                  </div>
+                  <div class="voting-stats">
+                    <div class="stat">
+                      <div class="stat-label">Total Stakes</div>
+                      <div class="stat-value">{{ v.votes_count }}</div>
+                    </div>
+                    <div class="stat">
+                      <div class="stat-label">Total Volume</div>
+                      <div class="stat-value">{{ v.total_amount | number:'1.2-2' }} XLM</div>
+                    </div>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="getVotingPct(v.total_amount)"></div>
+                  </div>
+                  <div class="pct-label">{{ getVotingPct(v.total_amount) | number:'1.1-1' }}% of total</div>
+                </div>
               </div>
             </div>
           </div>
@@ -343,12 +388,12 @@ interface MarketPositionRow {
 
     .main-layout {
       display: grid;
-      grid-template-columns: 1fr 360px;
-      gap: 2rem;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
       align-items: start;
     }
 
-    @media (max-width: 1024px) {
+    @media (max-width: 1150px) {
       .main-layout {
         grid-template-columns: 1fr;
         gap: 1.5rem;
@@ -666,6 +711,71 @@ interface MarketPositionRow {
     }
     .tx-link:hover { text-decoration: underline; }
 
+    .voting-section {
+      background: white;
+      border: 1px solid #F3F4F6;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px -10px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+    }
+    .voting-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .voting-header h2 { margin: 0; font-size: 1.25rem; font-weight: 800; }
+    .voting-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .voting-card {
+      background: #F9FAFB;
+      border: 1px solid #F3F4F6;
+      border-radius: 16px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .voting-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .voting-card-header .ngo-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 1px solid #E5E7EB;
+    }
+    .ngo-info .ngo-name { font-weight: 900; font-size: 1rem; color: #111827; }
+    .ngo-info .ngo-id { font-size: 0.75rem; color: #6B7280; font-weight: 700; }
+    
+    .voting-stats {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .voting-stats .stat { display: flex; flex-direction: column; gap: 2px; }
+    .stat-label { font-size: 0.7rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; }
+    .stat-value { font-size: 0.95rem; font-weight: 900; color: #111827; }
+
+    .progress-bar {
+      height: 8px;
+      background: #E5E7EB;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #11D48A, #0FB978);
+      border-radius: 99px;
+    }
+    .pct-label { font-size: 0.75rem; font-weight: 700; color: #6B7280; text-align: right; }
+
     .results-wrap { display: grid; gap: 1rem; }
     .scenario-tabs {
       display: inline-flex;
@@ -719,7 +829,7 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
   private now = signal(Date.now());
   private nowInterval?: ReturnType<typeof setInterval>;
   private refreshInterval?: ReturnType<typeof setInterval>;
-  activeTab = signal<'probability' | 'details' | 'predictions' | 'results'>(
+  activeTab = signal<'probability' | 'details' | 'predictions' | 'voting' | 'results'>(
     'probability',
   );
 
@@ -731,6 +841,9 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
   positions = signal<MarketPositionRow[]>([]);
   positionsLoading = signal(false);
   positionsError = signal<string | null>(null);
+
+  votingStats = signal<any[]>([]);
+  votingLoading = signal(false);
 
   results = signal<MarketResults | null>(null);
   resultsLoading = signal(false);
@@ -772,10 +885,13 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  setTab(tab: 'probability' | 'details' | 'predictions' | 'results') {
+  setTab(tab: 'probability' | 'details' | 'predictions' | 'voting' | 'results') {
     this.activeTab.set(tab);
     if (tab === 'results' && !this.results()) {
       this.loadResults();
+    }
+    if (tab === 'voting') {
+      this.loadVotingStats();
     }
   }
 
@@ -784,6 +900,7 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
       this.store.dispatch(MarketActions.loadMarket({ id: this.marketId }));
       this.store.dispatch(MarketActions.loadHistory({ id: this.marketId, range: this.selectedRange }));
       this.loadPositions();
+      this.loadVotingStats();
     }
   }
 
@@ -797,12 +914,29 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
       );
       this.positions.set((resp?.positions ?? []) as MarketPositionRow[]);
     } catch (e: any) {
-      this.positionsError.set(
-        e?.error?.message ?? 'Failed to load predictions history.',
-      );
+      this.positionsError.set(e?.message || 'Failed to load predictions');
     } finally {
       this.positionsLoading.set(false);
     }
+  }
+
+  async loadVotingStats() {
+    if (!this.marketId) return;
+    this.votingLoading.set(true);
+    try {
+      const stats = await firstValueFrom(this.marketService.getMarketVoting(this.marketId));
+      this.votingStats.set(stats || []);
+    } catch (e) {
+      console.error('Failed to load voting stats', e);
+    } finally {
+      this.votingLoading.set(false);
+    }
+  }
+
+  getVotingPct(amount: number): number {
+    const total = this.votingStats().reduce((acc, v) => acc + (v.total_amount || 0), 0);
+    if (total <= 0) return 0;
+    return (amount / total) * 100;
   }
 
   async loadResults() {

@@ -188,6 +188,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
             pointHoverRadius: 6,
             borderWidth: 2,
             yAxisID: 'y',
+            clip: false,
           },
           {
             label: 'NO pool (XLM)',
@@ -200,6 +201,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
             pointHoverRadius: 6,
             borderWidth: 2,
             yAxisID: 'y',
+            clip: false,
           },
           {
             label: 'YES probability (%)',
@@ -217,12 +219,21 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
             pointHoverRadius: 6,
             borderWidth: 2,
             yAxisID: 'yPct',
+            clip: false,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: {
+            top: 30,
+            right: 10,
+            left: 10,
+            bottom: 5
+          }
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -249,6 +260,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
             display: true,
             beginAtZero: true,
             min: 0,
+            grace: '10%',
             ticks: {
               callback: (value) => `${value} XLM`
             }
@@ -257,10 +269,14 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
             display: true,
             position: 'right',
             min: 0,
-            max: 100,
+            max: 110,
             grid: { drawOnChartArea: false },
             ticks: {
-              callback: (value) => `${value}%`
+              stepSize: 20,
+              callback: function(val) {
+                const numericVal = Number(val);
+                return numericVal <= 100 ? `${numericVal}%` : '';
+              }
             }
           }
         }
@@ -305,6 +321,8 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
     this.chart.setDatasetVisibility(2, !isPools);
     (this.chart.options.scales as any).y.display = isPools;
     (this.chart.options.scales as any).yPct.display = !isPools;
+    (this.chart.options.scales as any).yPct.position = 'right';
+    (this.chart.options.scales as any).yPct.max = 110;
 
     this.chart.update();
   }
