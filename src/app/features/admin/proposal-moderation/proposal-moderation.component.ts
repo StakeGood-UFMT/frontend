@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
   ProposalService,
@@ -33,7 +34,7 @@ interface NgoProposalSummary {
 @Component({
   selector: 'app-proposal-moderation',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="admin-page">
       <header class="admin-header">
@@ -95,6 +96,29 @@ interface NgoProposalSummary {
         </button>
       </nav>
 
+      <div class="dashboard-filter-bar">
+        <div class="search-input">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            [(ngModel)]="searchTerm" 
+            [placeholder]="mode() === 'MARKETS' ? 'Search by title or ID...' : 'Search by NGO name or wallet...'"
+            class="form-input"
+          >
+        </div>
+        <div class="date-input">
+          <span class="date-label">Created At:</span>
+          <input 
+            type="date" 
+            [(ngModel)]="dateFilter" 
+            class="form-input"
+          >
+        </div>
+        <button class="clear-btn" (click)="clearFilters()" *ngIf="searchTerm() || dateFilter()">
+          Clear
+        </button>
+      </div>
+
       <div *ngIf="loading()" class="loading-state">
         <div class="spinner"></div>
         <p>{{ mode() === 'MARKETS' ? 'Loading market proposals...' : 'Loading NGO proposals...' }}</p>
@@ -105,18 +129,18 @@ interface NgoProposalSummary {
         <p>{{ error() }}</p>
       </div>
 
-      <div *ngIf="!loading() && !error() && mode() === 'MARKETS' && proposals().length === 0" class="empty-state">
+      <div *ngIf="!loading() && !error() && mode() === 'MARKETS' && filteredProposals().length === 0" class="empty-state">
         <div class="empty-icon">📝</div>
-        <p>No proposals found for this filter.</p>
+        <p>No proposals found matching your filters.</p>
       </div>
 
-      <div *ngIf="!loading() && !error() && mode() === 'NGOS' && ngoProposals().length === 0" class="empty-state">
+      <div *ngIf="!loading() && !error() && mode() === 'NGOS' && filteredNgoProposals().length === 0" class="empty-state">
         <div class="empty-icon">🏛️</div>
-        <p>No NGO proposals found for this filter.</p>
+        <p>No NGO proposals found matching your filters.</p>
       </div>
 
-      <div *ngIf="!loading() && !error() && mode() === 'MARKETS' && proposals().length > 0" class="proposal-grid">
-        <div *ngFor="let p of proposals()" class="proposal-card">
+      <div *ngIf="!loading() && !error() && mode() === 'MARKETS' && filteredProposals().length > 0" class="proposal-grid">
+        <div *ngFor="let p of filteredProposals()" class="proposal-card">
           <div class="proposal-main">
             <div class="top-line">
               <span class="category-chip">{{ p.category || 'Uncategorized' }}</span>
@@ -139,8 +163,8 @@ interface NgoProposalSummary {
         </div>
       </div>
 
-      <div *ngIf="!loading() && !error() && mode() === 'NGOS' && ngoProposals().length > 0" class="proposal-grid">
-        <div *ngFor="let p of ngoProposals()" class="proposal-card">
+      <div *ngIf="!loading() && !error() && mode() === 'NGOS' && filteredNgoProposals().length > 0" class="proposal-grid">
+        <div *ngFor="let p of filteredNgoProposals()" class="proposal-card">
           <div class="proposal-main">
             <div class="top-line">
               <span class="category-chip">{{ p.category || 'Uncategorized' }}</span>
@@ -454,6 +478,65 @@ interface NgoProposalSummary {
         font-size: 1.5rem;
         font-weight: 900;
         color: #f59e0b;
+      }
+
+      .dashboard-filter-bar {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+        align-items: center;
+        background: #FFFFFF;
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(0,0,0,0.05);
+      }
+
+      .search-input {
+        position: relative;
+        flex: 1;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94A3B8;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 10px 12px 10px 36px;
+        border: 1px solid #E2E8F0;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+      }
+
+      .date-input {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .date-input .form-input {
+        padding-left: 12px;
+      }
+
+      .date-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #64748B;
+      }
+
+      .clear-btn {
+        padding: 8px 16px;
+        background: #F1F5F9;
+        border: none;
+        border-radius: 8px;
+        color: #64748B;
+        font-weight: 600;
+        cursor: pointer;
       }
 
       .filters {
@@ -941,6 +1024,59 @@ export class ProposalModerationComponent implements OnInit {
 
   protected mode = signal<ModerationMode>('MARKETS');
   protected statusFilter = signal<ProposalStatus>('PENDING');
+
+  searchTerm = signal('');
+  dateFilter = signal('');
+
+  filteredProposals = computed(() => {
+    let list = this.proposals();
+    const search = this.searchTerm().toLowerCase();
+    const date = this.dateFilter();
+
+    if (search) {
+      list = list.filter(p => 
+        p.title.toLowerCase().includes(search) || 
+        p.id.toLowerCase().includes(search)
+      );
+    }
+
+    if (date) {
+      list = list.filter(p => {
+        const pDate = new Date(p.createdAt).toISOString().split('T')[0];
+        return pDate === date;
+      });
+    }
+
+    return list;
+  });
+
+  filteredNgoProposals = computed(() => {
+    let list = this.ngoProposals();
+    const search = this.searchTerm().toLowerCase();
+    const date = this.dateFilter();
+
+    if (search) {
+      list = list.filter(p => 
+        p.name.toLowerCase().includes(search) || 
+        p.walletAddress.toLowerCase().includes(search) ||
+        p.id.toLowerCase().includes(search)
+      );
+    }
+
+    if (date) {
+      list = list.filter(p => {
+        const pDate = new Date(p.createdAt).toISOString().split('T')[0];
+        return pDate === date;
+      });
+    }
+
+    return list;
+  });
+
+  clearFilters() {
+    this.searchTerm.set('');
+    this.dateFilter.set('');
+  }
   protected proposals = signal<ProposalSummary[]>([]);
   protected ngoProposals = signal<NgoProposalSummary[]>([]);
   protected loading = signal(false);
