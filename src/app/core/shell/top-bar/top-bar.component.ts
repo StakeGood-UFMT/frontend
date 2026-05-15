@@ -77,18 +77,9 @@ import { selectIsAdmin } from '../../store/auth/auth.selectors';
                 <!-- Admin Section -->
                 <ng-container *ngIf="isAdmin()">
                   <div class="drawer-divider"></div>
-                  <div class="nav-section-title">Admin Operations</div>
-                  <a routerLink="/admin/keeper" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item admin-item">
-                    <span class="icon">⚙️</span>
-                    <span class="label">Keeper TTL</span>
-                  </a>
-                  <a routerLink="/admin/markets" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item admin-item">
-                    <span class="icon">🏢</span>
-                    <span class="label">Market Admin</span>
-                  </a>
-                  <a routerLink="/admin/proposals" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item admin-item">
-                    <span class="icon">📝</span>
-                    <span class="label">Proposal Moderation</span>
+                  <a routerLink="/admin" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item admin-item">
+                    <span class="icon">🛡️</span>
+                    <span class="label">Admin Operations</span>
                   </a>
                 </ng-container>
               </nav>

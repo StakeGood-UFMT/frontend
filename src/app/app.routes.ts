@@ -88,21 +88,7 @@ export const routes: Routes = [
       {
         path: 'admin',
         canActivate: [authGuard, adminGuard],
-        children: [
-          { path: '', redirectTo: 'keeper', pathMatch: 'full' },
-          {
-            path: 'keeper',
-            loadComponent: () => import('./features/admin/keeper-ttl/keeper-ttl.component').then(m => m.KeeperTTLComponent)
-          },
-          {
-            path: 'markets',
-            loadComponent: () => import('./features/admin/market-admin/market-admin.component').then(m => m.MarketAdminComponent)
-          },
-          {
-            path: 'proposals',
-            loadComponent: () => import('./features/admin/proposal-moderation/proposal-moderation.component').then(m => m.ProposalModerationComponent)
-          }
-        ]
+        loadComponent: () => import('./features/admin/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent)
       }
     ]
   }

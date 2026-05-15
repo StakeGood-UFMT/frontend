@@ -69,18 +69,9 @@ import { UserNotificationsService } from '../../services/user-notifications.serv
           <!-- Admin Section -->
           <li *ngIf="isAdmin()" class="admin-nav-group">
             <div class="nav-divider"></div>
-            <div class="nav-section-title">Admin Operations</div>
-            <a routerLink="/admin/keeper" routerLinkActive="active" class="nav-item">
-              <span class="icon">⚙️</span>
-              <span class="label">Keeper TTL</span>
-            </a>
-            <a routerLink="/admin/markets" routerLinkActive="active" class="nav-item">
-              <span class="icon">🏢</span>
-              <span class="label">Market Admin</span>
-            </a>
-            <a routerLink="/admin/proposals" routerLinkActive="active" class="nav-item">
-              <span class="icon">📝</span>
-              <span class="label">Proposal Moderation</span>
+            <a routerLink="/admin" routerLinkActive="active" class="nav-item">
+              <span class="icon">🛡️</span>
+              <span class="label">Admin Operations</span>
             </a>
           </li>
         </ul>
