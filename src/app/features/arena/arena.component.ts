@@ -4,10 +4,12 @@ import { MarketService } from '../../core/services/market.service';
 import { MarketCardComponent } from './components/market-card/market-card.component';
 import { MarketFiltersComponent } from './components/market-filters/market-filters.component';
 
+import { RouterModule } from '@angular/router';
+
 @Component({
   selector: 'app-arena',
   standalone: true,
-  imports: [CommonModule, MarketCardComponent, MarketFiltersComponent],
+  imports: [CommonModule, MarketCardComponent, MarketFiltersComponent, RouterModule],
   template: `
     <div class="arena-page" id="arena-page">
       <!-- Page Header -->
@@ -21,10 +23,16 @@ import { MarketFiltersComponent } from './components/market-filters/market-filte
             Discover and stake on prediction markets. Find the right question, pick your side.
           </p>
         </div>
-        <div class="header-stats" *ngIf="!marketService.loading() && !marketService.error()">
-          <div class="stat-chip">
-            <span class="stat-value">{{ marketService.filteredMarkets().length }}</span>
-            <span class="stat-label">Markets</span>
+        
+        <div class="header-actions">
+          <a routerLink="/proposals/new" class="propose-btn" id="propose-market-btn">
+            ✨ Propose Market
+          </a>
+          <div class="header-stats" *ngIf="!marketService.loading() && !marketService.error()">
+            <div class="stat-chip">
+              <span class="stat-value">{{ marketService.filteredMarkets().length }}</span>
+              <span class="stat-label">Markets</span>
+            </div>
           </div>
         </div>
       </div>
@@ -137,6 +145,33 @@ import { MarketFiltersComponent } from './components/market-filters/market-filte
 
     .header-stats {
       flex-shrink: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .propose-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      border-radius: 12px;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+
+    .propose-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+      background: linear-gradient(135deg, #7073f3, #5a52ea);
     }
 
     .stat-chip {
@@ -362,7 +397,18 @@ import { MarketFiltersComponent } from './components/market-filters/market-filte
       }
       .page-header {
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
+      }
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .propose-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 14px;
+        font-size: 0.82rem;
       }
       .page-title {
         font-size: 1.4rem;

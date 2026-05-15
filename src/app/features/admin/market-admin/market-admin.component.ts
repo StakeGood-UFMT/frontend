@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { RouterModule } from '@angular/router';
 import { AdminService } from '../../../core/services/admin.service';
 import { MarketService } from '../../../core/services/market.service';
-import { Market, MarketListResponse } from '../../../core/models/market.model';
+import { Market, MarketListResponse, MarketResults } from '../../../core/models/market.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { DistributeImpactButtonComponent } from './components/distribute-impact-button.component';
 import { FormsModule } from '@angular/forms';
@@ -163,194 +163,282 @@ import { API_CONFIG } from '../../../core/config/api.config';
           <button class="modal-close" (click)="closeManage()">×</button>
         </div>
 
+        <div class="modal-tabs">
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab() === 'overview'" 
+            (click)="activeTab.set('overview')"
+          >
+            Overview & Actions
+          </button>
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab() === 'impact'" 
+            (click)="activeTab.set('impact')"
+          >
+            Impact & NGOs
+          </button>
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab() === 'financials'" 
+            (click)="activeTab.set('financials')"
+          >
+            Financials
+          </button>
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab() === 'bettors'" 
+            (click)="activeTab.set('bettors')"
+          >
+            Bettors ({{ marketPositions()?.positions?.length || 0 }})
+          </button>
+        </div>
+
         <div class="modal-body">
-          <div class="modal-grid" *ngIf="!manageLoading(); else manageLoadingTpl">
-            <div class="panel">
-              <div class="panel-title">Status</div>
-              <div class="kv">
-                <div class="kv-row">
-                  <span class="k">DB status</span>
-                  <span class="v">
-                    <span class="pill" [class]="selectedMarket()!.status">{{ selectedMarket()!.status }}</span>
-                  </span>
+          <div *ngIf="!manageLoading(); else manageLoadingTpl">
+            <!-- TAB: OVERVIEW & ACTIONS -->
+            <div class="tab-content" *ngIf="activeTab() === 'overview'">
+              <div class="modal-grid">
+                <div class="panel">
+                  <div class="panel-title">Market Status</div>
+                  <div class="kv">
+                    <div class="kv-row">
+                      <span class="k">DB status</span>
+                      <span class="v">
+                        <span class="pill" [class]="selectedMarket()!.status">{{ selectedMarket()!.status }}</span>
+                      </span>
+                    </div>
+                    <div class="kv-row">
+                      <span class="k">On-chain</span>
+                      <span class="v">
+                        <span class="pill neutral">{{ onChainStatusLabel() }}</span>
+                      </span>
+                    </div>
+                    <div class="kv-row">
+                      <span class="k">Lock time</span>
+                      <span class="v">{{ selectedMarket()!.lock_at | date:'medium' }}</span>
+                    </div>
+                    <div class="kv-row">
+                      <span class="k">Resolve time</span>
+                      <span class="v">{{ selectedMarket()!.settle_at | date:'medium' }}</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="kv-row">
-                  <span class="k">Derived</span>
-                  <span class="v">
-                    <span class="pill neutral">{{ selectedMarket()!.derived_status || '-' }}</span>
-                  </span>
-                </div>
-                <div class="kv-row">
-                  <span class="k">On-chain</span>
-                  <span class="v">
-                    <span class="pill neutral">{{ onChainStatusLabel() }}</span>
-                  </span>
-                </div>
-                <div class="kv-row">
-                  <span class="k">Lock time</span>
-                  <span class="v">{{ selectedMarket()!.lock_at | date:'medium' }}</span>
-                </div>
-                <div class="kv-row">
-                  <span class="k">Resolve time</span>
-                  <span class="v">{{ selectedMarket()!.settle_at | date:'medium' }}</span>
-                </div>
-                <div class="kv-row">
-                  <span class="k">Resolve available</span>
-                  <span class="v">{{ canResolveNow() ? 'Yes' : 'No' }}</span>
-                </div>
-                <div class="kv-row" *ngIf="onChainImpactDistributed() !== null">
-                  <span class="k">Impact distributed</span>
-                  <span class="v">{{ onChainImpactDistributed() ? 'Yes' : 'No' }}</span>
+
+                <div class="panel">
+                  <div class="panel-title">Admin Actions</div>
+                  <div class="actions">
+                    <div class="action-group">
+                      <button
+                        class="action-btn"
+                        [disabled]="manageActionBusy() || !canToggleActive()"
+                        (click)="toggleActive()"
+                      >
+                        {{ selectedMarket()!.status === 'draft' ? 'Activate Market' : 'Deactivate Market' }}
+                      </button>
+
+                      <button
+                        class="action-btn danger"
+                        [disabled]="manageActionBusy() || selectedMarket()!.status === 'resolved'"
+                        (click)="cancelSelected()"
+                      >
+                        Cancel Market
+                      </button>
+                    </div>
+
+                    <div class="action-block">
+                      <div class="action-label">Resolution</div>
+                      <div class="action-row">
+                        <button
+                          class="resolve-btn yes"
+                          [disabled]="manageActionBusy() || !canResolveNow()"
+                          (click)="resolveSelected('YES')"
+                        >
+                          Set YES
+                        </button>
+                        <button
+                          class="resolve-btn no"
+                          [disabled]="manageActionBusy() || !canResolveNow()"
+                          (click)="resolveSelected('NO')"
+                        >
+                          Set NO
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="panel-note">
+                    <span class="icon">ℹ️</span> Resolve and Impact actions require admin signature.
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="panel">
-              <div class="panel-title">Actions</div>
-              <div class="actions">
-                <button
-                  class="action-btn"
-                  [disabled]="manageActionBusy() || !canToggleActive()"
-                  (click)="toggleActive()"
-                >
-                  {{ selectedMarket()!.status === 'draft' ? 'Activate' : 'Deactivate' }}
-                </button>
-
-                <button
-                  class="action-btn danger"
-                  [disabled]="manageActionBusy() || selectedMarket()!.status === 'resolved'"
-                  (click)="cancelSelected()"
-                >
-                  Cancel Market
-                </button>
-
-                <div class="action-block">
-                  <div class="action-label">Resolve</div>
-                  <div class="action-row">
-                    <button
-                      class="resolve-btn yes"
-                      [disabled]="manageActionBusy() || !canResolveNow()"
-                      (click)="resolveSelected('YES')"
-                    >
-                      Set YES
-                    </button>
-                    <button
-                      class="resolve-btn no"
-                      [disabled]="manageActionBusy() || !canResolveNow()"
-                      (click)="resolveSelected('NO')"
-                    >
-                      Set NO
-                    </button>
+            <!-- TAB: IMPACT & NGOs -->
+            <div class="tab-content" *ngIf="activeTab() === 'impact'">
+              <div class="impact-section">
+                <div class="panel wide">
+                  <div class="panel-header-inline">
+                    <div class="panel-title">NGO Candidates & Voting</div>
+                    <app-distribute-impact-button
+                      [marketId]="selectedMarket()!.id"
+                      [disabled]="manageActionBusy() || selectedMarket()!.status !== 'resolved' || onChainImpactDistributed() === true"
+                      (distributed)="afterChainAction()"
+                    ></app-distribute-impact-button>
                   </div>
-                </div>
 
-                <div class="action-block">
-                  <div class="action-label">Impact</div>
-                  <app-distribute-impact-button
-                    [marketId]="selectedMarket()!.id"
-                    [disabled]="manageActionBusy() || selectedMarket()!.status !== 'resolved' || onChainImpactDistributed() === true"
-                    (distributed)="afterChainAction()"
-                  ></app-distribute-impact-button>
+                  <div class="ngo-grid" *ngIf="selectedMarket()?.ngo_candidates?.length; else noNgos">
+                    <div class="ngo-card" *ngFor="let ngo of selectedMarket()!.ngo_candidates">
+                      <div class="ngo-main">
+                        <div class="ngo-logo">
+                          <img 
+                            *ngIf="ngo.logo_url" 
+                            [src]="ngo.logo_url" 
+                            [alt]="ngo.name"
+                            (error)="onImageError($event)"
+                          >
+                          <div *ngIf="!ngo.logo_url" class="ngo-icon">NGO</div>
+                        </div>
+                        <div class="ngo-info">
+                          <div class="ngo-name">{{ ngo.name }}</div>
+                          <div class="ngo-id">ID: {{ ngo.on_chain_id }}</div>
+                        </div>
+                      </div>
+                      <div class="ngo-votes" *ngIf="getVotesForNgo(ngo.on_chain_id) as voteData">
+                        <div class="vote-stat">
+                          <span class="vote-label">Votes</span>
+                          <span class="vote-val">{{ voteData.total_votes }}</span>
+                        </div>
+                        <div class="vote-stat">
+                          <span class="vote-label">Impact</span>
+                          <span class="vote-val">{{ voteData.impact_units || 0 }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <ng-template #noNgos>
+                    <div class="empty-state">No NGO candidates associated with this market.</div>
+                  </ng-template>
                 </div>
-              </div>
-              <div class="panel-note">
-                Resolve and Impact actions require the admin wallet signature.
               </div>
             </div>
 
-            <div class="panel wide">
-              <div class="panel-title">Payouts / Fees</div>
+            <!-- TAB: FINANCIALS -->
+            <div class="tab-content" *ngIf="activeTab() === 'financials'">
+              <div class="panel wide">
+                <div class="panel-title">Payouts / Fees / Projections</div>
 
-              <div *ngIf="marketResults(); else noResultsTpl">
-                <div *ngIf="marketResults()!.resolved; else projectionsTpl">
-                  <div class="summary-row">
-                    <span class="pill neutral">Outcome: {{ marketResults()!.outcome }}</span>
-                    <span class="pill neutral">Total liquidity: {{ marketResults()!.pools?.total_liquidity }}</span>
-                    <span class="pill neutral">Winners: {{ (marketResults()!.winners || []).length }}</span>
+                <div *ngIf="marketResults(); else noResultsTpl">
+                  <div *ngIf="marketResults()!.resolved; else projectionsTpl">
+                    <div class="summary-row">
+                      <div class="metric-card">
+                        <span class="m-label">Outcome</span>
+                        <span class="m-value outcome" [class]="marketResults()!.outcome">{{ marketResults()!.outcome }}</span>
+                      </div>
+                      <div class="metric-card">
+                        <span class="m-label">Total Liquidity</span>
+                        <span class="m-value">{{ marketResults()!.pools.total_liquidity }} XLM</span>
+                      </div>
+                      <div class="metric-card">
+                        <span class="m-label">Winners Count</span>
+                        <span class="m-value">{{ (marketResults()!.winners || []).length }}</span>
+                      </div>
+                    </div>
+
+                    <div class="fees-grid">
+                      <div class="fee-card">
+                        <div class="fee-k">Charity</div>
+                        <div class="fee-v">{{ marketResults()!.fees?.charity?.amount }}</div>
+                      </div>
+                      <div class="fee-card">
+                        <div class="fee-k">Platform</div>
+                        <div class="fee-v">{{ marketResults()!.fees?.platform?.amount }}</div>
+                      </div>
+                      <div class="fee-card">
+                        <div class="fee-k">Gamification</div>
+                        <div class="fee-v">{{ marketResults()!.fees?.gamification?.amount }}</div>
+                      </div>
+                    </div>
+
+                    <div class="table-wrap" *ngIf="(marketResults()!.winners || []).length > 0">
+                      <div class="table">
+                        <div class="thead">
+                          <div>User</div>
+                          <div>Invested</div>
+                          <div>Profit</div>
+                          <div>Payout</div>
+                        </div>
+                        <div class="trow" *ngFor="let w of marketResults()!.winners; trackBy: trackByAnyId">
+                          <div class="mono truncate">{{ w.wallet || w.user_id }}</div>
+                          <div>{{ w.invested }}</div>
+                          <div [class.profit]="(w.profit || 0) > 0">{{ w.profit }}</div>
+                          <div class="strong">{{ w.payout }}</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div class="fees-grid">
-                    <div class="fee-card">
-                      <div class="fee-k">Charity</div>
-                      <div class="fee-v">{{ marketResults()!.fees?.charity?.amount }}</div>
+                  <ng-template #projectionsTpl>
+                    <div class="summary-row">
+                      <div class="metric-card">
+                        <span class="m-label">Closed</span>
+                        <span class="m-value">{{ marketResults()!.closed ? 'Yes' : 'No' }}</span>
+                      </div>
+                      <div class="metric-card">
+                        <span class="m-label">Total Liquidity</span>
+                        <span class="m-value">{{ marketResults()!.pools.total_liquidity }} XLM</span>
+                      </div>
                     </div>
-                    <div class="fee-card">
-                      <div class="fee-k">Platform</div>
-                      <div class="fee-v">{{ marketResults()!.fees?.platform?.amount }}</div>
-                    </div>
-                    <div class="fee-card">
-                      <div class="fee-k">Gamification</div>
-                      <div class="fee-v">{{ marketResults()!.fees?.gamification?.amount }}</div>
-                    </div>
-                  </div>
 
-                  <div class="table" *ngIf="(marketResults()!.winners || []).length > 0">
-                    <div class="thead">
-                      <div>User</div>
-                      <div>Invested</div>
-                      <div>Profit</div>
-                      <div>Payout</div>
-                    </div>
-                    <div class="trow" *ngFor="let w of marketResults()!.winners; trackBy: trackByAnyId">
-                      <div class="mono">{{ w.wallet || w.user_id }}</div>
-                      <div>{{ w.invested }}</div>
-                      <div>{{ w.profit }}</div>
-                      <div class="strong">{{ w.payout }}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <ng-template #projectionsTpl>
-                  <div class="summary-row">
-                    <span class="pill neutral">Closed: {{ marketResults()!.closed ? 'Yes' : 'No' }}</span>
-                    <span class="pill neutral">Total liquidity: {{ marketResults()!.pools?.total_liquidity }}</span>
-                  </div>
-
-                  <div *ngIf="marketResults()!.projections">
                     <div class="two-col">
-                      <div class="projection">
+                      <div class="projection yes">
                         <div class="proj-title">If YES wins</div>
                         <div class="proj-kv">
-                          <div class="kv-row"><span class="k">Winners profit total</span><span class="v">{{ marketResults()!.projections?.YES?.winners_profit_total }}</span></div>
+                          <div class="kv-row"><span class="k">Winners profit</span><span class="v">{{ marketResults()!.projections?.YES?.winners_profit_total }}</span></div>
                           <div class="kv-row"><span class="k">Charity fee</span><span class="v">{{ marketResults()!.projections?.YES?.fees?.charity?.amount }}</span></div>
                         </div>
                       </div>
-                      <div class="projection">
+                      <div class="projection no">
                         <div class="proj-title">If NO wins</div>
                         <div class="proj-kv">
-                          <div class="kv-row"><span class="k">Winners profit total</span><span class="v">{{ marketResults()!.projections?.NO?.winners_profit_total }}</span></div>
+                          <div class="kv-row"><span class="k">Winners profit</span><span class="v">{{ marketResults()!.projections?.NO?.winners_profit_total }}</span></div>
                           <div class="kv-row"><span class="k">Charity fee</span><span class="v">{{ marketResults()!.projections?.NO?.fees?.charity?.amount }}</span></div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </ng-template>
+                </div>
+
+                <ng-template #noResultsTpl>
+                  <div class="empty-state">No results available yet.</div>
                 </ng-template>
               </div>
-
-              <ng-template #noResultsTpl>
-                <div class="empty-state">No results available.</div>
-              </ng-template>
             </div>
 
-            <div class="panel wide">
-              <div class="panel-title">Bettors</div>
-              <div *ngIf="marketPositions()?.positions?.length; else noPositionsTpl" class="table">
-                <div class="thead">
-                  <div>User</div>
-                  <div>Outcome</div>
-                  <div>Amount</div>
-                  <div>Chain</div>
+            <!-- TAB: BETTORS -->
+            <div class="tab-content" *ngIf="activeTab() === 'bettors'">
+              <div class="panel wide no-border">
+                <div *ngIf="marketPositions()?.positions?.length; else noPositionsTpl" class="table-wrap">
+                  <div class="table">
+                    <div class="thead">
+                      <div>User</div>
+                      <div>Outcome</div>
+                      <div>Amount</div>
+                      <div>Status</div>
+                    </div>
+                    <div class="trow" *ngFor="let p of marketPositions()!.positions; trackBy: trackByAnyId">
+                      <div class="mono truncate">{{ p.user?.wallet || p.user?.display || p.user_id || p.id }}</div>
+                      <div>
+                        <span class="pill-sm" [class]="p.outcome">{{ p.outcome }}</span>
+                      </div>
+                      <div class="strong">{{ p.amount }}</div>
+                      <div>{{ p.chain_status }}</div>
+                    </div>
+                  </div>
                 </div>
-                <div class="trow" *ngFor="let p of marketPositions()!.positions; trackBy: trackByAnyId">
-                  <div class="mono">{{ p.user?.wallet || p.user?.display || p.user_id || p.id }}</div>
-                  <div>{{ p.outcome }}</div>
-                  <div>{{ p.amount }}</div>
-                  <div>{{ p.chain_status }}</div>
-                </div>
+                <ng-template #noPositionsTpl>
+                  <div class="empty-state">No positions found for this market.</div>
+                </ng-template>
               </div>
-              <ng-template #noPositionsTpl>
-                <div class="empty-state">No positions found.</div>
-              </ng-template>
             </div>
           </div>
         </div>
@@ -683,7 +771,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
       font-size: 0.7rem !important;
       min-width: unset !important;
       width: 100%;
-    }   }
+    }
 
     .loading-state {
       display: flex;
@@ -693,7 +781,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
       color: #64748b;
     }
     .loading-state.small {
-      padding: 40px 0;
+      padding: 80px 0;
     }
     .spinner {
       width: 40px;
@@ -707,277 +795,335 @@ import { API_CONFIG } from '../../../core/config/api.config';
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* Modal Styling */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.5);
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
       z-index: 2000;
+      animation: fadeIn 0.3s ease-out;
     }
     .modal-card {
-      width: min(1100px, 96vw);
-      max-height: 92vh;
-      max-height: 92dvh;
+      width: min(900px, 96vw);
+      max-height: 90vh;
       background: #ffffff;
-      border-radius: 18px;
+      border-radius: 24px;
       overflow: hidden;
-      border: 1px solid rgba(0,0,0,0.08);
-      box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
       display: flex;
       flex-direction: column;
+      border: 1px solid rgba(255,255,255,0.1);
     }
     .modal-header {
-      padding: 16px 18px;
+      padding: 20px 24px;
       border-bottom: 1px solid #f1f5f9;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
+      background: #ffffff;
     }
     .modal-kicker {
-      font-size: 0.72rem;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      color: #94a3b8;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #10b981;
       text-transform: uppercase;
+      margin-bottom: 4px;
     }
     .modal-title {
-      font-size: 1.2rem;
-      font-weight: 900;
+      font-size: 1.25rem;
+      font-weight: 850;
       color: #0f172a;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
     }
     .modal-close {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      border: 1px solid #e2e8f0;
-      background: #ffffff;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: none;
+      background: #f1f5f9;
       font-size: 1.5rem;
-      line-height: 1;
       cursor: pointer;
       color: #64748b;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .modal-close:hover {
-      background: #f8fafc;
+      background: #e2e8f0;
+      color: #0f172a;
+      transform: rotate(90deg);
+    }
+
+    /* Tabs */
+    .modal-tabs {
+      display: flex;
+      padding: 0 24px;
+      background: #ffffff;
+      border-bottom: 1px solid #f1f5f9;
+      gap: 24px;
+    }
+    .tab-btn {
+      padding: 16px 0;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
       color: #0f172a;
     }
-    .modal-body {
-      padding: 16px 18px 18px;
-      overflow: auto;
+    .tab-btn.active {
+      color: #10b981;
+      border-bottom-color: #10b981;
     }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      background: #f8fafc;
+      flex: 1;
+    }
+    .tab-content {
+      animation: fadeIn 0.2s ease-out;
+    }
+
     .modal-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      gap: 20px;
     }
     .panel {
-      border: 1px solid #f1f5f9;
-      border-radius: 16px;
-      padding: 14px;
       background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    .panel.wide {
-      grid-column: 1 / -1;
+    .panel.wide { grid-column: 1 / -1; }
+    .panel.no-border { background: transparent; border: none; padding: 0; box-shadow: none; }
+    
+    .panel-header-inline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
     }
     .panel-title {
-      font-size: 0.85rem;
-      font-weight: 900;
+      font-size: 0.9rem;
+      font-weight: 800;
       color: #0f172a;
-      margin-bottom: 10px;
+      margin: 0;
     }
-    .kv {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+
+    .kv { display: flex; flex-direction: column; gap: 12px; }
     .kv-row {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
-      font-size: 0.85rem;
-      color: #0f172a;
-    }
-    .kv-row .k {
-      color: #64748b;
-      font-weight: 800;
-    }
-    .kv-row .v {
-      font-weight: 800;
-      text-align: right;
-    }
-    .pill {
-      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-weight: 900;
-      font-size: 0.72rem;
+      font-size: 0.85rem;
+    }
+    .kv-row .k { color: #64748b; font-weight: 600; }
+    .kv-row .v { color: #0f172a; font-weight: 700; }
+
+    .pill {
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      border: 1px solid #e2e8f0;
-      background: #f8fafc;
-      color: #0f172a;
+      letter-spacing: 0.05em;
     }
-    .pill.neutral {
-      background: #f8fafc;
-      color: #0f172a;
+    .pill.active { background: #dcfce7; color: #166534; }
+    .pill.locked { background: #fef9c3; color: #854d0e; }
+    .pill.resolved { background: #dbeafe; color: #1e40af; }
+    .pill.draft { background: #f1f5f9; color: #334155; }
+    .pill.neutral { background: #f1f5f9; color: #64748b; }
+
+    .pill-sm {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.65rem;
+      font-weight: 800;
     }
-    .pill.active { background: #dcfce7; color: #166534; border-color: rgba(22,101,52,0.15); }
-    .pill.locked { background: #fef9c3; color: #854d0e; border-color: rgba(133,77,14,0.15); }
-    .pill.resolved { background: #dbeafe; color: #1e40af; border-color: rgba(30,64,175,0.15); }
-    .pill.draft { background: #f1f5f9; color: #334155; border-color: rgba(51,65,85,0.15); }
-    .actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .pill-sm.YES { background: #dcfce7; color: #166534; }
+    .pill-sm.NO { background: #fef2f2; color: #991b1b; }
+
+    /* Actions */
+    .actions { display: flex; flex-direction: column; gap: 16px; }
+    .action-group { display: flex; gap: 10px; }
     .action-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
       border: 1px solid #e2e8f0;
       background: #ffffff;
-      padding: 10px 12px;
-      border-radius: 12px;
-      font-weight: 900;
+      font-weight: 800;
+      font-size: 0.85rem;
       cursor: pointer;
+      transition: all 0.2s;
     }
-    .action-btn:hover:not(:disabled) {
-      background: #f8fafc;
-    }
-    .action-btn:disabled {
-      background: #f1f5f9;
-      color: #cbd5e1;
-      cursor: not-allowed;
-      border-color: #f1f5f9;
-    }
-    .action-btn.danger {
-      border-color: rgba(239, 68, 68, 0.25);
-      color: #991b1b;
-      background: #fff1f2;
-    }
-    .action-btn.danger:hover:not(:disabled) {
-      background: #ffe4e6;
-    }
+    .action-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+    .action-btn.danger { color: #ef4444; background: #fff5f5; border-color: #fee2e2; }
+    .action-btn.danger:hover:not(:disabled) { background: #fee2e2; }
+    
     .action-block {
-      border-top: 1px dashed #e2e8f0;
-      padding-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 16px;
     }
     .action-label {
-      font-size: 0.75rem;
-      font-weight: 900;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-    .action-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .panel-note {
-      margin-top: 10px;
-      font-size: 0.78rem;
-      color: #64748b;
-      font-weight: 700;
-    }
-    .summary-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .fees-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .fee-card {
-      border: 1px solid #f1f5f9;
-      border-radius: 14px;
-      padding: 10px 12px;
-      background: #ffffff;
-    }
-    .fee-k {
-      font-size: 0.72rem;
-      font-weight: 900;
+      font-size: 0.7rem;
+      font-weight: 800;
       color: #94a3b8;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      margin-bottom: 10px;
     }
-    .fee-v {
-      margin-top: 2px;
-      font-size: 1rem;
-      font-weight: 900;
-      color: #0f172a;
-    }
-    .table {
-      border: 1px solid #f1f5f9;
-      border-radius: 14px;
-      overflow: hidden;
-    }
-    .thead, .trow {
-      display: grid;
-      grid-template-columns: 1.6fr 0.7fr 0.7fr 0.7fr;
-      gap: 10px;
-      padding: 10px 12px;
-      align-items: center;
-    }
-    .thead {
-      background: #f8fafc;
-      font-size: 0.72rem;
-      font-weight: 900;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    .trow {
-      border-top: 1px solid #f1f5f9;
-      font-size: 0.85rem;
-      color: #0f172a;
-      font-weight: 800;
+    .action-row { display: flex; gap: 10px; }
+    .resolve-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
       background: #ffffff;
-    }
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-weight: 800;
-      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .strong {
-      font-weight: 900;
-    }
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .projection {
-      border: 1px solid #f1f5f9;
-      border-radius: 14px;
-      padding: 12px;
-    }
-    .proj-title {
-      font-weight: 900;
-      color: #0f172a;
-      margin-bottom: 8px;
-    }
-    .proj-kv {
+    .resolve-btn.yes { color: #10b981; border-color: #dcfce7; }
+    .resolve-btn.yes:hover:not(:disabled) { background: #10b981; color: white; border-color: #10b981; }
+    .resolve-btn.no { color: #ef4444; border-color: #fef2f2; }
+    .resolve-btn.no:hover:not(:disabled) { background: #ef4444; color: white; border-color: #ef4444; }
+
+    .panel-note {
+      margin-top: 16px;
+      font-size: 0.75rem;
+      color: #64748b;
+      background: #f8fafc;
+      padding: 10px;
+      border-radius: 10px;
       display: flex;
-      flex-direction: column;
       gap: 8px;
     }
 
-    @media (max-width: 980px) {
-      .modal-grid { grid-template-columns: 1fr; }
-      .fees-grid { grid-template-columns: 1fr; }
-      .two-col { grid-template-columns: 1fr; }
+    /* NGO Cards */
+    .ngo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
     }
+    .ngo-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .ngo-main { display: flex; gap: 12px; align-items: center; }
+    .ngo-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #ffffff;
+      border: 1px solid #f1f5f9;
+    }
+    .ngo-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .ngo-icon { 
+      width: 100%; height: 100%; display: flex; align-items: center; 
+      justify-content: center; background: #10b981; color: white; font-size: 0.6rem; font-weight: 900;
+    }
+    .ngo-name { font-weight: 800; color: #0f172a; font-size: 0.9rem; }
+    .ngo-id { font-size: 0.7rem; color: #94a3b8; font-family: monospace; }
+    
+    .ngo-votes {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px dashed #e2e8f0;
+      padding-top: 12px;
+    }
+    .vote-stat { display: flex; flex-direction: column; }
+    .vote-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; }
+    .vote-val { font-weight: 800; color: #0f172a; font-size: 0.95rem; }
+
+    /* Financials */
+    .metric-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      padding: 12px 16px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      min-width: 140px;
+    }
+    .m-label { font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
+    .m-value { font-size: 1.1rem; font-weight: 850; color: #0f172a; }
+    .m-value.outcome.YES { color: #10b981; }
+    .m-value.outcome.NO { color: #ef4444; }
+
+    .fees-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+    .fee-card { background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .fee-k { font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
+    .fee-v { font-size: 1rem; font-weight: 800; color: #0f172a; margin-top: 2px; }
+
+    .projection { padding: 16px; border-radius: 16px; border: 2px solid #f1f5f9; }
+    .projection.yes { border-color: #dcfce7; background: #f0fdf4; }
+    .projection.no { border-color: #fef2f2; background: #fff5f5; }
+    .proj-title { font-weight: 800; color: #0f172a; margin-bottom: 12px; font-size: 0.95rem; }
+
+    /* Table Improvements */
+    .table-wrap {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .table { width: 100%; border: none; }
+    .thead { 
+      background: #f8fafc; 
+      display: grid; 
+      grid-template-columns: 2fr 1fr 1fr 1fr; 
+      padding: 12px 20px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .trow {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      padding: 12px 20px;
+      align-items: center;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #f8fafc;
+      transition: background 0.2s;
+    }
+    .trow:last-child { border-bottom: none; }
+    .trow:hover { background: #f8fafc; }
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b; }
+    .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .profit { color: #10b981; font-weight: 800; }
+
+    @media (max-width: 768px) {
+      .modal-grid, .two-col, .fees-grid { grid-template-columns: 1fr; }
+      .modal-tabs { overflow-x: auto; gap: 16px; padding: 0 16px; }
+      .tab-btn { white-space: nowrap; }
+    }
+
   `]
 })
 export class MarketAdminComponent implements OnInit {
@@ -1037,9 +1183,12 @@ export class MarketAdminComponent implements OnInit {
   selectedMarket = signal<Market | null>(null);
   manageLoading = signal(false);
   manageActionBusy = signal(false);
-  marketResults = signal<any | null>(null);
+  marketResults = signal<MarketResults | null>(null);
   marketPositions = signal<any | null>(null);
+  marketVoting = signal<any[]>([]);
   onChain = signal<any | null>(null);
+  activeTab = signal<'overview' | 'impact' | 'financials' | 'bettors'>('overview');
+
 
   ngOnInit() {
     this.loadMarkets();
@@ -1093,20 +1242,29 @@ export class MarketAdminComponent implements OnInit {
     if (!m) return;
     this.manageLoading.set(true);
     try {
-      const [results, positions, onChain] = await Promise.all([
+      const [fullMarket, results, positions, onChain, voting] = await Promise.all([
+        firstValueFrom(this.marketService.getMarket(m.id)),
         firstValueFrom(this.marketService.getMarketResults(m.id)),
         firstValueFrom(this.marketService.getMarketPositions(m.id, 50, 0)),
         firstValueFrom(this.adminService.getOnChainMarket(m.id)),
+        firstValueFrom(this.marketService.getMarketVoting(m.id)),
       ]);
+      this.selectedMarket.set(fullMarket);
       this.marketResults.set(results);
       this.marketPositions.set(positions);
       this.onChain.set(onChain);
+      this.marketVoting.set(voting || []);
     } catch (e: any) {
       this.notify.error(e?.error?.message ?? 'Failed to load market details.');
     } finally {
       this.manageLoading.set(false);
     }
   }
+
+  getVotesForNgo(ngoOnChainId: number) {
+    return this.marketVoting().find(v => v.ngo_on_chain_id === ngoOnChainId) || { total_votes: 0, impact_units: 0 };
+  }
+
 
   canResolveNow() {
     const m = this.selectedMarket();
@@ -1292,5 +1450,9 @@ export class MarketAdminComponent implements OnInit {
     } finally {
       this.resolving.update((m) => ({ ...m, [marketId]: false }));
     }
+  }
+
+  onImageError(event: any) {
+    event.target.src = '/logo.png';
   }
 }

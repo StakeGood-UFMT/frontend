@@ -31,22 +31,29 @@ export class MarketService {
 
   // Computed: filtered markets (client-side filtering)
   public filteredMarkets = computed(() => {
-    let list = this._markets();
+    const allMarkets = this._markets();
     const { search, category } = this._filters();
 
+    // Filter out ghost markets (those with default/missing metadata from incomplete chain ingestion)
+    let filtered = allMarkets.filter((m: Market) => {
+      const isGhostTitle = m.title && m.title.startsWith('Market ') && m.title.includes('0');
+      const isDefaultDate = m.lock_at && (m.lock_at.startsWith('1970') || m.lock_at.startsWith('1969'));
+      return !(isGhostTitle && isDefaultDate);
+    });
+
     if (category !== 'ALL') {
-      list = list.filter(m => m.category === category);
+      filtered = filtered.filter((m: Market) => m.category === category);
     }
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      list = list.filter(m =>
-        m.title.toLowerCase().includes(q) ||
-        m.description.toLowerCase().includes(q)
+      filtered = filtered.filter((m: Market) =>
+        (m.title || '').toLowerCase().includes(q) ||
+        (m.description || '').toLowerCase().includes(q)
       );
     }
 
-    return list;
+    return filtered;
   });
 
   // Computed: empty state
