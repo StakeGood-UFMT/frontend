@@ -11,7 +11,7 @@ import { Ngo } from '../../../../core/models/ngo.model';
     <a class="ngo-card" [routerLink]="['/ngos', ngo.id]" id="ngo-card-{{ngo.id}}">
       <div class="card-header">
         <div class="ngo-info">
-          <img [src]="ngo.logo_url || '/logo.webp'" [alt]="ngo.name" class="ngo-logo">
+          <img [src]="ngo.logo_url || '/logo.png'" [alt]="ngo.name" class="ngo-logo" (error)="onImageError($event)">
           <div class="name-container">
             <h3 class="ngo-name">{{ ngo.name }}</h3>
             <div class="badges">
@@ -184,4 +184,7 @@ import { Ngo } from '../../../../core/models/ngo.model';
 })
 export class NgoCardComponent {
   @Input({ required: true }) ngo!: Ngo;
+  onImageError(event: any) {
+    event.target.src = '/logo.png';
+  }
 }

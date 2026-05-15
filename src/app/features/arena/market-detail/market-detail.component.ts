@@ -179,7 +179,7 @@ interface MarketPositionRow {
               <div class="voting-grid" *ngIf="!votingLoading() && votingStats().length > 0">
                 <div class="voting-card" *ngFor="let v of votingStats()">
                   <div class="voting-card-header">
-                    <img [src]="v.logo_url || '/logo.webp'" [alt]="v.name" class="ngo-logo" />
+                    <img [src]="v.logo_url || '/logo.png'" [alt]="v.name" class="ngo-logo" (error)="onImageError($event)" />
                     <div class="ngo-info">
                       <div class="ngo-name">{{ v.name }}</div>
                       <div class="ngo-id">#{{ v.on_chain_id }}</div>
@@ -982,5 +982,9 @@ export class MarketDetailComponent implements OnInit, OnDestroy {
     parts.push(`${String(minutes).padStart(2, '0')}m`);
     parts.push(`${String(seconds).padStart(2, '0')}s`);
     return parts.join(' ');
+  }
+
+  onImageError(event: any) {
+    event.target.src = '/logo.png';
   }
 }

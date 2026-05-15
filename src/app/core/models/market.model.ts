@@ -22,6 +22,7 @@ export interface Market {
   lock_at: string;
   settle_at?: string;
   created_at: string;
+  asset_code?: string;
   outcome?: 'YES' | 'NO' | null;
   user_position?: UserPosition;
   

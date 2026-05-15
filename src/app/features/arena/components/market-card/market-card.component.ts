@@ -48,7 +48,7 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
       <div class="card-footer">
         <div class="volume">
           <span class="volume-icon">📊</span>
-          <span class="volume-value">\${{ market.total_liquidity || 0 | number:'1.0-0' }}</span>
+          <span class="volume-value">{{ (market.total_liquidity || 0) | number:'1.0-2' }} {{ market.asset_code || 'XLM' }}</span>
           <span class="volume-label">Volume</span>
         </div>
         <div class="lock-date">
@@ -62,6 +62,8 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
     .market-card {
       display: flex;
       flex-direction: column;
+      flex: 1; /* Fill available height in grid item */
+      height: 100%;
       gap: 14px;
       padding: 24px;
       background: #FFFFFF;
@@ -186,9 +188,10 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
       line-height: 1.5;
       margin: 0;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      flex: 1; /* Pushes the next elements to the bottom */
     }
 
     .probability-section {

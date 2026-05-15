@@ -90,7 +90,7 @@ import { RouterModule } from '@angular/router';
               >
                 ↗
               </a>
-              <img class="ngo-card-logo" [src]="ngo.logo_url || '/logo.webp'" [alt]="ngo.name" />
+              <img class="ngo-card-logo" [src]="ngo.logo_url || '/logo.png'" [alt]="ngo.name" (error)="onImageError($event)" />
               <span class="ngo-card-name">{{ ngo.name }}</span>
             </button>
           </div>
@@ -568,5 +568,8 @@ export class StakeFormComponent implements OnInit, OnChanges {
   increment(delta: number) {
     const next = (this.amount() || 0) + delta;
     this.amount.set(Math.max(0, Math.round(next)));
+  }
+  onImageError(event: any) {
+    event.target.src = '/logo.png';
   }
 }

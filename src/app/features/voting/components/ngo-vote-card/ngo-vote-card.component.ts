@@ -11,7 +11,7 @@ import { NgoOrganization } from '../../../../core/models/governance.model';
     <div class="ngo-card" [class.disabled]="disabled" [class.has-votes]="votes > 0">
       <div class="card-header">
         <div class="logo-container">
-          <img [src]="ngo.logo_url" [alt]="ngo.name" class="ngo-logo">
+          <img [src]="ngo.logo_url" [alt]="ngo.name" class="ngo-logo" (error)="onImageError($event)">
         </div>
         <div class="ngo-info">
           <h3 class="ngo-name">{{ ngo.name }}</h3>
@@ -235,5 +235,8 @@ export class NgoVoteCardComponent {
     if (element) {
       element.style.setProperty('--fill-percent', `${percent}%`);
     }
+  }
+  onImageError(event: any) {
+    event.target.src = '/logo.png';
   }
 }
