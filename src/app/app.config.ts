@@ -14,6 +14,8 @@ import { authReducer } from './core/store/auth/auth.reducer';
 import { AuthEffects } from './core/store/auth/auth.effects';
 import { marketReducer } from './core/store/market/market.reducer';
 import { MarketEffects } from './core/store/market/market.effects';
+import { anchorReducer } from './core/store/anchor/anchor.reducer';
+import { AnchorEffects } from './core/store/anchor/anchor.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -26,8 +28,9 @@ export const appConfig: ApplicationConfig = {
     )),
     provideStore({ 
       auth: authReducer,
-      market: marketReducer 
+      market: marketReducer,
+      anchor: anchorReducer,
     }),
-    provideEffects([AuthEffects, MarketEffects])
+    provideEffects([AuthEffects, MarketEffects, AnchorEffects])
   ]
 };

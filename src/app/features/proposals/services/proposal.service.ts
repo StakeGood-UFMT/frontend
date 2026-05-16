@@ -14,6 +14,7 @@ export interface MarketProposal {
   ngo_candidate_ids: number[];
   image_url?: string;
   oracle_url?: string;
+  asset_code?: string;
 }
 
 export type ProposalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -97,6 +98,7 @@ export class ProposalService {
       resolutionRule: proposal.resolution_rule,
       resolutionSource: proposal.resolution_source,
       ngoCandidateIds: proposal.ngo_candidate_ids,
+      assetCode: proposal.asset_code,
     });
   }
 

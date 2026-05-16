@@ -29,8 +29,8 @@ export class WalletService {
           metadata: {
             name: 'StakeGood',
             description: 'StakeGood - Impact Ledger & Prediction Market',
-            url: 'https://stakegood.onrender.com/',
-            icons: ['https://stakegood.onrender.com/logo.png'],
+            url: window.location.origin,
+            icons: [window.location.origin + '/logo.png'],
           }
         })
       ],

@@ -14,6 +14,9 @@ import { RouterModule } from '@angular/router';
       <a routerLink="/arena" routerLinkActive="active" class="nav-item">
         <span class="icon">🏆</span>
       </a>
+      <a routerLink="/gateway" routerLinkActive="active" class="nav-item">
+        <span class="icon">💱</span>
+      </a>
       <a routerLink="/profile" routerLinkActive="active" class="nav-item">
         <span class="icon">👤</span>
       </a>

@@ -38,10 +38,13 @@ export class ProposeMarketComponent implements OnInit {
     'Science', 'Health', 'Education', 'Animals', 'Entertainment'
   ];
 
+  assets = ['USDC', 'CETES', 'TESOURO', 'EURC', 'BRZ', 'XLM'];
+
   constructor() {
     this.proposalForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(100)]],
       category: ['', [Validators.required]],
+      asset_code: ['USDC', [Validators.required]],
       description: ['', [Validators.required, Validators.minLength(50)]],
       lock_at: ['', [Validators.required]],
       resolve_at: ['', [Validators.required]],
@@ -109,6 +112,7 @@ export class ProposeMarketComponent implements OnInit {
     const proposal: MarketProposal = {
       title: v.title,
       category: v.category,
+      asset_code: v.asset_code,
       description: v.description,
       lock_at: v.lock_at,
       resolve_at: v.resolve_at,
@@ -191,6 +195,7 @@ export class ProposeMarketComponent implements OnInit {
     const example: MarketProposal = {
       title: 'Will NASA land humans on Mars by 2030?',
       category: 'Science',
+      asset_code: 'USDC',
       lock_at: '2029-12-31T23:59',
       resolve_at: '2030-12-31T23:59',
       description: 'Provide background information about this market, including context, key sources, and why it matters.',
@@ -262,6 +267,7 @@ export class ProposeMarketComponent implements OnInit {
 
       const title = (parsed['title'] ?? '').toString();
       const category = (parsed['category'] ?? '').toString();
+      const assetCode = (parsed['asset_code'] ?? parsed['assetCode'] ?? 'USDC').toString();
       const description = (parsed['description'] ?? '').toString();
       const resolutionRule = (parsed['resolution_rule'] ?? parsed['resolutionRule'] ?? '').toString();
       const resolutionSource = (parsed['resolution_source'] ?? parsed['resolutionSource'] ?? '').toString();
@@ -277,6 +283,7 @@ export class ProposeMarketComponent implements OnInit {
       this.proposalForm.patchValue({
         title,
         category,
+        asset_code: assetCode,
         description,
         resolution_rule: resolutionRule,
         resolution_source: resolutionSource,

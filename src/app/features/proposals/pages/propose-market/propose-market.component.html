@@ -36,6 +36,15 @@
           <span class="error-msg" *ngIf="isInvalid('category')">Category is required.</span>
         </div>
 
+        <!-- Stablecoin/Asset -->
+        <div class="form-group">
+          <label for="asset_code">Market Currency (Stablecoin/Asset)</label>
+          <select id="asset_code" formControlName="asset_code" [class.invalid]="isInvalid('asset_code')">
+            <option *ngFor="let asset of assets" [value]="asset">{{ asset }}</option>
+          </select>
+          <span class="error-msg" *ngIf="isInvalid('asset_code')">Currency is required.</span>
+        </div>
+
         <!-- NGO Candidates -->
         <div class="form-group full-width">
           <label>Impact NGOs (pick 3)</label>

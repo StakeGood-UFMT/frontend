@@ -83,6 +83,17 @@ export const API_CONFIG = {
       cancelMarket: (id: string) => `/admin/markets/${id}/cancel`,
       setMarketStatus: (id: string) => `/admin/markets/${id}/status`,
       onChainMarket: (id: string) => `/admin/markets/${id}/onchain`,
+    },
+    anchor: {
+      kycUrl: '/anchor/kyc/url',
+      kycStatus: '/anchor/kyc/status',
+      quotes: '/anchor/quotes',
+      onramp: '/anchor/onramp',
+      offramp: '/anchor/offramp',
+      orders: '/anchor/orders',
+      order: (id: string) => `/anchor/orders/${id}`,
+      accounts: '/anchor/accounts',
+      simulatePayment: '/anchor/sandbox/simulate-payment',
     }
   }
 };
