@@ -1,6 +1,6 @@
 import { createAction, props } from '@ngrx/store';
 
-export const loadKycUrl = createAction('[Anchor] Load KYC URL');
+export const loadKycUrl = createAction('[Anchor] Load KYC URL', props<{ currency?: string }>());
 export const loadKycUrlSuccess = createAction('[Anchor] Load KYC URL Success', props<{ url: string }>());
 export const loadKycUrlFailure = createAction('[Anchor] Load KYC URL Failure', props<{ error: string }>());
 
@@ -39,3 +39,7 @@ export const simulatePaymentFailure = createAction('[Anchor] Simulate Payment Fa
 export const signOffRampXdr = createAction('[Anchor] Sign OffRamp XDR', props<{ xdr: string }>());
 export const signOffRampXdrSuccess = createAction('[Anchor] Sign OffRamp XDR Success', props<{ txHash: string }>());
 export const signOffRampXdrFailure = createAction('[Anchor] Sign OffRamp XDR Failure', props<{ error: string }>());
+
+export const sandboxAutoApproveKyc = createAction('[Anchor] Sandbox Auto Approve KYC');
+export const sandboxAutoApproveKycSuccess = createAction('[Anchor] Sandbox Auto Approve KYC Success', props<{ status: string; localKycStatus: string }>());
+export const sandboxAutoApproveKycFailure = createAction('[Anchor] Sandbox Auto Approve KYC Failure', props<{ error: string }>());

@@ -112,6 +112,7 @@ Chart.register(...registerables);
 export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
   @Input() history: MarketHistoryPoint[] = [];
   @Input() selectedRange: string = '1D';
+  @Input() assetCode: string = 'XLM';
   @Output() rangeChange = new EventEmitter<string>();
   @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
 
@@ -151,7 +152,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if ((changes['history'] || changes['selectedRange']) && this.chart) {
+    if ((changes['history'] || changes['selectedRange'] || changes['assetCode']) && this.chart) {
       this.updateChart();
     }
   }
@@ -178,7 +179,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
         labels: this.history.map((p) => this.formatLabel(p.timestamp)),
         datasets: [
           {
-            label: 'YES pool (XLM)',
+            label: `YES pool (${this.assetCode.toUpperCase()})`,
             data: this.history.map((p) => Number(p.yes_pool ?? 0)),
             borderColor: '#11D48A',
             backgroundColor: 'transparent',
@@ -191,7 +192,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
             clip: false,
           },
           {
-            label: 'NO pool (XLM)',
+            label: `NO pool (${this.assetCode.toUpperCase()})`,
             data: this.history.map((p) => Number(p.no_pool ?? 0)),
             borderColor: '#CC5A37',
             backgroundColor: 'transparent',
@@ -262,7 +263,7 @@ export class ProbabilityChartComponent implements AfterViewInit, OnChanges {
             min: 0,
             grace: '10%',
             ticks: {
-              callback: (value) => `${value} XLM`
+              callback: (value) => `${value} ${this.assetCode.toUpperCase()}`
             }
           },
           yPct: {

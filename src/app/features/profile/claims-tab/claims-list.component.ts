@@ -35,7 +35,7 @@ import { PendingTxStore } from '../../../core/services/pending-tx.service';
           <div class="claim-info">
             <span class="market-title">{{ claim.market_title }}</span>
             <div class="claim-meta">
-              <span class="amount">{{ claim.amount | number:'1.2-4' }} XLM</span>
+              <span class="amount">{{ claim.amount | number:'1.2-4' }} {{ claim.asset_code || 'XLM' }}</span>
               <span class="status-badge" [class]="claim.market_state.toLowerCase()">
                 {{ claim.market_state }}
               </span>

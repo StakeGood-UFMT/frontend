@@ -61,7 +61,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
           <div class="row-side">
             <div class="m-stat">
               <span class="m-stat-val">{{ m.total_liquidity }}</span>
-              <span class="m-stat-unit">XLM</span>
+              <span class="m-stat-unit">{{ m.asset_code || 'XLM' }}</span>
             </div>
 
             <div class="m-resolve">
@@ -336,7 +336,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
                       </div>
                       <div class="metric-card">
                         <span class="m-label">Total Liquidity</span>
-                        <span class="m-value">{{ marketResults()!.pools.total_liquidity }} XLM</span>
+                        <span class="m-value">{{ marketResults()!.pools.total_liquidity }} {{ selectedMarket()!.asset_code || 'XLM' }}</span>
                       </div>
                       <div class="metric-card">
                         <span class="m-label">Winners Count</span>
@@ -385,7 +385,7 @@ import { API_CONFIG } from '../../../core/config/api.config';
                       </div>
                       <div class="metric-card">
                         <span class="m-label">Total Liquidity</span>
-                        <span class="m-value">{{ marketResults()!.pools.total_liquidity }} XLM</span>
+                        <span class="m-value">{{ marketResults()!.pools.total_liquidity }} {{ selectedMarket()!.asset_code || 'XLM' }}</span>
                       </div>
                     </div>
 

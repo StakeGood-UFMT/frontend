@@ -9,4 +9,5 @@ export interface Claim {
   claimed_at?: string;
   tx_hash?: string;
   impact_generated_by_user?: number;
+  asset_code?: string;
 }

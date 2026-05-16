@@ -154,6 +154,13 @@ export class StakeService {
           backendMsg.toLowerCase().includes('closed'))
       ) {
         errorMessage = 'Market is closed for new stakes.';
+      } else if (
+        backendMsg &&
+        (backendMsg.toLowerCase().includes('resulting balance is not within the allowed range') ||
+         backendMsg.toLowerCase().includes('insufficient balance') ||
+         backendMsg.toLowerCase().includes('underflow'))
+      ) {
+        errorMessage = 'Insufficient token balance in your wallet to place this stake. Please deposit funds via On-Ramp.';
       } else if (backendCode === 'HEDGE_LOCK_VIOLATION' || error.status === 409) {
         const existing = error?.error?.existing_outcome;
         if (existing === 'YES' || existing === 'NO') {
@@ -170,7 +177,11 @@ export class StakeService {
       } else if (error.message === 'User canceled') {
          errorMessage = 'Transaction canceled by user';
       } else if (backendMsg) {
-        errorMessage = backendMsg;
+        if (backendMsg.includes('HostError') || backendMsg.includes('Error(Contract')) {
+          errorMessage = 'Smart contract execution failed. Please verify your wallet balance and market status.';
+        } else {
+          errorMessage = backendMsg;
+        }
       }
 
       this.notificationService.update(toastId, { 

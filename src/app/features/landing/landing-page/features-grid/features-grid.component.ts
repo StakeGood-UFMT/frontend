@@ -313,7 +313,7 @@ export class FeaturesGridComponent {
   steps = [
     { title: 'Connect Wallet', desc: 'Freighter, xBull, Albedo...' },
     { title: 'Choose an Arena', desc: 'Topic + beneficiary NGO' },
-    { title: 'Make your Prediction', desc: 'Stake XLM on the outcome' },
+    { title: 'Make your Prediction', desc: 'Stake crypto on the outcome' },
     { title: 'Real Impact', desc: 'Prize + donation confirmed' },
   ];
 }

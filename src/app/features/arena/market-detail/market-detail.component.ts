@@ -71,6 +71,7 @@ interface MarketPositionRow {
               <app-probability-chart 
                 [history]="(history$ | async) || []" 
                 [selectedRange]="selectedRange"
+                [assetCode]="market.asset_code || 'XLM'"
                 (rangeChange)="onRangeChange($event)">
               </app-probability-chart>
             </div>
@@ -143,7 +144,7 @@ interface MarketPositionRow {
                           {{ p.outcome }}
                         </span>
                       </td>
-                      <td>{{ p.amount === null ? 'Hidden' : (p.amount | number:'1.2-2') + ' XLM' }}</td>
+                      <td>{{ p.amount === null ? 'Hidden' : (p.amount | number:'1.2-2') + ' ' + (market.asset_code || 'XLM').toUpperCase() }}</td>
                       <td>
                         <span class="status" [class.ok]="p.chain_status === 'confirmed'" [class.bad]="p.chain_status === 'failed'" [class.wait]="p.chain_status === 'pending'">
                           {{ p.chain_status }}
@@ -192,7 +193,7 @@ interface MarketPositionRow {
                     </div>
                     <div class="stat">
                       <div class="stat-label">Total Volume</div>
-                      <div class="stat-value">{{ v.total_amount | number:'1.2-2' }} XLM</div>
+                      <div class="stat-value">{{ v.total_amount | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
                     </div>
                   </div>
                   <div class="progress-bar">
@@ -241,26 +242,26 @@ interface MarketPositionRow {
                     <div class="results-cards">
                       <div class="result-card">
                         <div class="result-title">Charity</div>
-                        <div class="result-value">{{ s.fees.charity.amount | number:'1.2-2' }} XLM</div>
+                        <div class="result-value">{{ s.fees.charity.amount | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
                         <div class="result-sub">{{ s.fees.charity.pct * 100 | number:'1.2-2' }}%</div>
                       </div>
 
                       <div class="result-card">
                         <div class="result-title">Platform Fee</div>
-                        <div class="result-value">{{ s.fees.platform.amount | number:'1.2-2' }} XLM</div>
+                        <div class="result-value">{{ s.fees.platform.amount | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
                         <div class="result-sub">{{ s.fees.platform.pct * 100 | number:'1.2-2' }}%</div>
                       </div>
 
                       <div class="result-card">
                         <div class="result-title">Gamification</div>
-                        <div class="result-value">{{ s.fees.gamification.amount | number:'1.2-2' }} XLM</div>
+                        <div class="result-value">{{ s.fees.gamification.amount | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
                         <div class="result-sub">{{ s.fees.gamification.pct * 100 | number:'1.2-2' }}%</div>
                       </div>
 
                       <div class="result-card">
                         <div class="result-title">Winners (Total Payout)</div>
-                        <div class="result-value">{{ s.winners_total_payout | number:'1.2-2' }} XLM</div>
-                        <div class="result-sub">Profit: {{ s.winners_profit_total | number:'1.2-2' }} XLM</div>
+                        <div class="result-value">{{ s.winners_total_payout | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
+                        <div class="result-sub">Profit: {{ s.winners_profit_total | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
                       </div>
                     </div>
 
@@ -277,9 +278,9 @@ interface MarketPositionRow {
                         <tbody>
                           <tr *ngFor="let w of s.winners">
                             <td class="mono">{{ w.wallet || 'Anonymous' }}</td>
-                            <td>{{ w.invested === null ? 'Hidden' : (w.invested | number:'1.2-2') + ' XLM' }}</td>
-                            <td>{{ w.profit === null ? 'Hidden' : (w.profit | number:'1.2-2') + ' XLM' }}</td>
-                            <td>{{ w.payout === null ? 'Hidden' : (w.payout | number:'1.2-2') + ' XLM' }}</td>
+                            <td>{{ w.invested === null ? 'Hidden' : (w.invested | number:'1.2-2') + ' ' + (market.asset_code || 'XLM').toUpperCase() }}</td>
+                            <td>{{ w.profit === null ? 'Hidden' : (w.profit | number:'1.2-2') + ' ' + (market.asset_code || 'XLM').toUpperCase() }}</td>
+                            <td>{{ w.payout === null ? 'Hidden' : (w.payout | number:'1.2-2') + ' ' + (market.asset_code || 'XLM').toUpperCase() }}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -294,26 +295,26 @@ interface MarketPositionRow {
                   <div class="results-cards">
                     <div class="result-card">
                       <div class="result-title">Charity</div>
-                      <div class="result-value">{{ r.fees!.charity.amount | number:'1.2-2' }} XLM</div>
+                      <div class="result-value">{{ r.fees!.charity.amount | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
                       <div class="result-sub">{{ r.fees!.charity.pct * 100 | number:'1.2-2' }}%</div>
                     </div>
 
                     <div class="result-card">
                       <div class="result-title">Platform Fee</div>
-                      <div class="result-value">{{ r.fees!.platform.amount | number:'1.2-2' }} XLM</div>
+                      <div class="result-value">{{ r.fees!.platform.amount | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
                       <div class="result-sub">{{ r.fees!.platform.pct * 100 | number:'1.2-2' }}%</div>
                     </div>
 
                     <div class="result-card">
                       <div class="result-title">Gamification</div>
-                      <div class="result-value">{{ r.fees!.gamification.amount | number:'1.2-2' }} XLM</div>
+                      <div class="result-value">{{ r.fees!.gamification.amount | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
                       <div class="result-sub">{{ r.fees!.gamification.pct * 100 | number:'1.2-2' }}%</div>
                     </div>
 
                     <div class="result-card">
                       <div class="result-title">Winners (Total Payout)</div>
-                      <div class="result-value">{{ r.winners_total_payout! | number:'1.2-2' }} XLM</div>
-                      <div class="result-sub">Profit: {{ r.winners_profit_total! | number:'1.2-2' }} XLM</div>
+                      <div class="result-value">{{ r.winners_total_payout! | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
+                      <div class="result-sub">Profit: {{ r.winners_profit_total! | number:'1.2-2' }} {{ (market.asset_code || 'XLM').toUpperCase() }}</div>
                     </div>
                   </div>
 
@@ -330,13 +331,14 @@ interface MarketPositionRow {
                       <tbody>
                         <tr *ngFor="let w of r.winners!">
                           <td class="mono">{{ w.wallet || 'Anonymous' }}</td>
-                          <td>{{ w.invested === null ? 'Hidden' : (w.invested | number:'1.2-2') + ' XLM' }}</td>
-                          <td>{{ w.profit === null ? 'Hidden' : (w.profit | number:'1.2-2') + ' XLM' }}</td>
-                          <td>{{ w.payout === null ? 'Hidden' : (w.payout | number:'1.2-2') + ' XLM' }}</td>
+                          <td>{{ w.invested === null ? 'Hidden' : (w.invested | number:'1.2-2') + ' ' + (market.asset_code || 'XLM').toUpperCase() }}</td>
+                          <td>{{ w.profit === null ? 'Hidden' : (w.profit | number:'1.2-2') + ' ' + (market.asset_code || 'XLM').toUpperCase() }}</td>
+                          <td>{{ w.payout === null ? 'Hidden' : (w.payout | number:'1.2-2') + ' ' + (market.asset_code || 'XLM').toUpperCase() }}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
+
                   <ng-template #noWinners>
                     <div class="positions-empty">No winners found.</div>
                   </ng-template>

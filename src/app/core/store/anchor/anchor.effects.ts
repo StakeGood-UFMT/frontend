@@ -15,8 +15,8 @@ export class AnchorEffects {
   loadKycUrl$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AnchorActions.loadKycUrl),
-      mergeMap(() =>
-        this.anchorService.getKycUrl().pipe(
+      mergeMap(({ currency }) =>
+        this.anchorService.getKycUrl(currency).pipe(
           map((response) => AnchorActions.loadKycUrlSuccess({ url: response.url })),
           catchError((error) =>
             of(AnchorActions.loadKycUrlFailure({ error: error?.error?.message || error?.message || 'Failed to load KYC URL' })),
@@ -150,6 +150,25 @@ export class AnchorEffects {
         this.walletService.signTransaction(xdr).then(
           (result) => AnchorActions.signOffRampXdrSuccess({ txHash: 'signed_and_submitted' }),
           (error) => AnchorActions.signOffRampXdrFailure({ error: error?.error?.message || error?.message || 'Failed to sign XDR' }),
+        ),
+      ),
+    ),
+  );
+
+  sandboxAutoApproveKyc$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AnchorActions.sandboxAutoApproveKyc),
+      mergeMap(() =>
+        this.anchorService.sandboxAutoApproveKyc().pipe(
+          map((response) =>
+            AnchorActions.sandboxAutoApproveKycSuccess({
+              status: response.status,
+              localKycStatus: response.localKycStatus,
+            }),
+          ),
+          catchError((error) =>
+            of(AnchorActions.sandboxAutoApproveKycFailure({ error: error?.error?.message || error?.message || 'Failed to auto-approve KYC in sandbox' })),
+          ),
         ),
       ),
     ),
