@@ -6,6 +6,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import * as AnchorActions from '../../../core/store/anchor/anchor.actions';
 import * as AnchorSelectors from '../../../core/store/anchor/anchor.selectors';
 import { map } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { WalletService } from '../../../core/services/wallet.service';
+import { firstValueFrom } from 'rxjs';
+import { API_CONFIG } from '../../../core/config/api.config';
 
 @Component({
   selector: 'app-ramp-widget',
@@ -55,7 +59,12 @@ import { map } from 'rxjs/operators';
         <div class="indeterminate-bar"></div>
       </div>
       <div *ngIf="error$ | async as error" class="error-banner">
-        ⚠️ {{ error }}
+        <div>⚠️ {{ error }}</div>
+        <div *ngIf="error.includes('trustline')" class="trustline-action">
+          <button class="action-btn" [disabled]="isAddingTrustline()" (click)="addTrustline()">
+            {{ isAddingTrustline() ? 'Adding Trustline...' : '➕ Add Trustline for ' + onRampCrypto }}
+          </button>
+        </div>
       </div>
 
       <!-- TAB 1: KYC Onboarding -->
@@ -80,6 +89,9 @@ import { map } from 'rxjs/operators';
             </button>
             <button class="secondary-btn" (click)="checkKycStatus()">
               Check Status
+            </button>
+            <button class="secondary-btn" (click)="sandboxAutoApproveKyc()" title="Bypasses manual review in Etherfuse Sandbox">
+              ⚡ Auto-Approve (Sandbox)
             </button>
           </div>
         </div>
@@ -175,6 +187,12 @@ import { map } from 'rxjs/operators';
           <div class="order-status-footer">
             <span class="status-indicator" [class]="order.status"></span>
             <span>Order Status: <strong>{{ order.status }}</strong></span>
+            <span class="order-id-display" *ngIf="order.orderId || order.id">ID: {{ order.orderId || order.id }}</span>
+          </div>
+          <div class="sandbox-quick-action" *ngIf="order.status === 'pending' || order.status === 'processing'">
+            <button class="secondary-btn" [disabled]="isSimulating()" (click)="quickSimulate(order.orderId || order.id)">
+              {{ isSimulating() ? '⏳ Simulating Bank Transfer...' : '🧪 Simulate Bank Transfer (Sandbox)' }}
+            </button>
           </div>
         </div>
       </div>
@@ -407,6 +425,10 @@ import { map } from 'rxjs/operators';
         font-weight: 600;
         margin-bottom: 20px;
         border-left: 4px solid #cc5a37;
+      }
+
+      .trustline-action {
+        margin-top: 12px;
       }
 
       .tab-content {
@@ -669,7 +691,25 @@ import { map } from 'rxjs/operators';
         gap: 10px;
         font-size: 0.95rem;
         color: #f1f5f2;
+        flex-wrap: wrap;
       }
+
+      .order-id-display {
+        margin-left: auto;
+        font-family: monospace;
+        color: #9ca3af;
+        background: #111815;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .sandbox-quick-action {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+      }
+
 
       .status-indicator {
         width: 10px;
@@ -813,8 +853,12 @@ import { map } from 'rxjs/operators';
 export class RampWidgetComponent implements OnInit, OnDestroy {
   private store = inject(Store);
   private sanitizer = inject(DomSanitizer);
+  private http = inject(HttpClient);
+  private walletService = inject(WalletService);
 
   activeTab = signal<'kyc' | 'onramp' | 'offramp' | 'sandbox'>('kyc');
+  isAddingTrustline = signal<boolean>(false);
+  isSimulating = signal<boolean>(false);
 
   // Observables from Store
   safeKycUrl$ = this.store.select(AnchorSelectors.selectKycUrl).pipe(
@@ -865,11 +909,15 @@ export class RampWidgetComponent implements OnInit, OnDestroy {
   }
 
   loadKycUrl() {
-    this.store.dispatch(AnchorActions.loadKycUrl());
+    this.store.dispatch(AnchorActions.loadKycUrl({ currency: this.onRampFiat }));
   }
 
   checkKycStatus() {
     this.store.dispatch(AnchorActions.loadKycStatus());
+  }
+
+  sandboxAutoApproveKyc() {
+    this.store.dispatch(AnchorActions.sandboxAutoApproveKyc());
   }
 
   getOnRampQuote() {
@@ -958,5 +1006,41 @@ export class RampWidgetComponent implements OnInit, OnDestroy {
         }
       }).unsubscribe();
     }, 5000);
+  }
+
+  async addTrustline() {
+    try {
+      this.isAddingTrustline.set(true);
+      const { xdr } = await firstValueFrom(
+        this.http.post<{ xdr: string }>(`${API_CONFIG.baseUrl}/anchor/trustline`, {
+          assetCode: this.onRampCrypto,
+          assetIssuer: 'GC3CW7EDYRTWQ635VDIGY6S4ZUF5L6TQ7AA4MWS7LEQDBLUSZXV7UPS4'
+        })
+      );
+      const { signedTxXdr } = await this.walletService.signTransaction(xdr);
+      await firstValueFrom(
+        this.http.post(`${API_CONFIG.baseUrl}/transactions/submit`, {
+          signedXdr: signedTxXdr
+        })
+      );
+      alert('Trustline added successfully! You can now confirm your deposit order.');
+      this.store.dispatch(AnchorActions.createQuoteSuccess({ quote: null }));
+    } catch (err: any) {
+      console.error('Failed to add trustline:', err);
+      alert('Failed to add trustline: ' + (err?.error?.message || err?.message || err));
+    } finally {
+      this.isAddingTrustline.set(false);
+    }
+  }
+
+  quickSimulate(orderId: string) {
+    if (!orderId) return;
+    this.sandboxOrderId = orderId;
+    this.isSimulating.set(true);
+    this.store.dispatch(AnchorActions.simulatePayment({ orderId }));
+    setTimeout(() => {
+      this.isSimulating.set(false);
+      alert('Sandbox simulation signal sent! Etherfuse is processing the payment.');
+    }, 1500);
   }
 }

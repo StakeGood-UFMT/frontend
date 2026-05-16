@@ -8,9 +8,10 @@ import { API_CONFIG } from '../config/api.config';
 export class AnchorService {
   private http = inject(HttpClient);
 
-  getKycUrl() {
+  getKycUrl(currency?: string) {
+    const params = currency ? `?currency=${currency}` : '';
     return this.http.get<{ url: string }>(
-      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.anchor.kycUrl}`,
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.anchor.kycUrl}${params}`,
     );
   }
 
@@ -78,6 +79,13 @@ export class AnchorService {
     return this.http.post<any>(
       `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.anchor.simulatePayment}`,
       { orderId },
+    );
+  }
+
+  sandboxAutoApproveKyc() {
+    return this.http.post<{ status: string; localKycStatus: string }>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.anchor.sandboxAutoApproveKyc}`,
+      {},
     );
   }
 }

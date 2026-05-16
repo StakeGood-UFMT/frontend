@@ -47,7 +47,15 @@ export const anchorReducer = createReducer(
   on(AnchorActions.createOffRampSuccess, (state, { order }) => ({ ...state, currentOrder: order, loading: false })),
   on(AnchorActions.createOffRampFailure, (state, { error }) => ({ ...state, error, loading: false })),
 
-  on(AnchorActions.pollOrderStatusSuccess, (state, { order }) => ({ ...state, currentOrder: order })),
+  on(AnchorActions.pollOrderStatusSuccess, (state, { order }) => ({
+    ...state,
+    currentOrder: order,
+    userOrders: state.userOrders.map((o) => (o.orderId === order.orderId || o.id === order.id ? { ...o, ...order } : o)),
+  })),
+
+  on(AnchorActions.simulatePayment, (state) => ({ ...state, loading: true, error: null })),
+  on(AnchorActions.simulatePaymentSuccess, (state) => ({ ...state, loading: false })),
+  on(AnchorActions.simulatePaymentFailure, (state, { error }) => ({ ...state, error, loading: false })),
 
   on(AnchorActions.loadUserOrders, (state) => ({ ...state, loading: true, error: null })),
   on(AnchorActions.loadUserOrdersSuccess, (state, { orders }) => ({
@@ -69,4 +77,8 @@ export const anchorReducer = createReducer(
     currentOrder: state.currentOrder ? { ...state.currentOrder, stellarTxHash: txHash, status: 'completed' } : null,
   })),
   on(AnchorActions.signOffRampXdrFailure, (state, { error }) => ({ ...state, error, loading: false })),
+
+  on(AnchorActions.sandboxAutoApproveKyc, (state) => ({ ...state, loading: true, error: null })),
+  on(AnchorActions.sandboxAutoApproveKycSuccess, (state, { status, localKycStatus }) => ({ ...state, kycStatus: status, localKycStatus, loading: false })),
+  on(AnchorActions.sandboxAutoApproveKycFailure, (state, { error }) => ({ ...state, error, loading: false })),
 );

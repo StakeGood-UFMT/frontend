@@ -45,7 +45,7 @@ import { RouterModule } from '@angular/router';
 
         <div class="input-group">
           <div class="label-row">
-            <label>Amount (XLM)</label>
+            <label>Amount ({{ (market.asset_code || 'XLM').toUpperCase() }})</label>
           </div>
           <div class="input-wrapper">
             <div class="quick-chips">
@@ -104,7 +104,7 @@ import { RouterModule } from '@angular/router';
             </div>
             <div class="summary-item">
               <span class="label">Potential Payout</span>
-              <span class="value success">{{ potentialPayout().toFixed(2) }} XLM</span>
+              <span class="value success">{{ potentialPayout().toFixed(2) }} {{ (market.asset_code || 'XLM').toUpperCase() }}</span>
             </div>
           </div>
           
@@ -117,19 +117,20 @@ import { RouterModule } from '@angular/router';
             <div class="fees-content" *ngIf="showFees()">
               <div class="fee-row">
                 <span>NGO ({{ (market.fee_ngo * 100).toFixed(1) }}%)</span>
-                <span>{{ fees().ngo.toFixed(4) }} XLM</span>
+                <span>{{ fees().ngo.toFixed(4) }} {{ (market.asset_code || 'XLM').toUpperCase() }}</span>
               </div>
               <div class="fee-row">
                 <span>Platform ({{ (market.fee_platform * 100).toFixed(1) }}%)</span>
-                <span>{{ fees().platform.toFixed(4) }} XLM</span>
+                <span>{{ fees().platform.toFixed(4) }} {{ (market.asset_code || 'XLM').toUpperCase() }}</span>
               </div>
               <div class="fee-row">
                 <span>Gamification ({{ (market.fee_gamification * 100).toFixed(2) }}%)</span>
-                <span>{{ fees().gamification.toFixed(4) }} XLM</span>
+                <span>{{ fees().gamification.toFixed(4) }} {{ (market.asset_code || 'XLM').toUpperCase() }}</span>
               </div>
             </div>
           </div>
         </div>
+
 
         <button 
           class="submit-btn" 

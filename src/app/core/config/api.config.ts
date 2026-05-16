@@ -94,6 +94,7 @@ export const API_CONFIG = {
       order: (id: string) => `/anchor/orders/${id}`,
       accounts: '/anchor/accounts',
       simulatePayment: '/anchor/sandbox/simulate-payment',
+      sandboxAutoApproveKyc: '/anchor/sandbox/auto-approve-kyc',
     }
   }
 };
