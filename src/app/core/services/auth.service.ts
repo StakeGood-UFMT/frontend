@@ -25,6 +25,15 @@ export class AuthService {
   public profile = toSignal(this.store.select(selectProfile), { initialValue: null as AuthProfile | null });
   public accessToken = toSignal(this.store.select(selectAuthState).pipe(map(s => s.accessToken)), { initialValue: null as string | null });
 
+  public getAccessToken(): string | null {
+    const state = this.store.selectSignal(selectAuthState)();
+    if (state?.accessToken) {
+      return state.accessToken;
+    }
+    const stored = this.storage.load();
+    return stored?.accessToken || null;
+  }
+
   constructor() {}
 
   private mapKycStatus(status: AuthResponse['kyc_status']): AuthProfile['kyc_status'] {

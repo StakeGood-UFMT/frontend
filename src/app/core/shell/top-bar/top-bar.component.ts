@@ -73,6 +73,10 @@ import { selectIsAdmin } from '../../store/auth/auth.selectors';
                   <span class="label">Notifications</span>
                   <span *ngIf="unreadCount() > 0" class="badge">{{ unreadCount() }}</span>
                 </a>
+                <a *ngIf="isLoggedIn()" routerLink="/gateway" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
+                  <span class="icon">💱</span>
+                  <span class="label">Gateway (On/Off Ramp)</span>
+                </a>
 
                 <!-- Admin Section -->
                 <ng-container *ngIf="isAdmin()">
