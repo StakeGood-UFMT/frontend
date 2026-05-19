@@ -65,6 +65,12 @@ import { API_CONFIG } from '../../../core/config/api.config';
             {{ isAddingTrustline() ? 'Adding Trustline...' : '➕ Add Trustline for ' + onRampCrypto }}
           </button>
         </div>
+        <div *ngIf="error.includes('Terms and conditions') || error.includes('agreement')" class="agreement-action">
+          <p class="error-subtext">Etherfuse requires you to review and accept the legal agreements before creating an order.</p>
+          <button class="action-btn" (click)="setActiveTab('kyc'); loadKycUrl()">
+            📋 Open Onboarding Portal to Accept Agreements
+          </button>
+        </div>
       </div>
 
       <!-- TAB 1: KYC Onboarding -->
@@ -427,8 +433,15 @@ import { API_CONFIG } from '../../../core/config/api.config';
         border-left: 4px solid #cc5a37;
       }
 
-      .trustline-action {
+      .trustline-action, .agreement-action {
         margin-top: 12px;
+      }
+
+      .error-subtext {
+        margin: 4px 0 12px;
+        color: #b91c1c;
+        font-size: 0.8rem;
+        font-weight: 500;
       }
 
       .tab-content {

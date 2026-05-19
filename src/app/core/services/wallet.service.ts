@@ -12,6 +12,9 @@ export class WalletService {
   private static initialized = false;
   public publicKey = signal<string | null>(null);
   public isConnecting = signal<boolean>(false);
+  public wrongNetworkModalOpen = signal<boolean>(false);
+  public connectedNetworkName = signal<string>('');
+  public expectedNetworkName = signal<string>('Testnet');
 
   constructor() {
     const win = window as any;
@@ -85,6 +88,31 @@ export class WalletService {
     this.isConnecting.set(true);
     try {
       const { address } = await StellarWalletsKit.authModal();
+
+      try {
+        const { network } = await StellarWalletsKit.getNetwork();
+        const currentNet = network?.toUpperCase() || '';
+        const isMainnet = currentNet === 'PUBLIC' || currentNet === 'MAINNET';
+        const expectedNet = environment.stellar.network?.toUpperCase() || 'TESTNET';
+
+        if (isMainnet || (currentNet && currentNet !== expectedNet)) {
+          console.warn(`[WalletService] Network mismatch detected. Connected: ${currentNet}, Expected: ${expectedNet}`);
+          
+          this.connectedNetworkName.set(isMainnet ? 'Mainnet' : currentNet);
+          this.expectedNetworkName.set(expectedNet === 'TESTNET' ? 'Testnet' : expectedNet);
+          this.wrongNetworkModalOpen.set(true);
+
+          StellarWalletsKit.disconnect();
+          this.publicKey.set(null);
+
+          throw new Error(`Rede conectada foi a ${isMainnet ? 'Mainnet' : currentNet} e o produto só opera em ${expectedNet === 'TESTNET' ? 'Testnet' : expectedNet} por enquanto.`);
+        }
+      } catch (netErr: any) {
+        if (netErr.message && netErr.message.includes('Rede conectada foi a')) {
+          throw netErr;
+        }
+        console.warn('[WalletService] Could not verify network via getNetwork():', netErr);
+      }
 
       this.publicKey.set(address);
       return address;

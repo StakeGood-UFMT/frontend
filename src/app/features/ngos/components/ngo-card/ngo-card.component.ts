@@ -29,7 +29,7 @@ import { Ngo } from '../../../../core/models/ngo.model';
       <div class="card-footer">
         <div class="impact-stats">
           <span class="impact-label">Total Impact</span>
-          <span class="impact-value">{{ ngo.total_impact || '0 XLM' }}</span>
+          <span class="impact-value">{{ ngo.total_impact || '0.00 USDC' }}</span>
         </div>
         <div class="view-profile">
           <span>View Profile</span>
