@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NotificationContainerComponent } from './shared/components/notification-container/notification-container.component';
+import { WrongNetworkModalComponent } from './shared/components/wrong-network-modal/wrong-network-modal.component';
 import { RealtimeService } from './core/services/realtime.service';
 import { PendingTxStore } from './core/services/pending-tx.service';
 import { HttpClient } from '@angular/common/http';
@@ -10,7 +11,7 @@ import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NotificationContainerComponent],
+  imports: [RouterOutlet, NotificationContainerComponent, WrongNetworkModalComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

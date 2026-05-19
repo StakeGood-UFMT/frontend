@@ -5,6 +5,12 @@ export interface AdminMarketTTL extends Market {
   is_eligible_for_bump: boolean;
 }
 
+export interface KeeperEligibleMarketsResponse {
+  markets: AdminMarketTTL[];
+  contract_ttl?: number;
+  latest_ledger: number;
+}
+
 export interface BatchBumpTTLRequest {
   market_ids: string[];
 }

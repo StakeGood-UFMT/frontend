@@ -29,7 +29,7 @@ import { TimelineComponent } from '../../components/timeline/timeline.component'
               <span class="cause-tag">{{ ngo.cause }}</span>
               <h1 class="ngo-name">{{ ngo.name }}</h1>
               <div class="impact-summary">
-                 <span class="impact-val">{{ ngo.total_impact || '0 XLM' }}</span>
+                 <span class="impact-val">{{ ngo.total_impact || '0.00 USDC' }}</span>
                  <span class="impact-lab">Direct Social Impact</span>
               </div>
             </div>

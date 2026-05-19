@@ -10,6 +10,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { selectIsLoggedIn, selectProfile, selectAuthState } from '../store/auth/auth.selectors';
 import * as AuthActions from '../store/auth/auth.actions';
 import { map } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -50,7 +51,10 @@ export class AuthService {
       // 2. GET Nonce
       const { nonce } = await lastValueFrom(
         this.http.get<{ nonce: string }>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.nonce}`, {
-          params: { wallet: walletAddress }
+          params: { 
+            wallet: walletAddress,
+            network: environment.stellar.network
+          }
         })
       );
 
@@ -62,7 +66,8 @@ export class AuthService {
         this.http.post<AuthResponse>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.verify}`, {
           wallet: walletAddress,
           nonce: nonce,
-          signature: signature
+          signature: signature,
+          network: environment.stellar.network
         })
       );
 
