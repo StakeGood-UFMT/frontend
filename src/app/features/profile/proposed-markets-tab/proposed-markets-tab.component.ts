@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ProposalService,
@@ -46,7 +46,7 @@ import {
         *ngIf="!loading() && !error() && proposals().length > 0"
         class="proposals-grid"
       >
-        <div *ngFor="let p of proposals()" class="proposal-row">
+        <div *ngFor="let p of paginatedProposals()" class="proposal-row">
           <div class="proposal-info">
             <div class="title-line">
               <span class="proposal-title">{{ p.title }}</span>
@@ -71,6 +71,19 @@ import {
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="pagination" *ngIf="!loading() && !error() && proposals().length > limit">
+        <button [disabled]="page() === 1" (click)="page.set(page() - 1)" class="pagination-btn">
+          Previous
+        </button>
+        <span class="pagination-info">
+          Page {{ page() }} of {{ Math.ceil(proposals().length / limit) }}
+        </span>
+        <button [disabled]="page() * limit >= proposals().length" (click)="page.set(page() + 1)" class="pagination-btn">
+          Next
+        </button>
       </div>
 
       <div
@@ -170,7 +183,7 @@ import {
       .proposed-wrapper {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
         animation: fadeInUp 0.4s ease-out;
       }
 
@@ -179,13 +192,13 @@ import {
         justify-content: space-between;
         align-items: flex-start;
         gap: 16px;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
       }
 
       .header-left {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 2px;
       }
 
       .list-header h2 {
@@ -198,18 +211,18 @@ import {
       .subtitle {
         margin: 0;
         color: #6b7280;
-        font-size: 0.9rem;
-        line-height: 1.5;
+        font-size: 0.85rem;
+        line-height: 1.4;
       }
 
       .refresh-btn {
         background: transparent;
         border: 1px solid rgba(0, 0, 0, 0.08);
         color: #6b7280;
-        padding: 8px 16px;
-        border-radius: 10px;
+        padding: 6px 12px;
+        border-radius: 8px;
         cursor: pointer;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         font-weight: 700;
         display: flex;
         align-items: center;
@@ -245,47 +258,49 @@ import {
 
       .proposals-grid {
         display: grid;
-        gap: 16px;
+        gap: 10px;
       }
 
       .proposal-row {
         background: #ffffff;
         border: 1px solid rgba(0, 0, 0, 0.05);
-        border-radius: 16px;
-        padding: 20px 24px;
+        border-radius: 12px;
+        padding: 8px 14px;
         display: flex;
         gap: 16px;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
       }
 
       .proposal-row:hover {
         border-color: rgba(17, 212, 138, 0.2);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
       }
 
       .proposal-info {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 2px;
+        flex-grow: 1;
+        min-width: 0;
       }
 
       .proposal-actions {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
       }
 
       .details-btn {
         background: transparent;
         border: 1px solid rgba(0, 0, 0, 0.08);
         color: #111815;
-        padding: 8px 12px;
-        border-radius: 10px;
+        padding: 6px 12px;
+        border-radius: 8px;
         cursor: pointer;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         font-weight: 800;
         transition: all 0.2s;
         white-space: nowrap;
@@ -300,38 +315,42 @@ import {
       .title-line {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
+        gap: 8px;
+        flex-wrap: wrap;
       }
 
       .proposal-title {
         font-weight: 800;
-        font-size: 1.05rem;
+        font-size: 0.92rem;
         color: #111815;
         line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .proposal-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 12px;
-        font-size: 0.82rem;
+        gap: 10px;
+        font-size: 0.8rem;
         color: #6b7280;
       }
 
       .reason {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: #b45309;
         background: rgba(245, 158, 11, 0.08);
         border: 1px solid rgba(245, 158, 11, 0.18);
-        padding: 10px 12px;
-        border-radius: 12px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        margin-top: 2px;
       }
 
       .status-badge {
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.65rem;
         font-weight: 800;
         text-transform: uppercase;
         background: #f3f4f6;
@@ -507,34 +526,34 @@ import {
 
       .loading-state,
       .empty-state {
-        padding: 64px 32px;
+        padding: 48px 24px;
         text-align: center;
         background: #ffffff;
-        border-radius: 20px;
+        border-radius: 16px;
         border: 1px solid rgba(0, 0, 0, 0.05);
         color: #6b7280;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
       }
 
       .empty-icon {
-        font-size: 3rem;
-        margin-bottom: 8px;
+        font-size: 2.5rem;
+        margin-bottom: 2px;
       }
 
       .skeleton-list {
         display: grid;
-        gap: 16px;
+        gap: 10px;
         width: 100%;
       }
 
       .skeleton-item {
-        height: 90px;
+        height: 60px;
         background: linear-gradient(90deg, #f3f4f6 25%, #f9fafb 50%, #f3f4f6 75%);
         background-size: 200% 100%;
-        border-radius: 16px;
+        border-radius: 12px;
         animation: shimmer 1.5s infinite;
       }
 
@@ -585,6 +604,45 @@ import {
           transform: translateY(0);
         }
       }
+
+      /* Pagination CSS */
+      .pagination {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        align-items: center;
+        padding: 12px 0;
+        margin-top: 16px;
+      }
+
+      .pagination-btn {
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #4b5563;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .pagination-btn:hover:not(:disabled) {
+        border-color: #11D48A;
+        color: #11D48A;
+        background: #f9fafb;
+      }
+
+      .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .pagination-info {
+        font-size: 0.78rem;
+        color: #6b7280;
+        font-weight: 600;
+      }
     `,
   ],
 })
@@ -595,6 +653,15 @@ export class ProposedMarketsTabComponent implements OnInit {
   protected loading = signal(false);
   protected error = signal<string | null>(null);
   protected selectedProposal = signal<ProposalSummary | null>(null);
+  protected page = signal(1);
+  protected limit = 5;
+
+  Math = Math;
+
+  protected paginatedProposals = computed(() => {
+    const start = (this.page() - 1) * this.limit;
+    return this.proposals().slice(start, start + this.limit);
+  });
 
   ngOnInit(): void {
     this.load();
@@ -605,7 +672,10 @@ export class ProposedMarketsTabComponent implements OnInit {
     this.error.set(null);
 
     this.proposalService.listMine().subscribe({
-      next: (rows) => this.proposals.set(rows ?? []),
+      next: (rows) => {
+        this.proposals.set(rows ?? []);
+        this.page.set(1);
+      },
       error: () => {
         this.error.set('Unable to load your proposed markets.');
         this.loading.set(false);

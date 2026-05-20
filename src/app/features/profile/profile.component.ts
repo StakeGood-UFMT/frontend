@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ClaimsTabComponent } from './claims-tab/claims-tab.component';
 import { ProposedMarketsTabComponent } from './proposed-markets-tab/proposed-markets-tab.component';
+import { ActivityTabComponent } from './activity-tab/activity-tab.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, ClaimsTabComponent, ProposedMarketsTabComponent],
+  imports: [CommonModule, RouterModule, ClaimsTabComponent, ProposedMarketsTabComponent, ActivityTabComponent],
   template: `
     <div class="profile-page">
       <div class="page-header">
@@ -45,36 +46,16 @@ import { ProposedMarketsTabComponent } from './proposed-markets-tab/proposed-mar
         >
           Proposed Markets
         </button>
-        <button 
-          (click)="activeTab.set('settings')" 
-          [class.active]="activeTab() === 'settings'"
-        >
-          Settings
-        </button>
       </nav>
 
       <main class="tab-content">
-        <div *ngIf="activeTab() === 'activity'" class="state-container">
-          <div class="state-card placeholder">
-            <div class="state-icon">📊</div>
-            <h2 class="state-title">Your Activity</h2>
-            <p class="state-message">Recent stakes and results will appear here.</p>
-          </div>
-        </div>
+        <app-activity-tab *ngIf="activeTab() === 'activity'"></app-activity-tab>
 
         <app-claims-tab *ngIf="activeTab() === 'claims'"></app-claims-tab>
 
         <app-proposed-markets-tab
           *ngIf="activeTab() === 'proposed'"
         ></app-proposed-markets-tab>
-
-        <div *ngIf="activeTab() === 'settings'" class="state-container">
-          <div class="state-card placeholder">
-            <div class="state-icon">⚙️</div>
-            <h2 class="state-title">Settings</h2>
-            <p class="state-message">Wallet and security preferences.</p>
-          </div>
-        </div>
       </main>
     </div>
   `,
@@ -254,5 +235,5 @@ import { ProposedMarketsTabComponent } from './proposed-markets-tab/proposed-mar
   `]
 })
 export class ProfileComponent {
-  activeTab = signal('claims');
+  activeTab = signal('activity');
 }

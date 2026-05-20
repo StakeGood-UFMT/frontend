@@ -36,6 +36,7 @@ export const API_CONFIG = {
       status: (hash: string) => `/transactions/${hash}/status`,
     },
     users: {
+      meActivity: '/users/me/activity',
       meClaims: '/users/me/claims',
       meSettings: '/users/me/settings',
       mePrivacy: '/users/me/privacy',
