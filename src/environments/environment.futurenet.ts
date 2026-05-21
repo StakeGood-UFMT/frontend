@@ -7,5 +7,6 @@ export const environment = {
     network: 'FUTURENET',
     horizonUrl: 'https://horizon-futurenet.stellar.org',
     rpcUrl: 'https://soroban-futurenet.stellar.org'
-  }
+  },
+  walletConnectProjectId: 'dd7ad1f9a9784ee8bc5f6a7a99074cba'
 };
