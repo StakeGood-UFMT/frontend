@@ -84,6 +84,9 @@ export const API_CONFIG = {
       cancelMarket: (id: string) => `/admin/markets/${id}/cancel`,
       setMarketStatus: (id: string) => `/admin/markets/${id}/status`,
       onChainMarket: (id: string) => `/admin/markets/${id}/onchain`,
+      admins: '/admin/admins',
+      buildAddAdmin: '/admin/admins/build-add',
+      buildRemoveAdmin: '/admin/admins/build-remove',
     },
     anchor: {
       kycUrl: '/anchor/kyc/url',
