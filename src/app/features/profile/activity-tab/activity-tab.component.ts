@@ -70,30 +70,57 @@ import { ActivityItem } from '../../../core/models/activity.model';
               </div>
 
               <!-- Metadata / Actions Section side by side -->
-              <div *ngIf="item.type === 'stake' && item.metadata" class="card-side-info">
-                <div class="meta-col">
-                  <div class="meta-item">
-                    <span class="meta-label">Amount:</span>
-                    <span class="meta-value amount">{{ item.metadata.amount | number:'1.2-4' }}</span>
+              <div *ngIf="item.type === 'stake' && item.metadata" class="card-stake-section">
+                <div class="card-side-info">
+                  <div class="meta-col">
+                    <div class="meta-item">
+                      <span class="meta-label">Amount:</span>
+                      <span class="meta-value amount">{{ item.metadata.amount | number:'1.2-4' }}</span>
+                    </div>
+                    <div class="meta-item" *ngIf="item.metadata.payoutAmount && item.metadata.payoutAmount > 0">
+                      <span class="meta-label">Payout:</span>
+                      <span class="meta-value payout">+{{ item.metadata.payoutAmount | number:'1.2-4' }}</span>
+                    </div>
                   </div>
-                  <div class="meta-item" *ngIf="item.metadata.payoutAmount && item.metadata.payoutAmount > 0">
-                    <span class="meta-label">Payout:</span>
-                    <span class="meta-value payout">+{{ item.metadata.payoutAmount | number:'1.2-4' }}</span>
+
+                  <div class="links-col">
+                    <a *ngIf="item.metadata.marketId" 
+                       [routerLink]="['/arena', item.metadata.marketId]" 
+                       class="action-link-compact market-link">
+                      🏟️ Market
+                    </a>
+                    <a *ngIf="item.metadata.txHash" 
+                       [href]="'https://stellar.expert/explorer/testnet/tx/' + item.metadata.txHash" 
+                       target="_blank" 
+                       class="action-link-compact tx-link">
+                      🔗 Tx
+                    </a>
                   </div>
                 </div>
 
-                <div class="links-col">
-                  <a *ngIf="item.metadata.marketId" 
-                     [routerLink]="['/arena', item.metadata.marketId]" 
-                     class="action-link-compact market-link">
-                    🏟️ Market
-                  </a>
-                  <a *ngIf="item.metadata.txHash" 
-                     [href]="'https://stellar.expert/explorer/testnet/tx/' + item.metadata.txHash" 
-                     target="_blank" 
-                     class="action-link-compact tx-link">
-                    🔗 Tx
-                  </a>
+                <!-- NGO Card -->
+                <div *ngIf="item.metadata.ngo_voted" class="ngo-card">
+                  <div class="ngo-card-left">
+                    <div class="ngo-avatar" *ngIf="item.metadata.ngo_voted.logo_url">
+                      <img [src]="item.metadata.ngo_voted.logo_url" [alt]="item.metadata.ngo_voted.name" />
+                    </div>
+                    <div class="ngo-avatar ngo-avatar-fallback" *ngIf="!item.metadata.ngo_voted.logo_url">
+                      🌱
+                    </div>
+                    <div class="ngo-info">
+                      <span class="ngo-label">NGO Supported</span>
+                      <span class="ngo-name">{{ item.metadata.ngo_voted.name }}</span>
+                      <span *ngIf="item.metadata.ngo_voted.category" class="ngo-category">
+                        {{ item.metadata.ngo_voted.category }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="ngo-card-right">
+                    <span *ngIf="item.metadata.ngo_voted.verified" class="verified-badge">✓ Verified</span>
+                    <a [routerLink]="['/ngos', item.metadata.ngo_voted.slug]" class="ngo-btn">
+                      View NGO →
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -404,6 +431,122 @@ import { ActivityItem } from '../../../core/models/activity.model';
 
     .action-link-compact:hover {
       color: #11D48A;
+    }
+
+    /* Stake section stacks meta row and NGO card vertically */
+    .card-stake-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* NGO Card styles */
+    .ngo-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(135deg, rgba(17,212,138,0.05) 0%, rgba(17,212,138,0.02) 100%);
+      border: 1px solid rgba(17,212,138,0.18);
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+
+    .ngo-card-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .ngo-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid rgba(17,212,138,0.2);
+    }
+
+    .ngo-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .ngo-avatar-fallback {
+      background: rgba(17,212,138,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .ngo-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .ngo-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #0eb87a;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .ngo-name {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #111815;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ngo-category {
+      font-size: 0.7rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .ngo-card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .verified-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #0eb87a;
+      background: rgba(17,212,138,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .ngo-btn {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #0eb87a;
+      text-decoration: none;
+      padding: 5px 10px;
+      background: white;
+      border: 1px solid rgba(17,212,138,0.3);
+      border-radius: 6px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .ngo-btn:hover {
+      background: rgba(17,212,138,0.08);
+      border-color: #11D48A;
+      transform: translateX(2px);
     }
 
     /* Responsive layouts */

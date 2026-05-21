@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG } from '../../../core/config/api.config';
+import { NgoSummary } from '../../../core/models/claim.model';
 
 export interface MarketProposal {
   title: string;
@@ -43,6 +44,7 @@ export interface ProposalSummary {
   createdAt: string;
   updatedAt: string;
   user?: ProposalUserSummary;
+  ngo_candidates?: NgoSummary[];
 }
 
 export interface BuildApprovalResponse {
