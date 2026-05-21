@@ -43,6 +43,10 @@ interface MarketPositionRow {
               <span class="close-label">Closes in</span>
               <span class="close-pill">{{ formatCountdown(market.lock_at) }}</span>
               <span class="close-at">{{ market.lock_at | date:'MMM d, y, HH:mm:ss' }}</span>
+              <span class="divider-dot" *ngIf="market.stakers_count !== undefined">•</span>
+              <span class="stakers-pill" *ngIf="market.stakers_count !== undefined">
+                👥 {{ market.stakers_count }} Stakers
+              </span>
             </div>
             <h1>{{ market.title }}</h1>
             <p class="description">{{ market.description }}</p>
@@ -445,6 +449,22 @@ interface MarketPositionRow {
       color: #6B7280;
       font-weight: 700;
       font-size: 0.75rem;
+    }
+    .divider-dot {
+      color: #9CA3AF;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+    .stakers-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(14, 165, 233, 0.25);
+      background: rgba(14, 165, 233, 0.12);
+      color: #0369a1;
+      font-weight: 900;
+      font-size: 0.8rem;
     }
 
     h1 {

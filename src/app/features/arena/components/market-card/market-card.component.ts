@@ -51,6 +51,11 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
           <span class="volume-value">{{ (market.total_liquidity || 0) | number:'1.0-2' }} {{ market.asset_code || 'XLM' }}</span>
           <span class="volume-label">Volume</span>
         </div>
+        <div class="stakers" *ngIf="market.stakers_count !== undefined">
+          <span class="stakers-icon">👥</span>
+          <span class="stakers-value">{{ market.stakers_count }}</span>
+          <span class="stakers-label">Stakers</span>
+        </div>
         <div class="lock-date">
           <span class="lock-icon">🔒</span>
           <span class="lock-value">{{ lockDateFormatted }}</span>
@@ -158,8 +163,8 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
       display: inline-block;
     }
 
-    .status-open { color: #11D48A; }
-    .status-open .status-dot { background: #11D48A; box-shadow: 0 0 6px rgba(17, 212, 138, 0.5); }
+    .status-active { color: #11D48A; }
+    .status-active .status-dot { background: #11D48A; box-shadow: 0 0 6px rgba(17, 212, 138, 0.5); }
 
     .status-locked { color: #ef4444; }
     .status-locked .status-dot { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
@@ -275,6 +280,25 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
     }
 
     .volume-label {
+      color: #9ca3af;
+      font-weight: 500;
+    }
+
+    .stakers {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+    }
+
+    .stakers-icon { font-size: 0.85rem; }
+
+    .stakers-value {
+      font-weight: 700;
+      color: #111815;
+    }
+
+    .stakers-label {
       color: #9ca3af;
       font-weight: 500;
     }
