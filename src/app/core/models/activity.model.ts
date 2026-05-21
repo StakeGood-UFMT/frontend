@@ -1,3 +1,5 @@
+import { NgoSummary } from './claim.model';
+
 export interface ActivityItem {
   id: string;
   type: 'kyc' | 'gateway' | 'stake';
@@ -13,5 +15,6 @@ export interface ActivityItem {
     txHash?: string;
     payoutAmount?: number;
     status?: string;
+    ngo_voted?: NgoSummary | null;
   };
 }

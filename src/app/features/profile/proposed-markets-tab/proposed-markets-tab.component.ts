@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import {
   ProposalService,
   ProposalSummary,
@@ -9,7 +10,7 @@ import {
 @Component({
   selector: 'app-proposed-markets-tab',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="proposed-wrapper">
       <header class="list-header">
@@ -63,6 +64,24 @@ import {
 
             <div *ngIf="p.status === 'REJECTED' && p.rejectionReason" class="reason">
               Reason: {{ p.rejectionReason }}
+            </div>
+
+            <!-- NGO Candidates -->
+            <div *ngIf="p.ngo_candidates && p.ngo_candidates.length > 0" class="ngo-candidates-strip">
+              <span class="ngo-candidates-label">🤝 NGO Candidates</span>
+              <div class="ngo-candidates-list">
+                <a *ngFor="let ngo of p.ngo_candidates"
+                   [routerLink]="['/ngos', ngo.slug]"
+                   class="ngo-candidate-chip"
+                   [title]="ngo.name"
+                >
+                  <span *ngIf="ngo.logo_url" class="chip-avatar">
+                    <img [src]="ngo.logo_url" [alt]="ngo.name" />
+                  </span>
+                  <span class="chip-name">{{ ngo.name }}</span>
+                  <span *ngIf="ngo.verified" class="chip-verified">✓</span>
+                </a>
+              </div>
             </div>
           </div>
           <div class="proposal-actions">
@@ -163,6 +182,31 @@ import {
               class="reason"
             >
               Reason: {{ selectedProposal()!.rejectionReason }}
+            </div>
+
+            <!-- NGO Candidates in Modal -->
+            <div *ngIf="selectedProposal()!.ngo_candidates && selectedProposal()!.ngo_candidates!.length > 0" class="ngo-candidates-modal-block">
+              <div class="detail-label">🤝 NGO Candidates</div>
+              <div class="ngo-modal-cards">
+                <a *ngFor="let ngo of selectedProposal()!.ngo_candidates!"
+                   [routerLink]="['/ngos', ngo.slug]"
+                   (click)="closeDetails()"
+                   class="ngo-modal-card"
+                >
+                  <div class="ngo-modal-avatar" *ngIf="ngo.logo_url">
+                    <img [src]="ngo.logo_url" [alt]="ngo.name" />
+                  </div>
+                  <div class="ngo-modal-avatar ngo-modal-avatar-fallback" *ngIf="!ngo.logo_url">🌱</div>
+                  <div class="ngo-modal-info">
+                    <span class="ngo-modal-name">{{ ngo.name }}</span>
+                    <span *ngIf="ngo.category" class="ngo-modal-category">{{ ngo.category }}</span>
+                  </div>
+                  <div class="ngo-modal-right">
+                    <span *ngIf="ngo.verified" class="verified-badge">✓ Verified</span>
+                    <span class="ngo-modal-link-label">View →</span>
+                  </div>
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -642,6 +686,182 @@ import {
         font-size: 0.78rem;
         color: #6b7280;
         font-weight: 600;
+      }
+
+      /* NGO Candidates Strip (in proposal list row) */
+      .ngo-candidates-strip {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: rgba(17,212,138,0.04);
+        border: 1px solid rgba(17,212,138,0.1);
+        border-radius: 8px;
+        padding: 7px 10px;
+        margin-top: 6px;
+      }
+
+      .ngo-candidates-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #0eb87a;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .ngo-candidates-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .ngo-candidate-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 8px;
+        background: white;
+        border: 1px solid rgba(17,212,138,0.2);
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #374151;
+        text-decoration: none;
+        transition: all 0.15s;
+      }
+
+      .ngo-candidate-chip:hover {
+        background: rgba(17,212,138,0.07);
+        border-color: #11D48A;
+        color: #0eb87a;
+      }
+
+      .chip-avatar {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+
+      .chip-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .chip-name {
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .chip-verified {
+        color: #0eb87a;
+        font-size: 0.65rem;
+      }
+
+      /* NGO candidates block inside modal */
+      .ngo-candidates-modal-block {
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 14px;
+        padding: 12px;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .ngo-modal-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .ngo-modal-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        background: #f9fafb;
+        border: 1px solid rgba(17,212,138,0.12);
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.2s;
+      }
+
+      .ngo-modal-card:hover {
+        background: rgba(17,212,138,0.05);
+        border-color: rgba(17,212,138,0.25);
+        transform: translateX(4px);
+      }
+
+      .ngo-modal-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+        border: 1px solid rgba(17,212,138,0.15);
+      }
+
+      .ngo-modal-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .ngo-modal-avatar-fallback {
+        background: rgba(17,212,138,0.07);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+      }
+
+      .ngo-modal-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex-grow: 1;
+        min-width: 0;
+      }
+
+      .ngo-modal-name {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: #111815;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ngo-modal-category {
+        font-size: 0.72rem;
+        color: #6b7280;
+      }
+
+      .ngo-modal-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+
+      .verified-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #0eb87a;
+        background: rgba(17,212,138,0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+
+      .ngo-modal-link-label {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #0eb87a;
       }
     `,
   ],
