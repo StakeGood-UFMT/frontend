@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { MarketService } from '../../../../core/services/market.service';
+import { WalletService } from '../../../../core/services/wallet.service';
 import { MarketCategory } from '../../../../core/models/market.model';
 
 interface CategoryTab {
@@ -66,6 +67,85 @@ interface CategoryTab {
         <button class="nav-btn next" (click)="scroll('right')" aria-label="Scroll right">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
+      </div>
+
+      <!-- Status & Stake Filters -->
+      <div class="sub-filters-row">
+        <!-- Status Filter -->
+        <div class="filter-group">
+          <label class="filter-label">Status</label>
+          <div class="selector-pills">
+            <button 
+              (click)="setStatus('active')"
+              [class.active]="marketService.filters().status === 'active'"
+              class="pill-option active-pill"
+              id="status-filter-active"
+            >
+              🟢 Active
+            </button>
+            <button 
+              (click)="setStatus('locked')"
+              [class.active]="marketService.filters().status === 'locked'"
+              class="pill-option locked-pill"
+              id="status-filter-locked"
+            >
+              🔒 Locked
+            </button>
+            <button 
+              (click)="setStatus('resolved')"
+              [class.active]="marketService.filters().status === 'resolved'"
+              class="pill-option resolved-pill"
+              id="status-filter-resolved"
+            >
+              🏁 Resolved
+            </button>
+            <button 
+              (click)="setStatus('ALL')"
+              [class.active]="marketService.filters().status === 'ALL'"
+              class="pill-option all-pill"
+              id="status-filter-all"
+            >
+              🌐 All
+            </button>
+          </div>
+        </div>
+
+        <!-- Staked/Participation Filter -->
+        <div class="filter-group" [class.disabled]="!walletService.publicKey()">
+          <label class="filter-label">
+            My Stakes
+            <span *ngIf="!walletService.publicKey()" class="lock-hint" title="Connect wallet to filter by stakes">🔑 Connected wallet only</span>
+          </label>
+          <div class="selector-pills">
+            <button 
+              [disabled]="!walletService.publicKey()"
+              (click)="setStaked('ALL')"
+              [class.active]="marketService.filters().staked === 'ALL'"
+              class="pill-option"
+              id="staked-filter-all"
+            >
+              All
+            </button>
+            <button 
+              [disabled]="!walletService.publicKey()"
+              (click)="setStaked('STAKED')"
+              [class.active]="marketService.filters().staked === 'STAKED'"
+              class="pill-option staked-pill"
+              id="staked-filter-staked"
+            >
+              🎯 Staked
+            </button>
+            <button 
+              [disabled]="!walletService.publicKey()"
+              (click)="setStaked('NOT_STAKED')"
+              [class.active]="marketService.filters().staked === 'NOT_STAKED'"
+              class="pill-option not-staked-pill"
+              id="staked-filter-not-staked"
+            >
+              ⏳ Not Staked
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   `,
@@ -222,6 +302,109 @@ interface CategoryTab {
       letter-spacing: 0.2px;
     }
 
+    .sub-filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-group.disabled {
+      opacity: 0.65;
+    }
+
+    .filter-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .lock-hint {
+      font-size: 0.65rem;
+      font-weight: 500;
+      text-transform: none;
+      color: #9ca3af;
+      background: rgba(0, 0, 0, 0.04);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .selector-pills {
+      display: flex;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.03);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .pill-option {
+      background: transparent;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6b7280;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .pill-option:hover:not(:disabled) {
+      color: #111815;
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .pill-option:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .pill-option.active {
+      background: #FFFFFF;
+      color: #111815;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .pill-option.active.active-pill {
+      color: #11D48A;
+    }
+
+    .pill-option.active.locked-pill {
+      color: #ef4444;
+    }
+
+    .pill-option.active.resolved-pill {
+      color: #6b7280;
+    }
+
+    .pill-option.active.all-pill {
+      color: #6366f1;
+    }
+
+    .pill-option.active.staked-pill {
+      color: #3b82f6;
+    }
+
+    .pill-option.active.not-staked-pill {
+      color: #f59e0b;
+    }
+
     @media (max-width: 640px) {
       .search-input {
         padding: 12px 40px 12px 44px;
@@ -231,6 +414,28 @@ interface CategoryTab {
         padding: 8px 14px;
         font-size: 0.78rem;
       }
+      .sub-filters-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .filter-group {
+        width: 100%;
+      }
+      .selector-pills {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        text-align: center;
+      }
+      .filter-group:last-child .selector-pills {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .pill-option {
+        justify-content: center;
+        padding: 6px 4px;
+        font-size: 0.75rem;
+      }
     }
   `]
 })
@@ -238,6 +443,7 @@ export class MarketFiltersComponent implements OnInit, OnDestroy {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
   public marketService = inject(MarketService);
+  public walletService = inject(WalletService);
 
   searchControl = new FormControl('', { nonNullable: true });
 
@@ -283,6 +489,14 @@ export class MarketFiltersComponent implements OnInit, OnDestroy {
 
   selectCategory(cat: MarketCategory): void {
     this.marketService.setCategory(cat);
+  }
+
+  setStatus(status: 'ALL' | 'active' | 'locked' | 'resolved'): void {
+    this.marketService.setStatus(status);
+  }
+
+  setStaked(staked: 'ALL' | 'STAKED' | 'NOT_STAKED'): void {
+    this.marketService.setStaked(staked);
   }
 
   clearSearch(): void {

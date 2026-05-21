@@ -25,6 +25,7 @@ export interface Market {
   asset_code?: string;
   outcome?: 'YES' | 'NO' | null;
   user_position?: UserPosition;
+  stakers_count?: number;
   
   // FE-6 Additions
   resolution_rule: string;
