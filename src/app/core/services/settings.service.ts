@@ -9,10 +9,12 @@ import {
   TwoFactorEnableResponse,
   TwoFactorVerifyPayload,
 } from '../models/settings.model';
+import { WalletService } from './wallet.service';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
   private http = inject(HttpClient);
+  private walletService = inject(WalletService);
   private readonly base = API_CONFIG.baseUrl;
 
   // ── State ────────────────────────────────────────────────────────────────
@@ -116,14 +118,31 @@ export class SettingsService {
 
   // ── Wallets ──────────────────────────────────────────────────────────────
   async addWallet(address: string): Promise<void> {
-    const data = await lastValueFrom(
+    // 1. Obter o desafio (nonce)
+    const challenge = await lastValueFrom(
       this.http.post<any>(
-        `${this.base}${API_CONFIG.endpoints.users.meWallets}`,
+        `${this.base}${API_CONFIG.endpoints.users.meWallets}/challenge`,
         { address }
       )
     );
-    // Backend returns full settings on add
-    this.settings.set(this.mapSettings(data));
+
+    // 2. Assinar o nonce usando a chave secundária
+    const signature = await this.walletService.sign(challenge.nonce, address);
+
+    // 3. Enviar a assinatura para verificação e persistência
+    await lastValueFrom(
+      this.http.post<any>(
+        `${this.base}${API_CONFIG.endpoints.users.meWallets}/verify`,
+        {
+          address,
+          signature,
+          nonce: challenge.nonce,
+        }
+      )
+    );
+
+    // 4. Recarregar as configurações atualizadas
+    await this.fetchSettings();
   }
 
   async removeWallet(address: string): Promise<void> {
