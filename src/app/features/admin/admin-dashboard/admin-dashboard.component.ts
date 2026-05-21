@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { KeeperTTLComponent } from '../keeper-ttl/keeper-ttl.component';
 import { MarketAdminComponent } from '../market-admin/market-admin.component';
 import { ProposalModerationComponent } from '../proposal-moderation/proposal-moderation.component';
+import { AdminManagementComponent } from '../admin-management/admin-management.component';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -12,7 +13,8 @@ import { ProposalModerationComponent } from '../proposal-moderation/proposal-mod
     CommonModule,
     KeeperTTLComponent,
     MarketAdminComponent,
-    ProposalModerationComponent
+    ProposalModerationComponent,
+    AdminManagementComponent
   ],
   template: `
     <div class="dashboard-page">
@@ -42,6 +44,7 @@ import { ProposalModerationComponent } from '../proposal-moderation/proposal-mod
             <app-keeper-ttl *ngIf="activeTab() === 'keeper'"></app-keeper-ttl>
             <app-market-admin *ngIf="activeTab() === 'markets'"></app-market-admin>
             <app-proposal-moderation *ngIf="activeTab() === 'proposals'"></app-proposal-moderation>
+            <app-admin-management *ngIf="activeTab() === 'admins'"></app-admin-management>
           </div>
         </main>
       </div>
@@ -191,7 +194,8 @@ export class AdminDashboardComponent {
   tabs = [
     { id: 'proposals', label: 'Proposal Moderation', icon: '📝' },
     { id: 'markets', label: 'Market Admin', icon: '🏢' },
-    { id: 'keeper', label: 'Keeper TTL', icon: '⚙️' }
+    { id: 'keeper', label: 'Keeper TTL', icon: '⚙️' },
+    { id: 'admins', label: 'Manage Admins', icon: '🔑' }
   ];
 
   activeTab = signal('proposals');

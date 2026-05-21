@@ -52,4 +52,22 @@ export class AdminService {
       `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.onChainMarket(marketId)}`,
     );
   }
+
+  getAdmins(): Observable<any[]> {
+    return this.http.get<any[]>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.admins}`);
+  }
+
+  buildAddAdminXdr(wallet: string): Observable<{ xdr: string; txHash: string }> {
+    return this.http.post<{ xdr: string; txHash: string }>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.buildAddAdmin}`,
+      { wallet },
+    );
+  }
+
+  buildRemoveAdminXdr(wallet: string): Observable<{ xdr: string; txHash: string }> {
+    return this.http.post<{ xdr: string; txHash: string }>(
+      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.admin.buildRemoveAdmin}`,
+      { wallet },
+    );
+  }
 }
