@@ -28,7 +28,7 @@ export class WalletService {
       modules: [
         ...defaultModules(),
         new WalletConnectModule({
-          projectId: 'dd7ad1f9a9784ee8bc5f6a7a99074cba',
+          projectId: environment.walletConnectProjectId,
           metadata: {
             name: 'StakeGood',
             description: 'StakeGood - Impact Ledger & Prediction Market',
@@ -124,14 +124,15 @@ export class WalletService {
     }
   }
 
-  async sign(message: string): Promise<string> {
-    if (!this.publicKey()) {
+  async sign(message: string, address?: string): Promise<string> {
+    const targetAddress = address || this.publicKey();
+    if (!targetAddress) {
       throw new Error('No wallet connected');
     }
 
     try {
       const { signedMessage } = await StellarWalletsKit.signMessage(message, {
-        address: this.publicKey()!,
+        address: targetAddress,
         networkPassphrase: Networks[environment.stellar.network as keyof typeof Networks] || Networks.TESTNET
       });
       return signedMessage;
@@ -142,8 +143,12 @@ export class WalletService {
   }
 
   async signTransaction(xdr: string): Promise<{ signedTxXdr: string }> {
+    const activeKey = this.publicKey();
+    if (!activeKey) {
+      throw new Error('Carteira não conectada. Conecte antes de assinar a transação.');
+    }
     return await StellarWalletsKit.signTransaction(xdr, {
-      address: this.publicKey()!,
+      address: activeKey,
       networkPassphrase: Networks[environment.stellar.network as keyof typeof Networks] || Networks.TESTNET
     });
   }
