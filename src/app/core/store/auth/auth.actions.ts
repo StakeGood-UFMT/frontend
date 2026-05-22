@@ -3,7 +3,7 @@ import { AuthProfile } from '../../models/auth.model';
 
 export const loginSuccess = createAction(
   '[Auth] Login Success',
-  props<{ accessToken: string; refreshToken: string; profile: AuthProfile }>()
+  props<{ profile: AuthProfile }>()
 );
 
 export const logout = createAction('[Auth] Logout');

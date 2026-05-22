@@ -22,8 +22,6 @@ export interface AuthResponse {
 }
 
 export interface AuthState {
-  accessToken: string | null;
-  refreshToken: string | null;
   profile: AuthProfile | null;
   isLoggedIn: boolean;
 }
