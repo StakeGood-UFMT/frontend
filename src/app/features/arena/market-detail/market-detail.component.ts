@@ -839,6 +839,35 @@ interface MarketPositionRow {
     .result-title { color: #6B7280; font-weight: 800; font-size: 0.8rem; }
     .result-value { margin-top: 0.2rem; font-weight: 950; font-size: 1.15rem; color: #111827; }
     .result-sub { margin-top: 0.15rem; color: #6B7280; font-weight: 700; font-size: 0.8rem; }
+
+    @media (max-width: 768px) {
+      .market-detail-container {
+        padding: 1rem 0.75rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      .tabs {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .chart-section {
+        height: 280px;
+      }
+      .details-grid {
+        gap: 1.5rem;
+      }
+      .voting-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
   `]
 })
 export class MarketDetailComponent implements OnInit, OnDestroy {

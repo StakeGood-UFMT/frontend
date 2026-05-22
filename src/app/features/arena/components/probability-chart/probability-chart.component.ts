@@ -107,6 +107,28 @@ Chart.register(...registerables);
       position: relative;
       width: 100%;
     }
+    @media (max-width: 600px) {
+      .chart-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        margin-bottom: 0.5rem;
+      }
+      .chart-title {
+        text-align: center;
+        font-size: 0.95rem;
+      }
+      .view-selector, .range-selector {
+        width: 100%;
+        justify-content: center;
+      }
+      .view-selector button, .range-selector button {
+        flex: 1;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        text-align: center;
+      }
+    }
   `]
 })
 export class ProbabilityChartComponent implements AfterViewInit, OnChanges {

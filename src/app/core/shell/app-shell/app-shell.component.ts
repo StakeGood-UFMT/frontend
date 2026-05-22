@@ -45,6 +45,11 @@ import { map } from 'rxjs/operators';
     .main-content.no-padding {
       padding: 0;
     }
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 0.75rem;
+      }
+    }
   `]
 })
 export class AppShellComponent {
