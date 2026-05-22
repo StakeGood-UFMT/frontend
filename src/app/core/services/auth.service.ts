@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { API_CONFIG } from '../config/api.config';
 import { AuthResponse, AuthProfile } from '../models/auth.model';
-import { AuthStorageService } from './auth-storage.service';
 import { WalletService } from './wallet.service';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -17,23 +16,12 @@ import { environment } from '../../../environments/environment';
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private storage = inject(AuthStorageService);
   private wallet = inject(WalletService);
   private store = inject(Store);
-  private refreshTokenPromise: Promise<string> | null = null;
+  private refreshTokenPromise: Promise<void> | null = null;
 
   public isLoggedIn = toSignal(this.store.select(selectIsLoggedIn), { initialValue: false });
   public profile = toSignal(this.store.select(selectProfile), { initialValue: null as AuthProfile | null });
-  public accessToken = toSignal(this.store.select(selectAuthState).pipe(map(s => s.accessToken)), { initialValue: null as string | null });
-
-  public getAccessToken(): string | null {
-    const state = this.store.selectSignal(selectAuthState)();
-    if (state?.accessToken) {
-      return state.accessToken;
-    }
-    const stored = this.storage.load();
-    return stored?.accessToken || null;
-  }
 
   constructor() {}
 
@@ -68,13 +56,13 @@ export class AuthService {
           nonce: nonce,
           signature: signature,
           network: environment.stellar.network
-        })
+        }, {withCredentials: true})
       );
 
       // 5. Update State via NgRx Action
       this.store.dispatch(AuthActions.loginSuccess({
-        accessToken: response.jwt,
-        refreshToken: response.refresh_token ?? '',
+        // accessToken: response.jwt,
+        // refreshToken: response.refresh_token ?? '',
         profile: {
           public_key: response.wallet,
           role: response.user.role,
@@ -91,52 +79,52 @@ export class AuthService {
     }
   }
 
-  async refresh(): Promise<string> {
+  async refresh(): Promise<void> {
     if (this.refreshTokenPromise) {
       return this.refreshTokenPromise;
     }
+    
+     this.refreshTokenPromise = (async () => {
+    try {
+      // body vazio — cookie vai automaticamente
+      const response = await lastValueFrom(
+        this.http.post<AuthResponse>(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.refresh}`,
+          {},
+          { withCredentials: true }
+        )
+      );
 
-    const currentState = this.storage.load();
-    const refreshToken = currentState?.refreshToken;
-    if (!refreshToken) {
+      this.store.dispatch(AuthActions.loginSuccess({
+        profile: {
+          public_key: response.wallet,
+          role: response.user.role,
+          kyc_status: this.mapKycStatus(response.kyc_status),
+          terms_accepted: true
+        }
+      }));
+
+    } catch (error) {
+      console.error('[AuthService] Token refresh failed', error);
       this.logout();
-      throw new Error('No refresh token available');
+      throw error;
+    } finally {
+      this.refreshTokenPromise = null;
     }
+  })();
 
-    this.refreshTokenPromise = (async () => {
-      try {
-        const response = await lastValueFrom(
-          this.http.post<AuthResponse>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.refresh}`, {
-            refresh_token: refreshToken
-          })
-        );
+  return this.refreshTokenPromise;
+}
 
-        this.store.dispatch(AuthActions.loginSuccess({
-          accessToken: response.jwt,
-          refreshToken,
-          profile: {
-            public_key: response.wallet,
-            role: response.user.role,
-            kyc_status: this.mapKycStatus(response.kyc_status),
-            terms_accepted: true
-          }
-        }));
-        
-        return response.jwt;
-      } catch (error) {
-        console.error('[AuthService] Token refresh failed', error);
-        this.logout();
-        throw error;
-      } finally {
-        this.refreshTokenPromise = null;
-      }
-    })();
+logout() {
+  // avisa o backend para limpar o cookie
+  this.http.post(
+    `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.logout}`,
+    {},
+    { withCredentials: true }
+  ).subscribe();
 
-    return this.refreshTokenPromise;
-  }
-
-  logout() {
-    this.store.dispatch(AuthActions.logout());
-    this.wallet.disconnect();
-  }
+  this.store.dispatch(AuthActions.logout());
+  this.wallet.disconnect();
+}
 }

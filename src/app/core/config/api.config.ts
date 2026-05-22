@@ -20,6 +20,7 @@ export const API_CONFIG = {
       nonce: '/auth/nonce',
       verify: '/auth/verify',
       refresh: '/auth/refresh',
+      logout: '/auth/logout',
     },
     markets: {
       base: '/markets',
