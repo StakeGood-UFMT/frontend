@@ -717,7 +717,7 @@ import { RouterModule } from '@angular/router';
         min-height: auto;
       }
       .featured-chart-container {
-        min-height: 200px;
+        min-height: 280px;
       }
     }
 
@@ -747,6 +747,20 @@ import { RouterModule } from '@angular/router';
       .market-grid,
       .loading-grid {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .featured-card {
+        padding: 14px;
+        gap: 16px;
+      }
+      .featured-title {
+        font-size: 1.15rem;
+      }
+      .outcome-pill {
+        padding: 6px 12px;
+        font-size: 0.8rem;
       }
     }
   `]
