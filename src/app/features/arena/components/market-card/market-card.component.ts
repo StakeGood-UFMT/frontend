@@ -26,35 +26,29 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
       <!-- Description -->
       <p class="card-description">{{ market.description }}</p>
 
-      <!-- Probability Bar -->
-      <div class="probability-section">
-        <div class="prob-labels">
-          <span class="yes-label">
-            <span class="prob-dot yes-dot"></span>
-            YES {{ ((market.yes_price || 0) * 100) | number:'1.0-0' }}%
-          </span>
-          <span class="no-label">
-            NO {{ ((market.no_price || 0) * 100) | number:'1.0-0' }}%
-            <span class="prob-dot no-dot"></span>
-          </span>
+      <!-- Polymarket Action Buttons -->
+      <div class="card-actions">
+        <div class="outcome-btn yes-btn">
+          <span class="outcome-label">YES</span>
+          <span class="outcome-value">{{ ((market.yes_price || 0) * 100) | number:'1.0-0' }}%</span>
         </div>
-        <div class="probability-bar">
-          <div class="yes-bar" [style.width.%]="(market.yes_price || 0) * 100"></div>
-          <div class="no-bar" [style.width.%]="(market.no_price || 0) * 100"></div>
+        <div class="outcome-btn no-btn">
+          <span class="outcome-label">NO</span>
+          <span class="outcome-value">{{ ((market.no_price || 0) * 100) | number:'1.0-0' }}%</span>
         </div>
       </div>
 
-      <!-- Footer -->
+      <!-- Footer Metrics -->
       <div class="card-footer">
-        <div class="volume">
-          <span class="volume-icon">📊</span>
-          <span class="volume-value">{{ (market.total_liquidity || 0) | number:'1.0-2' }} {{ market.asset_code || 'XLM' }}</span>
-          <span class="volume-label">Volume</span>
-        </div>
-        <div class="stakers" *ngIf="market.stakers_count !== undefined">
-          <span class="stakers-icon">👥</span>
-          <span class="stakers-value">{{ market.stakers_count }}</span>
-          <span class="stakers-label">Stakers</span>
+        <div class="footer-metrics">
+          <div class="metric">
+            <span class="metric-icon">📊</span>
+            <span class="metric-value">{{ (market.total_liquidity || 0) | number:'1.0-2' }} {{ market.asset_code || 'XLM' }}</span>
+          </div>
+          <div class="metric" *ngIf="market.stakers_count !== undefined">
+            <span class="metric-icon">👥</span>
+            <span class="metric-value">{{ market.stakers_count }} stakers</span>
+          </div>
         </div>
         <div class="lock-date">
           <span class="lock-icon">🔒</span>
@@ -69,39 +63,24 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
       flex-direction: column;
       flex: 1; /* Fill available height in grid item */
       height: 100%;
-      gap: 14px;
-      padding: 24px;
+      gap: 16px;
+      padding: 20px;
       background: #FFFFFF;
       border-radius: 16px;
-      border: 1px solid rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(0, 0, 0, 0.05);
       text-decoration: none;
       color: inherit;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       position: relative;
       overflow: hidden;
-    }
-
-    .market-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #11D48A, #0EA5E9);
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     }
 
     .market-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(17, 212, 138, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 12px 30px rgba(17, 212, 138, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
       border-color: rgba(17, 212, 138, 0.2);
-    }
-
-    .market-card:hover::before {
-      opacity: 1;
     }
 
     .card-header {
@@ -111,10 +90,10 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
     }
 
     .category-badge {
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.5px;
       padding: 4px 10px;
       border-radius: 20px;
       background: rgba(17, 212, 138, 0.08);
@@ -149,16 +128,16 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
     .status-badge {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       font-size: 0.7rem;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     .status-dot {
-      width: 7px;
-      height: 7px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       display: inline-block;
     }
@@ -167,7 +146,7 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
     .status-active .status-dot { background: #11D48A; box-shadow: 0 0 6px rgba(17, 212, 138, 0.5); }
 
     .status-locked { color: #ef4444; }
-    .status-locked .status-dot { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); }
+    .status-locked .status-dot { background: #ef4444; }
 
     .status-resolved { color: #6b7280; }
     .status-resolved .status-dot { background: #6b7280; }
@@ -185,6 +164,7 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      height: 2.8em; /* standard two line height */
     }
 
     .card-description {
@@ -193,132 +173,107 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
       line-height: 1.5;
       margin: 0;
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      flex: 1; /* Pushes the next elements to the bottom */
+      flex: 1;
     }
 
-    .probability-section {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    /* ---- YES / NO Action Buttons ---- */
+    .card-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
       margin-top: 4px;
     }
 
-    .prob-labels {
+    .outcome-btn {
       display: flex;
       justify-content: space-between;
-      font-size: 0.78rem;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
       font-weight: 700;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
     }
 
-    .yes-label {
-      color: #11D48A;
-      display: flex;
-      align-items: center;
-      gap: 5px;
+    .yes-btn {
+      background: rgba(17, 212, 138, 0.08);
+      color: #0d9b66;
     }
 
-    .no-label {
+    .yes-btn:hover {
+      background: rgba(17, 212, 138, 0.16);
+      transform: scale(1.02);
+      border-color: rgba(17, 212, 138, 0.3);
+    }
+
+    .no-btn {
+      background: rgba(204, 90, 55, 0.08);
       color: #CC5A37;
-      display: flex;
-      align-items: center;
-      gap: 5px;
     }
 
-    .prob-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      display: inline-block;
+    .no-btn:hover {
+      background: rgba(204, 90, 55, 0.16);
+      transform: scale(1.02);
+      border-color: rgba(204, 90, 55, 0.3);
     }
 
-    .yes-dot { background: #11D48A; }
-    .no-dot { background: #CC5A37; }
-
-    .probability-bar {
-      display: flex;
-      height: 8px;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #f3f4f6;
+    .outcome-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.8;
     }
 
-    .yes-bar {
-      background: linear-gradient(90deg, #11D48A, #0fd89a);
-      border-radius: 8px 0 0 8px;
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    .outcome-value {
+      font-size: 0.9rem;
+      font-weight: 800;
     }
 
-    .no-bar {
-      background: linear-gradient(90deg, #d96a4c, #CC5A37);
-      border-radius: 0 8px 8px 0;
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
+    /* ---- Card Footer ---- */
     .card-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding-top: 12px;
       border-top: 1px solid rgba(0, 0, 0, 0.04);
+      font-size: 0.78rem;
+      color: #9ca3af;
     }
 
-    .volume {
+    .footer-metrics {
+      display: flex;
+      gap: 12px;
+    }
+
+    .metric {
       display: flex;
       align-items: center;
-      gap: 5px;
-      font-size: 0.78rem;
+      gap: 4px;
     }
 
-    .volume-icon { font-size: 0.85rem; }
-
-    .volume-value {
-      font-weight: 700;
-      color: #111815;
-    }
-
-    .volume-label {
-      color: #9ca3af;
-      font-weight: 500;
-    }
-
-    .stakers {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.78rem;
-    }
-
-    .stakers-icon { font-size: 0.85rem; }
-
-    .stakers-value {
-      font-weight: 700;
-      color: #111815;
-    }
-
-    .stakers-label {
-      color: #9ca3af;
-      font-weight: 500;
+    .metric-value {
+      font-weight: 600;
+      color: #4b5563;
     }
 
     .lock-date {
       display: flex;
       align-items: center;
-      gap: 5px;
-      font-size: 0.75rem;
-      color: #9ca3af;
+      gap: 4px;
     }
 
-    .lock-icon { font-size: 0.75rem; }
-
-    .lock-value { font-weight: 500; }
+    .lock-value {
+      font-weight: 500;
+    }
 
     @media (max-width: 480px) {
       .market-card {
-        padding: 18px;
-        gap: 10px;
+        padding: 16px;
+        gap: 12px;
       }
       .card-title {
         font-size: 0.95rem;

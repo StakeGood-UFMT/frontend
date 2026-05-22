@@ -1,15 +1,18 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MarketService } from '../../core/services/market.service';
+import { AuthService } from '../../core/services/auth.service';
 import { MarketCardComponent } from './components/market-card/market-card.component';
 import { MarketFiltersComponent } from './components/market-filters/market-filters.component';
-
+import { ProbabilityChartComponent } from './components/probability-chart/probability-chart.component';
+import { derivedStatus, MarketHistoryPoint, Market } from '../../core/models/market.model';
+import { lastValueFrom } from 'rxjs';
 import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-arena',
   standalone: true,
-  imports: [CommonModule, MarketCardComponent, MarketFiltersComponent, RouterModule],
+  imports: [CommonModule, MarketCardComponent, MarketFiltersComponent, ProbabilityChartComponent, RouterModule],
   template: `
     <div class="arena-page" id="arena-page">
       <!-- Page Header -->
@@ -25,7 +28,7 @@ import { RouterModule } from '@angular/router';
         </div>
         
         <div class="header-actions">
-          <a routerLink="/proposals/new" class="propose-btn" id="propose-market-btn">
+          <a *ngIf="isLoggedIn()" routerLink="/proposals/new" class="propose-btn" id="propose-market-btn">
             ✨ Propose Market
           </a>
           <div class="header-stats" *ngIf="!marketService.loading() && !marketService.error()">
@@ -37,64 +40,146 @@ import { RouterModule } from '@angular/router';
         </div>
       </div>
 
-      <!-- Filters -->
-      <app-market-filters></app-market-filters>
-
-      <!-- Loading State -->
-      <div class="state-container" *ngIf="marketService.loading()">
-        <div class="loading-grid">
-          <div class="skeleton-card" *ngFor="let _ of skeletonCards">
-            <div class="skel-header">
-              <div class="skel-badge"></div>
-              <div class="skel-status"></div>
+      <!-- Hero Grid Section -->
+      <div class="hero-grid" *ngIf="!marketService.loading() && !marketService.error() && featuredMarket()">
+        <!-- Left: Featured Market with Chart -->
+        <div class="featured-card">
+          <div class="featured-info">
+            <div class="featured-tag">FEATURED MARKET</div>
+            <a [routerLink]="['/arena', featuredMarket()?.id]" class="featured-title-link">
+              <h2 class="featured-title">{{ featuredMarket()?.title }}</h2>
+            </a>
+            <p class="featured-description">{{ featuredMarket()?.description }}</p>
+            
+            <div class="featured-outcomes" *ngIf="featuredMarket()">
+              <div class="outcome-pill yes-pill">
+                <span class="outcome-name">YES</span>
+                <span class="outcome-value">{{ ((featuredMarket()?.yes_price || 0) * 100) | number:'1.0-0' }}%</span>
+              </div>
+              <div class="outcome-pill no-pill">
+                <span class="outcome-name">NO</span>
+                <span class="outcome-value">{{ ((featuredMarket()?.no_price || 0) * 100) | number:'1.0-0' }}%</span>
+              </div>
             </div>
-            <div class="skel-title"></div>
-            <div class="skel-desc"></div>
-            <div class="skel-bar"></div>
-            <div class="skel-footer">
-              <div class="skel-volume"></div>
-              <div class="skel-date"></div>
+          </div>
+          
+          <div class="featured-chart-container">
+            <app-probability-chart
+              [history]="featuredMarketHistory()"
+              [selectedRange]="featuredRange()"
+              [assetCode]="featuredMarket()?.asset_code || 'XLM'"
+              (rangeChange)="onFeaturedRangeChange($event)"
+            ></app-probability-chart>
+          </div>
+        </div>
+
+        <!-- Right: Sidebar Widgets -->
+        <div class="sidebar-widgets">
+          <!-- Latest Markets Widget -->
+          <div class="widget-panel">
+            <div class="widget-header">
+              <span class="widget-icon">⚡</span>
+              <h3 class="widget-title">Latest Markets</h3>
+            </div>
+            <div class="widget-list">
+              <a *ngFor="let market of latestMarkets()" [routerLink]="['/arena', market.id]" class="widget-item">
+                <span class="widget-item-title">{{ market.title }}</span>
+                <div class="widget-item-meta">
+                  <span class="widget-item-badge">{{ market.category }}</span>
+                  <span class="widget-item-price" [class.yes]="(market.yes_price || 0) >= 0.5" [class.no]="(market.yes_price || 0) < 0.5">
+                    YES {{ ((market.yes_price || 0) * 100) | number:'1.0-0' }}%
+                  </span>
+                </div>
+              </a>
+              <div class="widget-empty" *ngIf="latestMarkets().length === 0">
+                No recent markets.
+              </div>
+            </div>
+          </div>
+
+          <!-- Trending Markets Widget -->
+          <div class="widget-panel">
+            <div class="widget-header">
+              <span class="widget-icon">🔥</span>
+              <h3 class="widget-title">Trending Markets</h3>
+            </div>
+            <div class="widget-list">
+              <a *ngFor="let market of trendingMarkets()" [routerLink]="['/arena', market.id]" class="widget-item">
+                <span class="widget-item-title">{{ market.title }}</span>
+                <div class="widget-item-meta">
+                  <span class="widget-item-vol">📊 {{ (market.total_liquidity || 0) | number:'1.0-1' }} {{ market.asset_code || 'XLM' }}</span>
+                  <span class="widget-item-stakers">👥 {{ market.stakers_count || 0 }} stakers</span>
+                </div>
+              </a>
+              <div class="widget-empty" *ngIf="trendingMarkets().length === 0">
+                No trending markets.
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Error State -->
-      <div class="state-container" *ngIf="marketService.error() && !marketService.loading()" id="arena-error-state">
-        <div class="state-card error-state">
-          <div class="state-icon">⚠️</div>
-          <h2 class="state-title">Something went wrong</h2>
-          <p class="state-message">{{ marketService.error() }}</p>
-          <button class="retry-btn" (click)="retry()" id="arena-retry-btn">
-            <span class="retry-icon">↻</span>
-            Try Again
-          </button>
-        </div>
-      </div>
+      <!-- Filters & All Markets -->
+      <div class="all-markets-section">
+        <h2 class="section-title">All Markets</h2>
+        <app-market-filters></app-market-filters>
 
-      <!-- Empty State -->
-      <div class="state-container" *ngIf="marketService.isEmpty() && !marketService.loading()" id="arena-empty-state">
-        <div class="state-card empty-state">
-          <div class="state-icon">🔍</div>
-          <h2 class="state-title">No markets found</h2>
-          <p class="state-message">Try adjusting your search or filters to find what you're looking for.</p>
-          <button class="clear-filters-btn" (click)="clearFilters()" id="arena-clear-filters-btn">
-            Clear Filters
-          </button>
+        <!-- Loading State -->
+        <div class="state-container" *ngIf="marketService.loading()">
+          <div class="loading-grid">
+            <div class="skeleton-card" *ngFor="let _ of skeletonCards">
+              <div class="skel-header">
+                <div class="skel-badge"></div>
+                <div class="skel-status"></div>
+              </div>
+              <div class="skel-title"></div>
+              <div class="skel-desc"></div>
+              <div class="skel-bar"></div>
+              <div class="skel-footer">
+                <div class="skel-volume"></div>
+                <div class="skel-date"></div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Market Grid -->
-      <div
-        class="market-grid"
-        *ngIf="!marketService.loading() && !marketService.error() && !marketService.isEmpty()"
-        id="market-grid"
-      >
-        <app-market-card
-          *ngFor="let market of marketService.filteredMarkets(); trackBy: trackByMarket"
-          [market]="market"
-          class="grid-item"
-        ></app-market-card>
+        <!-- Error State -->
+        <div class="state-container" *ngIf="marketService.error() && !marketService.loading()" id="arena-error-state">
+          <div class="state-card error-state">
+            <div class="state-icon">⚠️</div>
+            <h2 class="state-title">Something went wrong</h2>
+            <p class="state-message">{{ marketService.error() }}</p>
+            <button class="retry-btn" (click)="retry()" id="arena-retry-btn">
+              <span class="retry-icon">↻</span>
+              Try Again
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="state-container" *ngIf="marketService.isEmpty() && !marketService.loading()" id="arena-empty-state">
+          <div class="state-card empty-state">
+            <div class="state-icon">🔍</div>
+            <h2 class="state-title">No markets found</h2>
+            <p class="state-message">Try adjusting your search or filters to find what you're looking for.</p>
+            <button class="clear-filters-btn" (click)="clearFilters()" id="arena-clear-filters-btn">
+              Clear Filters
+            </button>
+          </div>
+        </div>
+
+        <!-- Market Grid -->
+        <div
+          class="market-grid"
+          *ngIf="!marketService.loading() && !marketService.error() && !marketService.isEmpty()"
+          id="market-grid"
+        >
+          <app-market-card
+            *ngFor="let market of marketService.filteredMarkets(); trackBy: trackByMarket"
+            [market]="market"
+            class="grid-item"
+          ></app-market-card>
+        </div>
       </div>
     </div>
   `,
@@ -196,6 +281,239 @@ import { RouterModule } from '@angular/router';
       color: #6b7280;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+
+    /* ---- Hero Grid ---- */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin-bottom: 8px;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .featured-card {
+      background: #FFFFFF;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 18px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1.2fr 1.8fr;
+      gap: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      min-height: 320px;
+    }
+
+    .featured-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .featured-tag {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: #6366f1;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .featured-title-link {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .featured-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #111815;
+      margin: 0;
+      line-height: 1.3;
+      transition: color 0.2s ease;
+    }
+
+    .featured-title-link:hover .featured-title {
+      color: #11D48A;
+    }
+
+    .featured-description {
+      font-size: 0.85rem;
+      color: #6b7280;
+      line-height: 1.5;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .featured-outcomes {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .outcome-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .yes-pill {
+      background: rgba(17, 212, 138, 0.08);
+      color: #0d9b66;
+    }
+
+    .no-pill {
+      background: rgba(204, 90, 55, 0.08);
+      color: #CC5A37;
+    }
+
+    .outcome-name {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.8;
+    }
+
+    .featured-chart-container {
+      position: relative;
+      height: 100%;
+      min-height: 250px;
+    }
+
+    /* ---- Sidebar Widgets ---- */
+    .sidebar-widgets {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .widget-panel {
+      background: #FFFFFF;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .widget-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+      padding-bottom: 8px;
+    }
+
+    .widget-icon {
+      font-size: 1.1rem;
+    }
+
+    .widget-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #111815;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .widget-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .widget-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-decoration: none;
+      color: inherit;
+      padding: 6px 8px;
+      border-radius: 8px;
+      transition: background 0.2s ease;
+    }
+
+    .widget-item:hover {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .widget-item-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #111815;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .widget-item-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+    }
+
+    .widget-item-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.04);
+      color: #6b7280;
+    }
+
+    .widget-item-price {
+      font-weight: 800;
+    }
+
+    .widget-item-price.yes {
+      color: #0d9b66;
+    }
+
+    .widget-item-price.no {
+      color: #CC5A37;
+    }
+
+    .widget-item-vol {
+      color: #6b7280;
+      font-weight: 600;
+    }
+
+    .widget-item-stakers {
+      color: #9ca3af;
+      font-weight: 500;
+    }
+
+    .widget-empty {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    /* ---- All Markets Section ---- */
+    .all-markets-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #111815;
+      margin: 10px 0 0;
     }
 
     /* ---- Market Grid ---- */
@@ -390,6 +708,19 @@ import { RouterModule } from '@angular/router';
       border-color: #11D48A;
     }
 
+    @media (max-width: 992px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+      .featured-card {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+      .featured-chart-container {
+        min-height: 200px;
+      }
+    }
+
     @media (max-width: 768px) {
       .arena-page {
         padding: 4px 0;
@@ -422,8 +753,70 @@ import { RouterModule } from '@angular/router';
 })
 export class ArenaComponent implements OnInit {
   public marketService = inject(MarketService);
+  private auth = inject(AuthService);
+  public isLoggedIn = this.auth.isLoggedIn;
 
   skeletonCards = Array(6);
+
+  // Featured Market Signals
+  public featuredRange = signal<string>('1D');
+  public featuredMarketHistory = signal<MarketHistoryPoint[]>([]);
+  public featuredHistoryLoading = signal<boolean>(false);
+
+  // Computes the featured market based on highest liquidity
+  public featuredMarket = computed(() => {
+    const active = this.marketService.markets().filter(m => derivedStatus(m) === 'active');
+    if (active.length === 0) return null;
+    return active.reduce((max, m) => {
+      const maxLiq = parseFloat(max.total_liquidity) || 0;
+      const mLiq = parseFloat(m.total_liquidity) || 0;
+      return mLiq > maxLiq ? m : max;
+    }, active[0]);
+  });
+
+  // Computes latest active markets (excluding featured market)
+  public latestMarkets = computed(() => {
+    const featured = this.featuredMarket();
+    const active = this.marketService.markets()
+      .filter(m => derivedStatus(m) === 'active' && m.id !== featured?.id);
+    return active
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 3);
+  });
+
+  // Computes trending active markets based on stakers count or volume
+  public trendingMarkets = computed(() => {
+    const featured = this.featuredMarket();
+    const active = this.marketService.markets()
+      .filter(m => derivedStatus(m) === 'active' && m.id !== featured?.id);
+    return active
+      .sort((a, b) => (b.stakers_count || 0) - (a.stakers_count || 0))
+      .slice(0, 3);
+  });
+
+  constructor() {
+    // Reactively fetch featured market history
+    effect(async () => {
+      const market = this.featuredMarket();
+      const range = this.featuredRange();
+      if (market) {
+        this.featuredHistoryLoading.set(true);
+        try {
+          const history = await lastValueFrom(
+            this.marketService.getMarketHistory(market.id, range)
+          );
+          this.featuredMarketHistory.set(history || []);
+        } catch (e) {
+          console.error('[ArenaComponent] Failed to fetch featured market history', e);
+          this.featuredMarketHistory.set([]);
+        } finally {
+          this.featuredHistoryLoading.set(false);
+        }
+      } else {
+        this.featuredMarketHistory.set([]);
+      }
+    }, { allowSignalWrites: true });
+  }
 
   ngOnInit(): void {
     this.marketService.fetchMarkets();
@@ -437,7 +830,11 @@ export class ArenaComponent implements OnInit {
     this.marketService.clearFilters();
   }
 
-  trackByMarket(_: number, market: any): string {
+  trackByMarket(_: number, market: Market): string {
     return market.id;
+  }
+
+  onFeaturedRangeChange(range: string): void {
+    this.featuredRange.set(range);
   }
 }

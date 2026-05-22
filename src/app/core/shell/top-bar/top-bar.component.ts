@@ -48,17 +48,9 @@ import { selectIsAdmin } from '../../store/auth/auth.selectors';
                   <span class="icon">🏆</span>
                   <span class="label">Arena</span>
                 </a>
-                <a routerLink="/impact/ledger" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
-                  <span class="icon">📊</span>
-                  <span class="label">Impact Ledger</span>
-                </a>
                 <a routerLink="/ngos" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
                   <span class="icon">🌍</span>
                   <span class="label">NGO Directory</span>
-                </a>
-                <a *ngIf="isLoggedIn()" routerLink="/voting" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
-                  <span class="icon">🗳️</span>
-                  <span class="label">Voting</span>
                 </a>
                 <a *ngIf="isLoggedIn()" routerLink="/profile" (click)="toggleMenu()" routerLinkActive="active" class="drawer-item">
                   <span class="icon">👤</span>

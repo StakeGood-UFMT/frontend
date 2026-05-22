@@ -32,20 +32,22 @@ import { WalletService } from '../../core/services/wallet.service';
           </div>
           <div class="details">
             <span class="addr-label">Connected Wallet</span>
-            <span class="address">{{ shortAddress() }}</span>
+            <span class="address" [title]="auth.profile()?.public_key">{{ shortAddress() }}</span>
           </div>
+          <button (click)="logout()" class="logout-icon-btn" title="Sign Out">
+            <svg class="logout-svg" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
         </div>
-        
-        <button (click)="logout()" class="logout-btn" title="Sign Out">
-          <span class="logout-icon">🚪</span>
-          Logout
-        </button>
       </div>
 
       <!-- Powered by Stellar Badge -->
       <div *ngIf="isLoggedIn()" class="stellar-badge-small">
         <span class="badge-dot"></span>
-        Powered by Stellar Network
+        Powered by Stellar
       </div>
 
       <!-- ERROR MESSAGE -->
@@ -102,81 +104,84 @@ import { WalletService } from '../../core/services/wallet.service';
     /* Profile Card Styles */
     .profile-card {
       background: #FFFFFF;
-      border-radius: 20px;
-      padding: 16px;
+      border-radius: 12px;
+      padding: 10px 12px;
       border: 1px solid rgba(0, 0, 0, 0.05);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
     }
 
     .user-info {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .avatar {
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
       background: #f0fdf4;
-      border-radius: 12px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(17, 212, 138, 0.2);
+      border: 1px solid rgba(17, 212, 138, 0.15);
+      flex-shrink: 0;
     }
 
     .avatar-icon {
-      font-size: 20px;
+      font-size: 16px;
     }
 
     .details {
       display: flex;
       flex-direction: column;
+      flex-grow: 1;
+      min-width: 0;
     }
 
     .addr-label {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: #6B7280;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
       font-weight: 600;
+      line-height: 1.2;
     }
 
     .address {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       color: #111815;
       font-weight: 700;
       font-family: 'Inter', sans-serif;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    /* Logout Button Styles */
-    .logout-btn {
-      width: 100%;
+    /* Logout Icon Button Styles */
+    .logout-icon-btn {
       background: #FEF2F2;
       color: #CC5A37;
       border: none;
-      padding: 10px;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.85rem;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
       transition: all 0.2s;
+      flex-shrink: 0;
     }
 
-    .logout-btn:hover {
+    .logout-icon-btn:hover {
       background: #FEE2E2;
       color: #B91C1C;
     }
 
     .logout-icon {
-      font-size: 16px;
+      font-size: 14px;
     }
 
     /* Loader */
@@ -214,21 +219,19 @@ import { WalletService } from '../../core/services/wallet.service';
     .stellar-badge-small {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(17, 212, 138, 0.08);
-      color: #0a8a57;
-      padding: 6px 14px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      width: fit-content;
-      margin: 4px auto 0;
+      justify-content: center;
+      gap: 6px;
+      color: #94a3b8;
+      font-size: 0.65rem;
+      font-weight: 500;
+      width: 100%;
+      margin-top: 4px;
+      text-align: center;
     }
 
     .badge-dot {
-      width: 7px;
-      height: 7px;
+      width: 5px;
+      height: 5px;
       background: #11D48A;
       border-radius: 50%;
       animation: pulse 2s ease-in-out infinite;
@@ -241,7 +244,7 @@ import { WalletService } from '../../core/services/wallet.service';
   `]
 })
 export class WalletConnect {
-  private auth = inject(AuthService);
+  public auth = inject(AuthService);
   private wallet = inject(WalletService);
 
   public isLoggedIn = this.auth.isLoggedIn;

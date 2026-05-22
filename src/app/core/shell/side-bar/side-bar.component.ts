@@ -29,21 +29,9 @@ import { UserNotificationsService } from '../../services/user-notifications.serv
             </a>
           </li>
           <li>
-            <a routerLink="/impact/ledger" routerLinkActive="active" class="nav-item">
-              <span class="icon">📊</span>
-              <span class="label">Impact Ledger</span>
-            </a>
-          </li>
-          <li>
             <a routerLink="/ngos" routerLinkActive="active" class="nav-item">
               <span class="icon">🌍</span>
               <span class="label">NGO Directory</span>
-            </a>
-          </li>
-          <li *ngIf="isLoggedIn()">
-            <a routerLink="/voting" routerLinkActive="active" class="nav-item">
-              <span class="icon">🗳️</span>
-              <span class="label">Voting</span>
             </a>
           </li>
           <li *ngIf="isLoggedIn()">
@@ -109,12 +97,12 @@ import { UserNotificationsService } from '../../services/user-notifications.serv
       padding: 0;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.25rem;
     }
     .nav-item {
       display: flex;
       align-items: center;
-      padding: 0.85rem 1rem;
+      padding: 0.65rem 1rem;
       text-decoration: none;
       color: #4b5563;
       border-radius: 12px;
@@ -147,13 +135,13 @@ import { UserNotificationsService } from '../../services/user-notifications.serv
       text-align: center;
     }
     .sidebar-footer {
-      padding-top: 2rem;
+      padding-top: 1.5rem;
       border-top: 1px solid rgba(0,0,0,0.05);
     }
     .nav-divider {
       height: 1px;
       background: rgba(0,0,0,0.05);
-      margin: 1.5rem 1rem 1rem;
+      margin: 1rem 1rem 0.5rem;
     }
     .nav-section-title {
       font-size: 0.7rem;

@@ -6,6 +6,7 @@ import { API_CONFIG } from '../config/api.config';
 import { Market, MarketListResponse, MarketCategory, MarketHistoryPoint, MarketHistoryResponse, MarketResults, derivedStatus } from '../models/market.model';
 import { WalletService } from './wallet.service';
 import { ClaimService } from '../../features/profile/claims-tab/claim.service';
+import { AuthService } from './auth.service';
 
 export interface MarketFiltersState {
   search: string;
@@ -21,6 +22,7 @@ export class MarketService {
   private http = inject(HttpClient);
   private walletService = inject(WalletService);
   private claimService = inject(ClaimService);
+  private authService = inject(AuthService);
   private readonly baseUrl = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.markets.base}`;
 
   // State signals
@@ -44,9 +46,14 @@ export class MarketService {
 
   constructor() {
     effect(() => {
-      // Reactively fetch user's staked markets whenever public key changes
+      // Reactively fetch user's staked markets whenever public key changes and user is logged in
       const pubKey = this.walletService.publicKey();
-      this.fetchStakedMarkets();
+      const isLoggedIn = this.authService.isLoggedIn();
+      if (pubKey && isLoggedIn) {
+        this.fetchStakedMarkets();
+      } else {
+        this._stakedMarketIds.set(new Set());
+      }
     }, { allowSignalWrites: true });
   }
 
@@ -139,7 +146,8 @@ export class MarketService {
 
   async fetchStakedMarkets(): Promise<void> {
     const pubKey = this.walletService.publicKey();
-    if (!pubKey) {
+    const isLoggedIn = this.authService.isLoggedIn();
+    if (!pubKey || !isLoggedIn) {
       this._stakedMarketIds.set(new Set());
       return;
     }
