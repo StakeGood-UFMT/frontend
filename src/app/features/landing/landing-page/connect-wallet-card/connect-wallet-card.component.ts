@@ -79,6 +79,11 @@ import { WalletService } from '../../../../core/services/wallet.service';
                 🏆 Go to Arena
               </a>
               <button (click)="logout()" class="logout-link">
+                <svg class="logout-svg" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
                 Disconnect wallet
               </button>
             </div>
@@ -237,9 +242,13 @@ import { WalletService } from '../../../../core/services/wallet.service';
       color: rgba(255,255,255,0.3);
       font-size: 0.8rem;
       cursor: pointer;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
       transition: color 0.2s;
       font-family: 'Inter', sans-serif;
+      margin: 0 auto;
     }
     .logout-link:hover { color: rgba(255,255,255,0.6); }
 
