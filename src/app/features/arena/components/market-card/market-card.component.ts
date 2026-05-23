@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Market, derivedStatus, MarketStatus } from '../../../../core/models/market.model';
@@ -35,6 +35,17 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
         <div class="outcome-btn no-btn">
           <span class="outcome-label">NO</span>
           <span class="outcome-value">{{ ((market.no_price || 0) * 100) | number:'1.0-0' }}%</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar & Timer -->
+      <div class="time-progress-container" *ngIf="showProgressBar">
+        <div class="time-progress-bar">
+          <div class="progress-fill" [style.width.%]="progressPercentage" [style.background-color]="progressBarColor"></div>
+        </div>
+        <div class="time-remaining-label" [class.urgent]="isUrgent">
+          <span>⏰</span>
+          <span>{{ timeRemainingText }}</span>
         </div>
       </div>
 
@@ -233,6 +244,48 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
       font-weight: 800;
     }
 
+    /* ---- Time Progress Bar ---- */
+    .time-progress-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .time-progress-bar {
+      height: 6px;
+      width: 100%;
+      background: #F3F4F6;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s linear, background-color 1s linear;
+    }
+
+    .time-remaining-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #4b5563;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .time-remaining-label.urgent {
+      color: #ef4444;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.75; }
+      to { opacity: 1; }
+    }
+
     /* ---- Card Footer ---- */
     .card-footer {
       display: flex;
@@ -281,8 +334,15 @@ import { Market, derivedStatus, MarketStatus } from '../../../../core/models/mar
     }
   `]
 })
-export class MarketCardComponent {
+export class MarketCardComponent implements OnInit, OnDestroy {
   @Input({ required: true }) market!: Market;
+
+  timerId: any;
+  progressPercentage = 100;
+  timeRemainingText = '';
+  progressBarColor = 'hsl(140, 80%, 45%)';
+  showProgressBar = false;
+  isUrgent = false;
 
   get displayStatus(): MarketStatus {
     return derivedStatus(this.market);
@@ -310,4 +370,90 @@ export class MarketCardComponent {
     const d = new Date(this.market.lock_at);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
+
+  ngOnInit() {
+    this.updateTimer();
+    if (this.displayStatus === 'active') {
+      this.timerId = setInterval(() => {
+        this.updateTimer();
+      }, 1000);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.timerId) {
+      clearInterval(this.timerId);
+    }
+  }
+
+  updateTimer() {
+    const status = this.displayStatus;
+    if (status !== 'active') {
+      this.showProgressBar = false;
+      this.isUrgent = false;
+      if (this.timerId) {
+        clearInterval(this.timerId);
+        this.timerId = null;
+      }
+      return;
+    }
+
+    const now = new Date().getTime();
+    const lockTime = new Date(this.market.lock_at).getTime();
+    
+    // Check if created_at is available and valid
+    let createdTime = this.market.created_at ? new Date(this.market.created_at).getTime() : 0;
+    if (!createdTime || isNaN(createdTime) || createdTime >= lockTime) {
+      // Fallback: assume a 7-day default duration or similar if created_at is not valid
+      createdTime = lockTime - 7 * 24 * 60 * 60 * 1000;
+    }
+
+    const timeRemaining = lockTime - now;
+    const totalDuration = lockTime - createdTime;
+
+    if (timeRemaining <= 0) {
+      this.showProgressBar = false;
+      this.isUrgent = false;
+      if (this.timerId) {
+        clearInterval(this.timerId);
+        this.timerId = null;
+      }
+      return;
+    }
+
+    this.showProgressBar = true;
+
+    // Calculate percentage remaining (decrescendo até zero)
+    const rawPct = (timeRemaining / totalDuration) * 100;
+    this.progressPercentage = Math.max(0, Math.min(100, rawPct));
+
+    // Curated dynamic color from green (140) to red (0)
+    // Using HSL: hue goes from 140 (green) to 0 (red)
+    const hue = Math.round(this.progressPercentage * 1.4);
+    this.progressBarColor = `hsl(${hue}, 80%, 45%)`;
+
+    // Is urgent if remaining time is less than 3 hours
+    this.isUrgent = timeRemaining < 3 * 60 * 60 * 1000;
+
+    // Format remaining time text
+    const seconds = Math.floor((timeRemaining / 1000) % 60);
+    const minutes = Math.floor((timeRemaining / (1000 * 60)) % 60);
+    const hours = Math.floor((timeRemaining / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+
+    if (days > 1) {
+      this.timeRemainingText = `${days}d ${hours}h remaining`;
+    } else if (days === 1) {
+      this.timeRemainingText = `1d ${hours}h remaining`;
+    } else if (hours >= 3) {
+      this.timeRemainingText = `${hours}h ${minutes}m remaining`;
+    } else if (hours >= 1) {
+      this.timeRemainingText = `${hours}h ${minutes}m ${seconds}s remaining`;
+    } else if (minutes >= 1) {
+      this.timeRemainingText = `${minutes}m ${seconds}s remaining`;
+    } else {
+      this.timeRemainingText = `${seconds}s remaining!`;
+    }
+  }
 }
+
